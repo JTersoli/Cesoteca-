@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Helpers */
+.font-hand {
+  font-family: var(--font-hand);
+}
+
+.font-reading {
+  font-family: var(--font-reading);
+}
+
+.font-ui {
+  font-family: var(--font-ui);
+}
+
+/* Estilos para páginas de lectura (poemas/escritos) */
+.reading {
+  font-family: var(--font-reading);
+  font-size: 18px;
+  line-height: 1.8;
+  color: #111;
+}
+
+@media (min-width: 768px) {
+  .reading {
+    font-size: 19px;
+  }
+}
+
+.reading h1,
+.reading h2,
+.reading h3 {
+  font-family: var(--font-reading);
+  line-height: 1.2;
+  margin: 0 0 14px;
+}
+
+.reading p {
+  margin: 0 0 14px;
+}
+
+.reading a {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}

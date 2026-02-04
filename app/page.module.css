@@ -1,0 +1,80 @@
+.wrapper {
+  min-height: 100vh;
+  background: white;
+}
+
+.container {
+  padding-top: 0px;
+}
+
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: 520px 1fr;
+    gap: 90px;
+    align-items: start;
+  }
+}
+
+.imageBox {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+@media (min-width: 768px) {
+  .imageBox {
+    justify-content: flex-start;
+  }
+}
+
+.imageFrame {
+  width: 100%;
+  max-width: 520px;
+  height: 640px;
+  position: relative;
+}
+
+/* Subimos los links (antes estaban muy abajo) */
+.nav {
+  padding-top: 40px;
+}
+
+/* Links parejos con el título: Caveat */
+.link {
+  display: block;
+  width: fit-content;
+  margin-bottom: 16px;
+
+  font-family: var(--font-hand);
+  font-size: 30px;
+  line-height: 1.05;
+
+  color: #111;
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+  text-underline-offset: 8px;
+}
+
+.note {
+  margin-top: 26px;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  color: #666;
+}
