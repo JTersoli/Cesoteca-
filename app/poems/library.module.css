@@ -1,0 +1,42 @@
+.page {
+  padding: 24px;
+}
+
+.title {
+  margin: 0 0 16px 0;
+}
+
+.shelf {
+  position: relative;
+  width: min(520px, 92vw);
+  margin: 0 auto;
+
+  /* ✅ ratio real de tu imagen: 768x1280 */
+  aspect-ratio: 768 / 1280; /* = 3 / 5 */
+
+  overflow: hidden;
+}
+
+.image {
+  object-fit: contain;
+}
+
+
+.hotspot {
+  position: absolute;
+  display: block;
+  border-radius: 10px;
+  /* invisible por defecto */
+  background: transparent;
+}
+
+.hotspot:hover {
+  outline: 2px solid rgba(0, 0, 0, 0.25);
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.hint {
+  margin-top: 12px;
+  font-size: 14px;
+  opacity: 0.7;
+}

@@ -3,15 +3,15 @@ import Link from "next/link";
 import styles from "./page.module.css";
 
 const links = [
-  { label: "Introducción sobre mi", href: "/intro" },
-  { label: "Contacto", href: "/contacto" },
-  { label: "Currículum", href: "/curriculum" },
-  { label: "Poemas", href: "/poemas" },
-  { label: "Escritos personales", href: "/escritos-personales" },
-  { label: "Comentarios de textos", href: "/comentarios-de-textos" },
-  { label: "Otros escritos", href: "/otros-escritos" },
-  { label: "Publicaciones académicas y no académicas", href: "/publicaciones" },
+  { label: "Sobre mí", href: "/about" },
+  { label: "Poemas", href: "/poems" },
+  { label: "Escritos", href: "/writings" },
+  { label: "Ensayos", href: "/essays" },
+  { label: "Comentarios de textos", href: "/text-comments" },
+  { label: "Publicaciones académicas", href: "/publications/academic" },
+  { label: "Publicaciones no académicas", href: "/publications/non-academic" },
 ];
+
 
 export default function HomePage() {
   return (
