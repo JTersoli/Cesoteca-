@@ -14,7 +14,15 @@ function chunkWords(text: string, wordsPerPage = 120) {
   return pages.length ? pages : [""];
 }
 
-export default function PoemReader({ text }: { text: string }) {
+export default function PoemReader({
+  text,
+  downloadUrl,
+  downloadName = "cesoteca.docx",
+}: {
+  text: string;
+  downloadUrl?: string; // ej: "/downloads/poema-1.docx"
+  downloadName?: string; // nombre sugerido al descargar
+}) {
   const router = useRouter();
 
   const pages = useMemo(() => chunkWords(text, 120), [text]);
@@ -46,7 +54,7 @@ export default function PoemReader({ text }: { text: string }) {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "ArrowLeft") goPrev();
       if (e.key === "ArrowRight") goNext();
-      if (e.key === "Escape") router.push("/poems"); // ✅ no window.location
+      if (e.key === "Escape") router.push("/poems");
     }
 
     window.addEventListener("keydown", onKeyDown);
@@ -89,6 +97,19 @@ export default function PoemReader({ text }: { text: string }) {
               <div className={styles.text}>{right}</div>
             </div>
           </div>
+
+          {/* ✅ Botón descargar */}
+          {downloadUrl ? (
+            <a
+              className={styles.downloadBtn}
+              href={downloadUrl}
+              download={downloadName}
+              onClick={(e) => e.stopPropagation()}
+              aria-label="Download file"
+            >
+              Download
+            </a>
+          ) : null}
         </div>
       </div>
     </main>

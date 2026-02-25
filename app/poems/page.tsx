@@ -8,7 +8,12 @@ export default function PoemsPage() {
         <div style={{ width: "100%", maxWidth: 2000 }}>
           <div style={{ position: "relative", width: "100%", height: "96vh" }}>
             <svg
-              style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
+              style={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+              }}
               viewBox="0 0 768 1053"
               preserveAspectRatio="xMidYMid meet"
             >

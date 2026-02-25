@@ -82,7 +82,7 @@
 
   font-family: var(--font-reading);
   font-size: clamp(14px, 1.2vw, 18px);
-  line-height: 1.7;
+  line-height: 1.8;
   color: #222;
 
   text-align: justify;
@@ -91,4 +91,27 @@
   overflow-wrap: break-word;
   word-break: normal;
   text-wrap: pretty;
+}
+
+.downloadBtn {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  z-index: 10;
+
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+
+  font-family: var(--font-reading);
+  font-size: 14px;
+  color: #222;
+  text-decoration: none;
+
+  backdrop-filter: blur(6px);
+}
+
+.downloadBtn:hover {
+  transform: translateY(-1px);
 }
