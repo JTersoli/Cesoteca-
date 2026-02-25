@@ -40,3 +40,34 @@
   font-size: 14px;
   opacity: 0.7;
 }
+
+
+.bookLink {
+  cursor: pointer;
+}
+
+.bookHotspot {
+  /* reposo: invisible */
+  fill: rgba(180, 150, 255, 0);
+  stroke: rgba(180, 150, 255, 0);
+  stroke-width: 2;
+  transition: fill 140ms ease, stroke 140ms ease;
+}
+
+/* hover (desktop) */
+.bookLink:hover .bookHotspot {
+  fill: rgba(180, 150, 255, 0.14);   /* lavanda clarito */
+  stroke: rgba(180, 150, 255, 0.35);
+}
+
+/* tap (mobile) */
+.bookLink:active .bookHotspot {
+  fill: rgba(180, 150, 255, 0.22);
+  stroke: rgba(180, 150, 255, 0.45);
+}
+
+/* focus teclado */
+.bookLink:focus-visible .bookHotspot {
+  fill: rgba(180, 150, 255, 0.18);
+  stroke: rgba(180, 150, 255, 0.55);
+}

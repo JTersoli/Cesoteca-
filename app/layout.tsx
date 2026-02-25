@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { Caveat, EB_Garamond, Inter } from "next/font/google";
+import CursorBubble from "./components/CursorBubble";
 
 const fontHand = Caveat({
   subsets: ["latin"],
@@ -33,13 +34,13 @@ export default function RootLayout({
       className={`${fontHand.variable} ${fontReading.variable} ${fontUI.variable}`}
     >
       <body className="bg-white text-neutral-950">
+        <CursorBubble />
+
         <div className="mx-auto max-w-6xl px-6 py-6">
-          <header className="mb-6">
-    <h1 className="text-center font-hand font-bold text-[64px] sm:text-[76px] md:text-[96px] lg:text-[112px] leading-none">
-  Cesoteca
-</h1>
-
-
+          <header className="mb-2">
+            <h1 className="text-center font-hand font-bold text-[64px] sm:text-[76px] md:text-[96px] lg:text-[112px] leading-none">
+              Cesoteca
+            </h1>
           </header>
 
           {children}
@@ -48,3 +49,4 @@ export default function RootLayout({
     </html>
   );
 }
+

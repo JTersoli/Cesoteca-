@@ -1,46 +1,34 @@
-import Image from "next/image";
-import Link from "next/link";
+import { POEMS_HOTSPOTS } from "./hotspots";
 import styles from "./library.module.css";
 
-const books = [
-  // Cambiá slug + title por los reales
-  { title: "Poema 1", slug: "poema-1", x: 12, y: 10, w: 10, h: 18 },
-  { title: "Poema 2", slug: "poema-2", x: 26, y: 11, w: 12, h: 18 },
-  { title: "Poema 3", slug: "poema-3", x: 52, y: 36, w: 12, h: 18 },
-];
-
-export default function PoemsLibraryPage() {
+export default function PoemsPage() {
   return (
-    <main className={styles.page}>
-      <h1 className={styles.title}>Poemas</h1>
+    <main style={{ padding: 0 }}>
+      <div style={{ width: "100%", display: "flex", justifyContent: "center" }}>
+        <div style={{ width: "100%", maxWidth: 2000 }}>
+          <div style={{ position: "relative", width: "100%", height: "96vh" }}>
+            <svg
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
+              viewBox="0 0 768 1053"
+              preserveAspectRatio="xMidYMid meet"
+            >
+              <image href="/library.jpeg" x="0" y="0" width="768" height="1053" />
 
-      <div className={styles.shelf}>
-        <Image
-          src="/library.jpeg"
-          alt="Biblioteca"
-          fill
-          priority
-          className={styles.image}
-        />
-
-        {books.map((b) => (
-          <Link
-            key={b.slug}
-            href={`/poems/${b.slug}`}
-            className={styles.hotspot}
-            style={{
-              left: `${b.x}%`,
-              top: `${b.y}%`,
-              width: `${b.w}%`,
-              height: `${b.h}%`,
-            }}
-            aria-label={b.title}
-            title={b.title}
-          />
-        ))}
+              {POEMS_HOTSPOTS.map((h) => (
+                <a
+                  key={h.slug}
+                  href={`/poems/${h.slug}`}
+                  aria-label={h.title}
+                  data-book-title={h.title}
+                  className={styles.bookLink}
+                >
+                  <polygon points={h.points} className={styles.bookHotspot} />
+                </a>
+              ))}
+            </svg>
+          </div>
+        </div>
       </div>
-
-      <p className={styles.hint}>Tip: pasá el mouse por los libros.</p>
     </main>
   );
 }

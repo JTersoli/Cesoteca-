@@ -45,3 +45,18 @@
   text-decoration: underline;
   text-underline-offset: 4px;
 }
+
+:root { --broc: url("/cursors/broccoli.png") 32 32, auto; }
+
+html, body { cursor: var(--broc); }
+
+a, button, [role="button"], svg, svg * {
+  cursor: var(--broc) !important;
+}
+
+.bookHotspot {
+  fill: rgba(0, 120, 255, 0.25);
+  stroke: rgba(0, 120, 255, 0.9);
+  stroke-width: 2;
+  pointer-events: all;
+}

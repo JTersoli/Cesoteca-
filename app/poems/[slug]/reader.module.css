@@ -1,0 +1,94 @@
+/* Cubre toda la pantalla y tapa el header del layout */
+.screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: white;
+  overflow: hidden;
+}
+
+/* Full-bleed real (100vw) aunque el layout tenga max-width */
+.fullBleed {
+  width: 100vw;
+  height: 100svh;
+  position: relative;
+  left: 50%;
+  margin-left: -50vw;
+}
+
+/* Wrapper del libro */
+.bookWrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* Imagen del libro */
+.bookImg {
+  object-fit: contain; /* no se deforma */
+}
+
+/* ✅ Área donde vive el texto (dentro del libro) */
+.pages {
+  position: absolute;
+
+  /* Ajuste fino: estos 5 valores mandan todo */
+  top: 15%;
+  bottom: 11%;
+  left: 12%;
+  right: 12%;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  /* espacio del lomo */
+  column-gap: 6%;
+}
+
+/* cada hoja */
+.page {
+  cursor: pointer;
+  user-select: text;
+
+  display: flex;
+  align-items: flex-start;
+
+  overflow: hidden; /* evita “texto volando” */
+}
+
+/* empuja texto hacia el centro */
+.pageLeft {
+  justify-content: flex-end;
+  padding-right: 6%;
+  padding-left: 2%;
+}
+
+.pageRight {
+  justify-content: flex-start;
+  padding-left: 6%;
+  padding-right: 2%;
+}
+
+.disabled {
+  cursor: default;
+  opacity: 0.75;
+}
+
+/* Texto “de libro” */
+.text {
+  width: 100%;
+  max-width: 34ch;
+  white-space: pre-wrap;
+
+  font-family: var(--font-reading);
+  font-size: clamp(14px, 1.2vw, 18px);
+  line-height: 1.7;
+  color: #222;
+
+  text-align: justify;
+  text-justify: inter-word;
+
+  overflow-wrap: break-word;
+  word-break: normal;
+  text-wrap: pretty;
+}
