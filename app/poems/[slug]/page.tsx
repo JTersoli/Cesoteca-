@@ -1,19 +1,22 @@
 import PoemReader from "../PoemReader";
-import { POEMS_HOTSPOTS } from "../hotspots";
+import { getPublicPoemBySlug } from "@/lib/poems-public";
 
-export default function PoemPage({ params }: { params: { slug: string } }) {
-  const slug = params.slug;
+export const dynamic = "force-dynamic";
 
-  // ✅ Buscar el poema por slug (si tenés el texto en hotspots u otra data)
-  const poem = POEMS_HOTSPOTS.find((p) => p.slug === slug);
-
-  // Por ahora, fallback si no existe
-  const poemText = poem?.text ?? "Poem not found.";
+export default async function PoemPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const poem = await getPublicPoemBySlug(slug);
 
   return (
     <PoemReader
-      text={poemText}
-      downloadUrl={`/downloads/${slug}.docx`}
+      title={poem?.title ?? slug}
+      text={poem?.text ?? "Poem not found."}
+      downloadUrl={poem?.downloadUrl}
+      purchaseUrl={poem?.purchaseUrl}
       downloadName={`${slug}.docx`}
     />
   );

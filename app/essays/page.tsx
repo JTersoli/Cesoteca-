@@ -1,8 +1,9 @@
-export default function EssaysPage() {
-  return (
-    <main style={{ padding: 24 }}>
-      <h1>Sobre mí</h1>
-      <p>Coming soon.</p>
-    </main>
-  );
+import SectionLibraryPage from "@/app/components/SectionLibraryPage";
+import { getPublicItems } from "@/lib/content-public";
+
+export const dynamic = "force-dynamic";
+
+export default async function EssaysPage() {
+  const items = await getPublicItems("essays");
+  return <SectionLibraryPage basePath="/essays" items={items} />;
 }

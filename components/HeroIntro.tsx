@@ -6,17 +6,15 @@ import { useMemo, useState } from "react";
 
 const NAV = [
   { label: "Inicio", href: "/" },
-  { label: "Poemas", href: "/poemas" },
-  { label: "Escritos personales", href: "/escritos-personales" },
-  { label: "Comentarios", href: "/comentarios" },
-  { label: "Otros escritos", href: "/otros-escritos" },
-  { label: "Publicaciones", href: "/publicaciones" },
-  { label: "Videos", href: "/videos" },
-  { label: "Currículum", href: "/cv" },
-  { label: "Contacto", href: "/contacto" }
+  { label: "Sobre mi", href: "/about" },
+  { label: "Poemas", href: "/poems" },
+  { label: "Escritos", href: "/writings" },
+  { label: "Ensayos", href: "/essays" },
+  { label: "Comentarios de textos", href: "/text-comments" },
+  { label: "Publicaciones", href: "/publications" }
 ];
 
-export default function Sidebar() {
+export default function HeroIntro() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 

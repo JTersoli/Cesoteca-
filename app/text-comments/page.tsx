@@ -1,8 +1,11 @@
-export default function PoemsPage() {
+import SectionLibraryPage from "@/app/components/SectionLibraryPage";
+import { getPublicItems } from "@/lib/content-public";
+
+export const dynamic = "force-dynamic";
+
+export default async function TextCommentsPage() {
+  const items = await getPublicItems("text-comments");
   return (
-    <main style={{ padding: 24 }}>
-      <h1>Sobre mí</h1>
-      <p>Coming soon.</p>
-    </main>
+    <SectionLibraryPage basePath="/text-comments" items={items} />
   );
 }

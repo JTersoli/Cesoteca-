@@ -93,12 +93,17 @@
   text-wrap: pretty;
 }
 
-.downloadBtn {
+.actions {
   position: absolute;
   left: 16px;
   bottom: 16px;
   z-index: 10;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
 
+.actionBtn {
   padding: 10px 14px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.92);
@@ -112,6 +117,46 @@
   backdrop-filter: blur(6px);
 }
 
-.downloadBtn:hover {
+.actionBtn:hover {
   transform: translateY(-1px);
+}
+
+.titleBadge {
+  position: absolute;
+  right: 16px;
+  bottom: 64px;
+  z-index: 10;
+
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+
+  font-family: var(--font-reading);
+  font-size: 14px;
+  color: #222;
+  max-width: min(46vw, 360px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  backdrop-filter: blur(6px);
+}
+
+.pageIndicator {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  z-index: 10;
+
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+
+  font-family: var(--font-reading);
+  font-size: 14px;
+  color: #222;
+
+  backdrop-filter: blur(6px);
 }
