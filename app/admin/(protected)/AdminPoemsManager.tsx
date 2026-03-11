@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { SECTION_OPTIONS, getSectionBasePath } from "@/lib/sections";
 
 type Poem = {
@@ -22,7 +22,7 @@ export default function AdminPoemsManager() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  async function loadPoems() {
+  const loadPoems = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
@@ -39,11 +39,11 @@ export default function AdminPoemsManager() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [section]);
 
   useEffect(() => {
     void loadPoems();
-  }, [section]);
+  }, [loadPoems]);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -144,7 +144,7 @@ export default function AdminPoemsManager() {
         <input
           name="file"
           type="file"
-          accept=".doc,.pdf"
+          accept=".doc,.docx,.pdf"
           style={{ border: "1px solid #ccc", borderRadius: 8, padding: 8 }}
         />
         <input

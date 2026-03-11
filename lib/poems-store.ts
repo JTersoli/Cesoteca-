@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "fs/promises";
+import { mkdir, readFile, rename, writeFile } from "fs/promises";
 import path from "path";
 import type { ContentSection } from "@/lib/sections";
 
@@ -14,6 +14,8 @@ export type StoredPoem = {
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const POEMS_PATH = path.join(DATA_DIR, "poems.json");
+const POEMS_TEMP_PATH = path.join(DATA_DIR, "poems.tmp.json");
+let writeQueue: Promise<void> = Promise.resolve();
 
 function toSlug(input: string) {
   return input
@@ -44,29 +46,64 @@ export async function readStoredPoems() {
             ? item.section
             : "poems",
       })) as StoredPoem[];
-  } catch {
+  } catch (error) {
+    const code =
+      typeof error === "object" && error && "code" in error
+        ? String((error as { code?: string }).code || "")
+        : "";
+    if (code !== "ENOENT") {
+      console.error("[poems-store] Failed to read poems data:", error);
+    }
     return [];
   }
 }
 
 export async function writeStoredPoems(poems: StoredPoem[]) {
-  await mkdir(DATA_DIR, { recursive: true });
-  await writeFile(POEMS_PATH, JSON.stringify(poems, null, 2), "utf8");
+  await withWriteLock(async () => {
+    await mkdir(DATA_DIR, { recursive: true });
+    const payload = JSON.stringify(poems, null, 2);
+    await writeFile(POEMS_TEMP_PATH, payload, "utf8");
+    await rename(POEMS_TEMP_PATH, POEMS_PATH);
+  });
 }
 
 export async function upsertStoredPoem(
   input: Omit<StoredPoem, "updatedAt"> & { updatedAt?: string }
 ) {
-  const poems = await readStoredPoems();
-  const next: StoredPoem = {
-    ...input,
-    updatedAt: input.updatedAt || new Date().toISOString(),
-  };
-  const index = poems.findIndex(
-    (p) => p.section === next.section && p.slug === next.slug
-  );
-  if (index >= 0) poems[index] = next;
-  else poems.unshift(next);
-  await writeStoredPoems(poems);
-  return next;
+  let saved: StoredPoem | undefined;
+  await withWriteLock(async () => {
+    const poems = await readStoredPoems();
+    const next: StoredPoem = {
+      ...input,
+      updatedAt: input.updatedAt || new Date().toISOString(),
+    };
+    const index = poems.findIndex(
+      (p) => p.section === next.section && p.slug === next.slug
+    );
+    if (index >= 0) poems[index] = next;
+    else poems.unshift(next);
+
+    const payload = JSON.stringify(poems, null, 2);
+    await mkdir(DATA_DIR, { recursive: true });
+    await writeFile(POEMS_TEMP_PATH, payload, "utf8");
+    await rename(POEMS_TEMP_PATH, POEMS_PATH);
+    saved = next;
+  });
+
+  return saved as StoredPoem;
+}
+
+async function withWriteLock<T>(task: () => Promise<T>) {
+  const previous = writeQueue;
+  let release!: () => void;
+  writeQueue = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+
+  await previous;
+  try {
+    return await task();
+  } finally {
+    release();
+  }
 }
