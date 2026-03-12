@@ -1,7 +1,7 @@
-import SectionLibraryPage from "@/app/components/SectionLibraryPage";
+﻿import SectionLibraryPage from "@/app/components/SectionLibraryPage";
 import { getPublicItems } from "@/lib/content-public";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function EssaysPage() {
   const items = await getPublicItems("essays");

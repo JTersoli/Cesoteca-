@@ -2,7 +2,7 @@ import { POEMS_HOTSPOTS } from "./hotspots";
 import { getPublicPoems } from "@/lib/poems-public";
 import styles from "./library.module.css";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function PoemsPage() {
   const poems = await getPublicPoems();

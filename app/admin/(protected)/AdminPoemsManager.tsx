@@ -21,6 +21,12 @@ export default function AdminPoemsManager() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState("");
+  const [passwordError, setPasswordError] = useState("");
 
   const loadPoems = useCallback(async () => {
     setLoading(true);
@@ -78,6 +84,43 @@ export default function AdminPoemsManager() {
   async function onLogout() {
     await fetch("/api/admin/logout", { method: "POST" });
     window.location.href = "/admin/login";
+  }
+
+  async function onPasswordSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setPasswordSaving(true);
+    setPasswordError("");
+    setPasswordMessage("");
+
+    try {
+      const response = await fetch("/api/admin/password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+          confirmPassword,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = (await response.json().catch(() => null)) as
+          | { error?: string }
+          | null;
+        throw new Error(data?.error || "Failed to update password.");
+      }
+
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setPasswordMessage("Password updated successfully.");
+    } catch (e) {
+      setPasswordError(
+        e instanceof Error ? e.message : "Failed to update password."
+      );
+    } finally {
+      setPasswordSaving(false);
+    }
   }
 
   return (
@@ -168,6 +211,67 @@ export default function AdminPoemsManager() {
           {saving ? "Saving..." : "Save poem"}
         </button>
       </form>
+
+      <section style={{ marginTop: 28 }}>
+        <h2 style={{ fontSize: 22, marginBottom: 10 }}>Change admin password</h2>
+        <form onSubmit={onPasswordSubmit} style={{ display: "grid", gap: 10 }}>
+          <input
+            type="password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            placeholder="Current password"
+            autoComplete="current-password"
+            required
+            style={{ border: "1px solid #ccc", borderRadius: 8, padding: 10 }}
+          />
+          <input
+            type="password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            placeholder="New password (12+ chars)"
+            autoComplete="new-password"
+            minLength={12}
+            maxLength={128}
+            required
+            style={{ border: "1px solid #ccc", borderRadius: 8, padding: 10 }}
+          />
+          <input
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Confirm new password"
+            autoComplete="new-password"
+            minLength={12}
+            maxLength={128}
+            required
+            style={{ border: "1px solid #ccc", borderRadius: 8, padding: 10 }}
+          />
+          <button
+            type="submit"
+            disabled={passwordSaving}
+            style={{
+              border: "1px solid #111",
+              borderRadius: 8,
+              padding: "10px 12px",
+              background: "#111",
+              color: "#fff",
+              cursor: passwordSaving ? "default" : "pointer",
+            }}
+          >
+            {passwordSaving ? "Updating..." : "Update password"}
+          </button>
+        </form>
+        {passwordMessage ? (
+          <p style={{ marginTop: 12, color: "#0a7a3a" }} role="status">
+            {passwordMessage}
+          </p>
+        ) : null}
+        {passwordError ? (
+          <p style={{ marginTop: 12, color: "#b00020" }} role="alert">
+            {passwordError}
+          </p>
+        ) : null}
+      </section>
 
       {error ? (
         <p style={{ marginTop: 12, color: "#b00020" }} role="alert">

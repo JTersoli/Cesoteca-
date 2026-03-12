@@ -19,7 +19,7 @@ function buildItems(
     return {
       slug: `${prefix}-${n}`,
       title: `${label} ${n}`,
-      text: `${label} ${n}\n\n${intro}\n\nTexto de muestra para edición.`,
+      text: `${label} ${n}\n\n${intro}\n\nContenido en preparación.`,
       downloadUrl: "/downloads/mi-poema.docx",
     } satisfies SectionItem;
   });
@@ -42,11 +42,11 @@ export const TEXT_COMMENTS_ITEMS = buildItems(
 );
 export const PUBLICATIONS_ACADEMIC_ITEMS = buildItems(
   "academic-publication",
-  "Publicacion academica",
-  "Ficha de publicacion academica."
+  "Publicación académica",
+  "Ficha de publicación académica."
 );
 export const PUBLICATIONS_NON_ACADEMIC_ITEMS = buildItems(
   "non-academic-publication",
-  "Publicacion no academica",
-  "Ficha de publicacion no academica."
+  "Publicación no académica",
+  "Ficha de publicación no académica."
 );

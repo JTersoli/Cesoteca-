@@ -1,4 +1,8 @@
 import { createHmac, randomBytes, scryptSync, timingSafeEqual } from "crypto";
+import {
+  readStoredAdminPasswordHash,
+  writeStoredAdminPasswordHash,
+} from "@/lib/admin-credentials-store";
 
 export const ADMIN_COOKIE_NAME = "cesoteca_admin";
 const SESSION_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 7; // 7 days
@@ -80,7 +84,7 @@ export function createAdminPasswordHash(password: string) {
 }
 
 export async function verifyAdminPassword(password: string) {
-  const passwordHash = getAdminPasswordHash().trim();
+  const passwordHash = await getActiveAdminPasswordHash();
   if (passwordHash) {
     const parsed = parseScryptHash(passwordHash);
     if (!parsed) return false;
@@ -92,4 +96,20 @@ export async function verifyAdminPassword(password: string) {
   const plain = getAdminPassword();
   if (!plain) return false;
   return safeEqualText(password, plain);
+}
+
+export async function hasConfiguredAdminPassword() {
+  if (await getActiveAdminPasswordHash()) return true;
+  return Boolean(getAdminPassword());
+}
+
+export async function updateStoredAdminPassword(password: string) {
+  const hash = createAdminPasswordHash(password);
+  await writeStoredAdminPasswordHash(hash);
+}
+
+async function getActiveAdminPasswordHash() {
+  const storedHash = await readStoredAdminPasswordHash();
+  if (storedHash) return storedHash;
+  return getAdminPasswordHash().trim();
 }

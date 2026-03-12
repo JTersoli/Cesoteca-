@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   ADMIN_COOKIE_NAME,
   createAdminToken,
-  getAdminPasswordHash,
+  hasConfiguredAdminPassword,
   getSessionMaxAgeSeconds,
   getSessionSecret,
   verifyAdminPassword,
@@ -98,10 +98,9 @@ export async function POST(request: NextRequest) {
     | { password?: string }
     | null;
   const provided = body?.password || "";
-  const adminPasswordHash = getAdminPasswordHash();
   const sessionSecret = getSessionSecret();
 
-  if ((!adminPasswordHash && !process.env.ADMIN_PASSWORD) || !sessionSecret) {
+  if (!(await hasConfiguredAdminPassword()) || !sessionSecret) {
     return NextResponse.json(
       { error: "Admin auth is not configured." },
       { status: 500 }

@@ -1,7 +1,8 @@
-import PoemReader from "@/app/poems/PoemReader";
+﻿import PoemReader from "@/app/poems/PoemReader";
 import { getPublicItemBySlug } from "@/lib/content-public";
+import { notFound } from "next/navigation";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function AcademicPublicationPage({
   params,
@@ -10,13 +11,16 @@ export default async function AcademicPublicationPage({
 }) {
   const { slug } = await params;
   const item = await getPublicItemBySlug("publications-academic", slug);
+  if (!item) {
+    notFound();
+  }
 
   return (
     <PoemReader
-      title={item?.title ?? slug}
-      text={item?.text ?? "Texto no encontrado."}
-      downloadUrl={item?.downloadUrl}
-      purchaseUrl={item?.purchaseUrl}
+      title={item.title}
+      text={item.text}
+      downloadUrl={item.downloadUrl}
+      purchaseUrl={item.purchaseUrl}
       downloadName={`${slug}.docx`}
       backHref="/publications/academic"
     />

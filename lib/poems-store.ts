@@ -16,15 +16,44 @@ const DATA_DIR = path.join(process.cwd(), "data");
 const POEMS_PATH = path.join(DATA_DIR, "poems.json");
 const POEMS_TEMP_PATH = path.join(DATA_DIR, "poems.tmp.json");
 let writeQueue: Promise<void> = Promise.resolve();
+const MAX_SLUG_LENGTH = 120;
 
 function toSlug(input: string) {
-  return input
+  const normalized = input
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+  const base = normalized
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9\s-]/g, "")
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
+
+  const clipped = base.slice(0, MAX_SLUG_LENGTH).replace(/-+$/g, "");
+  return clipped;
+}
+
+function makeUniqueSlug(base: string, used: Set<string>) {
+  const fallback = base || "poem";
+  if (!used.has(fallback)) {
+    used.add(fallback);
+    return fallback;
+  }
+
+  let suffix = 2;
+  while (true) {
+    const suffixText = `-${suffix}`;
+    const prefixMax = MAX_SLUG_LENGTH - suffixText.length;
+    const trimmedPrefix = fallback.slice(0, Math.max(1, prefixMax)).replace(/-+$/g, "");
+    const candidate = `${trimmedPrefix}${suffixText}`;
+    if (!used.has(candidate)) {
+      used.add(candidate);
+      return candidate;
+    }
+    suffix += 1;
+  }
 }
 
 export function slugifyPoem(input: string) {
@@ -37,15 +66,25 @@ export async function readStoredPoems() {
     const raw = await readFile(POEMS_PATH, "utf8");
     const parsed = JSON.parse(raw) as Array<StoredPoem | Omit<StoredPoem, "section">>;
     if (!Array.isArray(parsed)) return [];
+    const usedSlugs = new Set<string>();
+
     return parsed
       .filter((item) => item && typeof item.slug === "string")
-      .map((item) => ({
-        ...item,
-        section:
-          "section" in item && typeof item.section === "string"
-            ? item.section
-            : "poems",
-      })) as StoredPoem[];
+      .map((item, index) => {
+        const rawSlug = typeof item.slug === "string" ? item.slug : "";
+        const fromTitle = "title" in item && typeof item.title === "string" ? item.title : "";
+        const baseSlug = toSlug(rawSlug) || toSlug(fromTitle) || `poem-${index + 1}`;
+        const safeSlug = makeUniqueSlug(baseSlug, usedSlugs);
+
+        return {
+          ...item,
+          slug: safeSlug,
+          section:
+            "section" in item && typeof item.section === "string"
+              ? item.section
+              : "poems",
+        };
+      }) as StoredPoem[];
   } catch (error) {
     const code =
       typeof error === "object" && error && "code" in error
