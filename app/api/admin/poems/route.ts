@@ -79,19 +79,25 @@ export async function POST(request: NextRequest) {
   const customSlug = String(formData.get("slug") || "").trim();
   const sectionValue = String(formData.get("section") || "").trim();
   const purchaseUrlInput = String(formData.get("purchaseUrl") || "").trim();
+  const textAlignInput = String(formData.get("textAlign") || "").trim().toLowerCase();
+  const boldInput = String(formData.get("bold") || "").trim().toLowerCase();
+  const italicInput = String(formData.get("italic") || "").trim().toLowerCase();
+  const underlineInput = String(formData.get("underline") || "").trim().toLowerCase();
   const file = formData.get("file");
-
-  if (!title) {
-    return NextResponse.json({ error: "Title is required." }, { status: 400 });
-  }
-  if (!text) {
-    return NextResponse.json({ error: "Text is required." }, { status: 400 });
-  }
 
   if (!isContentSection(sectionValue)) {
     return NextResponse.json({ error: "Invalid section." }, { status: 400 });
   }
   const normalizedPurchaseUrl = normalizeOptionalHttpUrl(purchaseUrlInput);
+  const textAlign =
+    textAlignInput === "center"
+      ? "center"
+      : textAlignInput === "justify"
+        ? "justify"
+        : "left";
+  const bold = boldInput === "true";
+  const italic = italicInput === "true";
+  const underline = underlineInput === "true";
   if (normalizedPurchaseUrl === null) {
     return NextResponse.json(
       { error: "Purchase URL must be a valid http(s) URL." },
@@ -143,6 +149,10 @@ export async function POST(request: NextRequest) {
     text,
     downloadUrl: downloadUrl || existing?.downloadUrl,
     purchaseUrl: normalizedPurchaseUrl || existing?.purchaseUrl,
+    textAlign,
+    bold,
+    italic,
+    underline,
   });
 
   return NextResponse.json({ poem: saved }, { status: 201 });

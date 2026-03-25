@@ -21,6 +21,10 @@ export default async function PoemPage({
       text={poem.text}
       downloadUrl={poem.downloadUrl}
       purchaseUrl={poem.purchaseUrl}
+      textAlign={poem.textAlign}
+      bold={poem.bold}
+      italic={poem.italic}
+      underline={poem.underline}
       downloadName={`${slug}.docx`}
     />
   );

@@ -10,8 +10,16 @@ type Poem = {
   text: string;
   downloadUrl?: string;
   purchaseUrl?: string;
+  textAlign?: "left" | "center" | "justify";
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
   updatedAt: string;
 };
+
+function getDisplayTitle(poem: Pick<Poem, "title" | "slug">) {
+  return poem.title.trim() || poem.slug.trim() || "Sin titulo";
+}
 
 export default function AdminPoemsManager() {
   const [poems, setPoems] = useState<Poem[]>([]);
@@ -21,6 +29,10 @@ export default function AdminPoemsManager() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [textAlign, setTextAlign] = useState<"left" | "center" | "justify">("left");
+  const [bold, setBold] = useState(false);
+  const [italic, setItalic] = useState(false);
+  const [underline, setUnderline] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -73,6 +85,10 @@ export default function AdminPoemsManager() {
       }
 
       form.reset();
+      setTextAlign("left");
+      setBold(false);
+      setItalic(false);
+      setUnderline(false);
       await loadPoems();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to save poem.");
@@ -168,8 +184,7 @@ export default function AdminPoemsManager() {
         </label>
         <input
           name="title"
-          placeholder="Title"
-          required
+          placeholder="Title (optional)"
           style={{ border: "1px solid #ccc", borderRadius: 8, padding: 10 }}
         />
         <input
@@ -179,11 +194,116 @@ export default function AdminPoemsManager() {
         />
         <textarea
           name="text"
-          placeholder="Poem text"
-          required
+          placeholder="Poem text (optional)"
           rows={8}
           style={{ border: "1px solid #ccc", borderRadius: 8, padding: 10 }}
         />
+        <div style={{ display: "grid", gap: 8 }}>
+          <span>Text format</span>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              onClick={() => setTextAlign("left")}
+              aria-pressed={textAlign === "left"}
+              style={{
+                border: "1px solid #111",
+                borderRadius: 999,
+                padding: "8px 12px",
+                background: textAlign === "left" ? "#111" : "#fff",
+                color: textAlign === "left" ? "#fff" : "#111",
+                cursor: "pointer",
+              }}
+            >
+              As written
+            </button>
+            <button
+              type="button"
+              onClick={() => setTextAlign("justify")}
+              aria-pressed={textAlign === "justify"}
+              style={{
+                border: "1px solid #111",
+                borderRadius: 999,
+                padding: "8px 12px",
+                background: textAlign === "justify" ? "#111" : "#fff",
+                color: textAlign === "justify" ? "#fff" : "#111",
+                cursor: "pointer",
+              }}
+            >
+              Justified
+            </button>
+            <button
+              type="button"
+              onClick={() => setTextAlign("center")}
+              aria-pressed={textAlign === "center"}
+              style={{
+                border: "1px solid #111",
+                borderRadius: 999,
+                padding: "8px 12px",
+                background: textAlign === "center" ? "#111" : "#fff",
+                color: textAlign === "center" ? "#fff" : "#111",
+                cursor: "pointer",
+              }}
+            >
+              Centered
+            </button>
+            <button
+              type="button"
+              onClick={() => setBold((value) => !value)}
+              aria-pressed={bold}
+              style={{
+                border: "1px solid #111",
+                borderRadius: 999,
+                padding: "8px 12px",
+                background: bold ? "#111" : "#fff",
+                color: bold ? "#fff" : "#111",
+              cursor: "pointer",
+              fontWeight: 700,
+            }}
+            >
+              Bold
+            </button>
+            <button
+              type="button"
+              onClick={() => setItalic((value) => !value)}
+              aria-pressed={italic}
+              style={{
+                border: "1px solid #111",
+                borderRadius: 999,
+                padding: "8px 12px",
+                background: italic ? "#111" : "#fff",
+                color: italic ? "#fff" : "#111",
+                cursor: "pointer",
+                fontStyle: "italic",
+              }}
+            >
+              Italic
+            </button>
+            <button
+              type="button"
+              onClick={() => setUnderline((value) => !value)}
+              aria-pressed={underline}
+              style={{
+                border: "1px solid #111",
+                borderRadius: 999,
+                padding: "8px 12px",
+                background: underline ? "#111" : "#fff",
+                color: underline ? "#fff" : "#111",
+                cursor: "pointer",
+                textDecoration: "underline",
+              }}
+            >
+              Underline
+            </button>
+          </div>
+          <input type="hidden" name="textAlign" value={textAlign} />
+          <input type="hidden" name="bold" value={bold ? "true" : "false"} />
+          <input type="hidden" name="italic" value={italic ? "true" : "false"} />
+          <input
+            type="hidden"
+            name="underline"
+            value={underline ? "true" : "false"}
+          />
+        </div>
         <input
           name="file"
           type="file"
@@ -292,12 +412,23 @@ export default function AdminPoemsManager() {
                 borderBottom: "1px solid #eee",
               }}
             >
-              <div style={{ fontWeight: 600 }}>{poem.title}</div>
+              <div style={{ fontWeight: 600 }}>{getDisplayTitle(poem)}</div>
               <div style={{ color: "#555", fontSize: 13 }}>
                 {getSectionBasePath(poem.section)}/{poem.slug}
               </div>
               <div style={{ color: "#666", fontSize: 12 }}>
                 Updated: {new Date(poem.updatedAt).toLocaleString()}
+              </div>
+              <div style={{ color: "#666", fontSize: 12 }}>
+                Format:{" "}
+                {poem.textAlign === "center"
+                  ? "Centered"
+                  : poem.textAlign === "justify"
+                    ? "Justified"
+                    : "As written"}
+                {poem.bold ? " + Bold" : ""}
+                {poem.italic ? " + Italic" : ""}
+                {poem.underline ? " + Underline" : ""}
               </div>
               {poem.downloadUrl ? (
                 <a href={poem.downloadUrl} target="_blank" rel="noreferrer">

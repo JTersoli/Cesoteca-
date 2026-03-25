@@ -5,65 +5,60 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./reader.module.css";
 
-function splitByWords(text: string, maxWords: number) {
-  const words = text.trim().split(/\s+/).filter(Boolean);
-  if (words.length <= maxWords) return [words.join(" ")];
-
-  const chunks: string[] = [];
-  for (let i = 0; i < words.length; i += maxWords) {
-    chunks.push(words.slice(i, i + maxWords).join(" "));
-  }
-  return chunks;
+function getTokenWidth(token: string) {
+  return token.replace(/\t/g, "    ").length;
 }
 
-function chunkWords(text: string, wordsPerPage = 120) {
-  const clean = text.trim();
-  if (!clean) return [""];
+function chunkText(text: string, maxCharsPerLine = 34, maxLinesPerPage = 18) {
+  const source = text.replace(/\r\n/g, "\n");
+  if (!source) return [""];
 
-  const paragraphs = clean
-    .split(/\n\s*\n/)
-    .map((p) => p.trim())
-    .filter(Boolean);
-
+  const tokens = source.split(/(\n|[^\S\n]+|\S+)/).filter(Boolean);
   const pages: string[] = [];
   let current = "";
-  let currentWords = 0;
+  let lineLength = 0;
+  let lineCount = 1;
 
-  for (const paragraph of paragraphs) {
-    const paragraphWords = paragraph.split(/\s+/).filter(Boolean).length;
+  const pushCurrent = () => {
+    pages.push(current);
+    current = "";
+    lineLength = 0;
+    lineCount = 1;
+  };
 
-    if (paragraphWords > wordsPerPage) {
-      const parts = splitByWords(paragraph, wordsPerPage);
-      for (const part of parts) {
-        if (currentWords > 0) {
-          pages.push(current);
-          current = "";
-          currentWords = 0;
-        }
-        pages.push(part);
+  for (const token of tokens) {
+    if (token === "\n") {
+      if (lineCount >= maxLinesPerPage && current) {
+        pushCurrent();
       }
+      current += token;
+      lineCount += 1;
+      lineLength = 0;
       continue;
     }
 
-    if (currentWords === 0) {
-      current = paragraph;
-      currentWords = paragraphWords;
-      continue;
+    const tokenWidth = getTokenWidth(token);
+    const nextLineLength = lineLength + tokenWidth;
+
+    if (lineLength > 0 && nextLineLength > maxCharsPerLine) {
+      if (lineCount >= maxLinesPerPage && current) {
+        pushCurrent();
+      } else {
+        lineCount += 1;
+        lineLength = 0;
+      }
     }
 
-    const nextWords = currentWords + paragraphWords;
-    if (nextWords <= wordsPerPage) {
-      current = `${current}\n\n${paragraph}`;
-      currentWords = nextWords;
-    } else {
-      pages.push(current);
-      current = paragraph;
-      currentWords = paragraphWords;
+    if (lineCount > maxLinesPerPage && current) {
+      pushCurrent();
     }
+
+    current += token;
+    lineLength += tokenWidth;
   }
 
-  if (currentWords > 0) pages.push(current);
-  return pages.length ? pages : [""];
+  if (current || pages.length === 0) pages.push(current);
+  return pages;
 }
 
 export default function PoemReader({
@@ -71,6 +66,10 @@ export default function PoemReader({
   text,
   downloadUrl,
   purchaseUrl,
+  textAlign = "left",
+  bold = false,
+  italic = false,
+  underline = false,
   backHref = "/poems",
   downloadName = "cesoteca.docx",
 }: {
@@ -78,12 +77,16 @@ export default function PoemReader({
   text: string;
   downloadUrl?: string; // ej: "/downloads/poema-1.docx"
   purchaseUrl?: string;
+  textAlign?: "left" | "center" | "justify";
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
   backHref?: string;
   downloadName?: string; // nombre sugerido al descargar
 }) {
   const router = useRouter();
 
-  const pages = useMemo(() => chunkWords(text, 120), [text]);
+  const pages = useMemo(() => chunkText(text, 34, 18), [text]);
   const [pageIndex, setPageIndex] = useState(0);
 
   useEffect(() => {
@@ -165,7 +168,19 @@ export default function PoemReader({
               aria-label="Previous pages"
               onKeyDown={(e) => onPageKeyDown(e, goPrev, canPrev)}
             >
-              <div className={styles.text}>{left}</div>
+              <div
+                className={`${styles.text} ${
+                  textAlign === "center"
+                    ? styles.textCenter
+                    : textAlign === "justify"
+                      ? styles.textJustify
+                      : styles.textLeft
+                } ${bold ? styles.textBold : ""} ${
+                  italic ? styles.textItalic : ""
+                } ${underline ? styles.textUnderline : ""}`}
+              >
+                {left}
+              </div>
             </div>
 
             <div
@@ -179,7 +194,19 @@ export default function PoemReader({
               aria-label="Next pages"
               onKeyDown={(e) => onPageKeyDown(e, goNext, canNext)}
             >
-              <div className={styles.text}>{right}</div>
+              <div
+                className={`${styles.text} ${
+                  textAlign === "center"
+                    ? styles.textCenter
+                    : textAlign === "justify"
+                      ? styles.textJustify
+                      : styles.textLeft
+                } ${bold ? styles.textBold : ""} ${
+                  italic ? styles.textItalic : ""
+                } ${underline ? styles.textUnderline : ""}`}
+              >
+                {right}
+              </div>
             </div>
           </div>
 

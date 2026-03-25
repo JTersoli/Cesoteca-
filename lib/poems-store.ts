@@ -9,6 +9,10 @@ export type StoredPoem = {
   text: string;
   downloadUrl?: string;
   purchaseUrl?: string;
+  textAlign?: "left" | "center" | "justify";
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
   updatedAt: string;
 };
 
@@ -79,6 +83,16 @@ export async function readStoredPoems() {
         return {
           ...item,
           slug: safeSlug,
+          textAlign:
+            "textAlign" in item &&
+            (item.textAlign === "left" ||
+              item.textAlign === "center" ||
+              item.textAlign === "justify")
+              ? item.textAlign
+              : "left",
+          bold: "bold" in item ? Boolean(item.bold) : false,
+          italic: "italic" in item ? Boolean(item.italic) : false,
+          underline: "underline" in item ? Boolean(item.underline) : false,
           section:
             "section" in item && typeof item.section === "string"
               ? item.section

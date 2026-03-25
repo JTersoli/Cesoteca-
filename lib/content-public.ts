@@ -15,6 +15,10 @@ export type PublicItem = {
   text: string;
   downloadUrl?: string;
   purchaseUrl?: string;
+  textAlign?: "left" | "center" | "justify";
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
 };
 
 const FALLBACK_BY_SECTION: Record<ContentSection, PublicItem[]> = {
@@ -36,6 +40,10 @@ export async function getPublicItems(section: ContentSection) {
       text: item.text,
       downloadUrl: item.downloadUrl,
       purchaseUrl: item.purchaseUrl,
+      textAlign: item.textAlign,
+      bold: item.bold,
+      italic: item.italic,
+      underline: item.underline,
     })) as PublicItem[];
   }
 

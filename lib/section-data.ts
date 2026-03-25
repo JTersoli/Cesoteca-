@@ -6,6 +6,10 @@ export type SectionItem = {
   text: string;
   downloadUrl?: string;
   purchaseUrl?: string;
+  textAlign?: "left" | "center" | "justify";
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
 };
 
 function buildItems(
