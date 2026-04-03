@@ -21,10 +21,12 @@ export default async function TextCommentPage({
       text={item.text}
       downloadUrl={item.downloadUrl}
       purchaseUrl={item.purchaseUrl}
+      bookImageUrl={item.bookImageUrl}
       textAlign={item.textAlign}
       bold={item.bold}
       italic={item.italic}
       underline={item.underline}
+      textLayout={item.textLayout}
       downloadName={`${slug}.docx`}
       backHref="/text-comments"
     />

@@ -1,4 +1,5 @@
 import { POEMS } from "@/app/poems/data";
+import type { BookTextLayout, TextAlign } from "@/lib/book-reader";
 import {
   ESSAYS_ITEMS,
   PUBLICATIONS_ACADEMIC_ITEMS,
@@ -15,10 +16,12 @@ export type PublicItem = {
   text: string;
   downloadUrl?: string;
   purchaseUrl?: string;
-  textAlign?: "left" | "center" | "justify";
+  bookImageUrl?: string;
+  textAlign?: TextAlign;
   bold?: boolean;
   italic?: boolean;
   underline?: boolean;
+  textLayout?: BookTextLayout;
 };
 
 const FALLBACK_BY_SECTION: Record<ContentSection, PublicItem[]> = {
@@ -40,10 +43,12 @@ export async function getPublicItems(section: ContentSection) {
       text: item.text,
       downloadUrl: item.downloadUrl,
       purchaseUrl: item.purchaseUrl,
+      bookImageUrl: item.bookImageUrl,
       textAlign: item.textAlign,
       bold: item.bold,
       italic: item.italic,
       underline: item.underline,
+      textLayout: item.textLayout,
     })) as PublicItem[];
   }
 

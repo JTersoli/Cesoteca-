@@ -1,9 +1,13 @@
+import type { BookTextLayout } from "@/lib/book-reader";
+
 export type Poem = {
   slug: string;
   title: string;
   text: string;
   downloadUrl?: string;
   purchaseUrl?: string;
+  bookImageUrl?: string;
+  textLayout?: BookTextLayout;
 };
 
 function buildPoemText(index: number) {

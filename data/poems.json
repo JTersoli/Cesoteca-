@@ -9,6 +9,20 @@
     "bold": false,
     "italic": false,
     "underline": false,
+    "textLayout": {
+      "left": {
+        "x": 18.4,
+        "y": 16.2,
+        "width": 27.2,
+        "height": 70
+      },
+      "right": {
+        "x": 57,
+        "y": 16.2,
+        "width": 27.2,
+        "height": 70
+      }
+    },
     "updatedAt": "2026-03-25T13:26:03.328Z"
   },
   {
@@ -20,7 +34,21 @@
     "textAlign": "left",
     "bold": false,
     "italic": false,
-    "underline": false
+    "underline": false,
+    "textLayout": {
+      "left": {
+        "x": 18.4,
+        "y": 16.2,
+        "width": 27.2,
+        "height": 70
+      },
+      "right": {
+        "x": 57,
+        "y": 16.2,
+        "width": 27.2,
+        "height": 70
+      }
+    }
   },
   {
     "section": "publications-non-academic",
@@ -32,6 +60,20 @@
     "textAlign": "left",
     "bold": false,
     "italic": false,
-    "underline": false
+    "underline": false,
+    "textLayout": {
+      "left": {
+        "x": 18.4,
+        "y": 16.2,
+        "width": 27.2,
+        "height": 70
+      },
+      "right": {
+        "x": 57,
+        "y": 16.2,
+        "width": 27.2,
+        "height": 70
+      }
+    }
   }
 ]

@@ -1,5 +1,7 @@
 import { mkdir, readFile, rename, writeFile } from "fs/promises";
 import path from "path";
+import type { BookTextLayout, TextAlign } from "@/lib/book-reader";
+import { normalizeBookTextLayout } from "@/lib/book-reader";
 import type { ContentSection } from "@/lib/sections";
 
 export type StoredPoem = {
@@ -9,10 +11,12 @@ export type StoredPoem = {
   text: string;
   downloadUrl?: string;
   purchaseUrl?: string;
-  textAlign?: "left" | "center" | "justify";
+  bookImageUrl?: string;
+  textAlign?: TextAlign;
   bold?: boolean;
   italic?: boolean;
   underline?: boolean;
+  textLayout?: BookTextLayout;
   updatedAt: string;
 };
 
@@ -93,6 +97,14 @@ export async function readStoredPoems() {
           bold: "bold" in item ? Boolean(item.bold) : false,
           italic: "italic" in item ? Boolean(item.italic) : false,
           underline: "underline" in item ? Boolean(item.underline) : false,
+          bookImageUrl:
+            "bookImageUrl" in item && typeof item.bookImageUrl === "string"
+              ? item.bookImageUrl
+              : undefined,
+          textLayout:
+            "textLayout" in item
+              ? normalizeBookTextLayout(item.textLayout)
+              : undefined,
           section:
             "section" in item && typeof item.section === "string"
               ? item.section

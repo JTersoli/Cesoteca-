@@ -1,6 +1,14 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import BookTextLayoutEditor from "./BookTextLayoutEditor";
+import {
+  DEFAULT_BOOK_IMAGE_URL,
+  DEFAULT_BOOK_TEXT_LAYOUT,
+  normalizeBookTextLayout,
+  type BookTextLayout,
+  type TextAlign,
+} from "@/lib/book-reader";
 import { SECTION_OPTIONS, getSectionBasePath } from "@/lib/sections";
 
 type Poem = {
@@ -10,10 +18,12 @@ type Poem = {
   text: string;
   downloadUrl?: string;
   purchaseUrl?: string;
-  textAlign?: "left" | "center" | "justify";
+  bookImageUrl?: string;
+  textAlign?: TextAlign;
   bold?: boolean;
   italic?: boolean;
   underline?: boolean;
+  textLayout?: BookTextLayout;
   updatedAt: string;
 };
 
@@ -29,16 +39,31 @@ export default function AdminPoemsManager() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [textAlign, setTextAlign] = useState<"left" | "center" | "justify">("left");
+  const [title, setTitle] = useState("");
+  const [slug, setSlug] = useState("");
+  const [text, setText] = useState("");
+  const [purchaseUrl, setPurchaseUrl] = useState("");
+  const [bookImageUrl, setBookImageUrl] = useState(DEFAULT_BOOK_IMAGE_URL);
+  const [bookImagePreviewUrl, setBookImagePreviewUrl] = useState<string | null>(null);
+  const [textAlign, setTextAlign] = useState<TextAlign>("left");
   const [bold, setBold] = useState(false);
   const [italic, setItalic] = useState(false);
   const [underline, setUnderline] = useState(false);
+  const [textLayout, setTextLayout] = useState<BookTextLayout>(
+    DEFAULT_BOOK_TEXT_LAYOUT
+  );
+  const [fileInputKey, setFileInputKey] = useState(0);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordMessage, setPasswordMessage] = useState("");
   const [passwordError, setPasswordError] = useState("");
+
+  const serializedTextLayout = useMemo(
+    () => JSON.stringify(normalizeBookTextLayout(textLayout)),
+    [textLayout]
+  );
 
   const loadPoems = useCallback(async () => {
     setLoading(true);
@@ -63,6 +88,32 @@ export default function AdminPoemsManager() {
     void loadPoems();
   }, [loadPoems]);
 
+  useEffect(() => {
+    return () => {
+      if (bookImagePreviewUrl) {
+        URL.revokeObjectURL(bookImagePreviewUrl);
+      }
+    };
+  }, [bookImagePreviewUrl]);
+
+  function resetForm() {
+    if (bookImagePreviewUrl) {
+      URL.revokeObjectURL(bookImagePreviewUrl);
+    }
+    setTitle("");
+    setSlug("");
+    setText("");
+    setPurchaseUrl("");
+    setBookImageUrl(DEFAULT_BOOK_IMAGE_URL);
+    setBookImagePreviewUrl(null);
+    setTextAlign("left");
+    setBold(false);
+    setItalic(false);
+    setUnderline(false);
+    setTextLayout(DEFAULT_BOOK_TEXT_LAYOUT);
+    setFileInputKey((value) => value + 1);
+  }
+
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSaving(true);
@@ -70,6 +121,7 @@ export default function AdminPoemsManager() {
     const form = e.currentTarget;
     const formData = new FormData(form);
     formData.set("section", section);
+    formData.set("textLayout", serializedTextLayout);
 
     try {
       const response = await fetch("/api/admin/poems", {
@@ -84,17 +136,33 @@ export default function AdminPoemsManager() {
         throw new Error(data?.error || "Failed to save poem.");
       }
 
-      form.reset();
-      setTextAlign("left");
-      setBold(false);
-      setItalic(false);
-      setUnderline(false);
+      resetForm();
       await loadPoems();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to save poem.");
     } finally {
       setSaving(false);
     }
+  }
+
+  function loadPoemIntoForm(poem: Poem) {
+    if (bookImagePreviewUrl) {
+      URL.revokeObjectURL(bookImagePreviewUrl);
+    }
+    setSection(poem.section);
+    setTitle(poem.title);
+    setSlug(poem.slug);
+    setText(poem.text);
+    setPurchaseUrl(poem.purchaseUrl || "");
+    setBookImageUrl(poem.bookImageUrl || DEFAULT_BOOK_IMAGE_URL);
+    setBookImagePreviewUrl(null);
+    setTextAlign(poem.textAlign || "left");
+    setBold(Boolean(poem.bold));
+    setItalic(Boolean(poem.italic));
+    setUnderline(Boolean(poem.underline));
+    setTextLayout(normalizeBookTextLayout(poem.textLayout));
+    setFileInputKey((value) => value + 1);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   async function onLogout() {
@@ -139,8 +207,20 @@ export default function AdminPoemsManager() {
     }
   }
 
+  function onBookImageChange(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (bookImagePreviewUrl) {
+      URL.revokeObjectURL(bookImagePreviewUrl);
+    }
+    if (!file) {
+      setBookImagePreviewUrl(null);
+      return;
+    }
+    setBookImagePreviewUrl(URL.createObjectURL(file));
+  }
+
   return (
-    <main style={{ maxWidth: 900, margin: "30px auto", padding: 24 }}>
+    <main style={{ maxWidth: 980, margin: "30px auto", padding: 24 }}>
       <div
         style={{
           display: "flex",
@@ -165,10 +245,11 @@ export default function AdminPoemsManager() {
         </button>
       </div>
 
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: 10 }}>
+      <form onSubmit={onSubmit} style={{ display: "grid", gap: 14 }}>
         <label style={{ display: "grid", gap: 6 }}>
           <span>Section</span>
           <select
+            name="section"
             value={section}
             onChange={(e) =>
               setSection(e.target.value as (typeof SECTION_OPTIONS)[number]["key"])
@@ -182,22 +263,32 @@ export default function AdminPoemsManager() {
             ))}
           </select>
         </label>
+
         <input
           name="title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
           placeholder="Title (optional)"
           style={{ border: "1px solid #ccc", borderRadius: 8, padding: 10 }}
         />
+
         <input
           name="slug"
+          value={slug}
+          onChange={(e) => setSlug(e.target.value)}
           placeholder="Slug (optional)"
           style={{ border: "1px solid #ccc", borderRadius: 8, padding: 10 }}
         />
+
         <textarea
           name="text"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
           placeholder="Poem text (optional)"
           rows={8}
           style={{ border: "1px solid #ccc", borderRadius: 8, padding: 10 }}
         />
+
         <div style={{ display: "grid", gap: 8 }}>
           <span>Text format</span>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -256,9 +347,9 @@ export default function AdminPoemsManager() {
                 padding: "8px 12px",
                 background: bold ? "#111" : "#fff",
                 color: bold ? "#fff" : "#111",
-              cursor: "pointer",
-              fontWeight: 700,
-            }}
+                cursor: "pointer",
+                fontWeight: 700,
+              }}
             >
               Bold
             </button>
@@ -296,6 +387,11 @@ export default function AdminPoemsManager() {
             </button>
           </div>
           <input type="hidden" name="textAlign" value={textAlign} />
+          <input
+            type="hidden"
+            name="currentBookImageUrl"
+            value={bookImageUrl}
+          />
           <input type="hidden" name="bold" value={bold ? "true" : "false"} />
           <input type="hidden" name="italic" value={italic ? "true" : "false"} />
           <input
@@ -303,33 +399,83 @@ export default function AdminPoemsManager() {
             name="underline"
             value={underline ? "true" : "false"}
           />
+          <input type="hidden" name="textLayout" value={serializedTextLayout} />
         </div>
+
+        <BookTextLayoutEditor
+          text={text}
+          textAlign={textAlign}
+          bold={bold}
+          italic={italic}
+          underline={underline}
+          bookImageUrl={bookImagePreviewUrl || bookImageUrl}
+          value={textLayout}
+          onChange={setTextLayout}
+        />
+
+        <div style={{ display: "grid", gap: 8 }}>
+          <span>Book image (optional)</span>
+          <input
+            key={`book-image-${fileInputKey}`}
+            name="bookImageFile"
+            type="file"
+            accept=".jpg,.jpeg,.png,.webp,.gif,image/*"
+            onChange={onBookImageChange}
+            style={{ border: "1px solid #ccc", borderRadius: 8, padding: 8 }}
+          />
+          <div style={{ color: "#666", fontSize: 13 }}>
+            Current image: {bookImageUrl === DEFAULT_BOOK_IMAGE_URL ? "Default book" : bookImageUrl}
+          </div>
+        </div>
+
         <input
+          key={`doc-file-${fileInputKey}`}
           name="file"
           type="file"
           accept=".doc,.docx,.pdf"
           style={{ border: "1px solid #ccc", borderRadius: 8, padding: 8 }}
         />
+
         <input
           name="purchaseUrl"
           type="url"
+          value={purchaseUrl}
+          onChange={(e) => setPurchaseUrl(e.target.value)}
           placeholder="Amazon purchase URL (optional)"
           style={{ border: "1px solid #ccc", borderRadius: 8, padding: 10 }}
         />
-        <button
-          type="submit"
-          disabled={saving}
-          style={{
-            border: "1px solid #111",
-            borderRadius: 8,
-            padding: "10px 12px",
-            background: "#111",
-            color: "#fff",
-            cursor: saving ? "default" : "pointer",
-          }}
-        >
-          {saving ? "Saving..." : "Save poem"}
-        </button>
+
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <button
+            type="submit"
+            disabled={saving}
+            style={{
+              border: "1px solid #111",
+              borderRadius: 8,
+              padding: "10px 12px",
+              background: "#111",
+              color: "#fff",
+              cursor: saving ? "default" : "pointer",
+            }}
+          >
+            {saving ? "Saving..." : "Save poem"}
+          </button>
+
+          <button
+            type="button"
+            onClick={resetForm}
+            style={{
+              border: "1px solid #111",
+              borderRadius: 8,
+              padding: "10px 12px",
+              background: "#fff",
+              color: "#111",
+              cursor: "pointer",
+            }}
+          >
+            Clear form
+          </button>
+        </div>
       </form>
 
       <section style={{ marginTop: 28 }}>
@@ -430,21 +576,41 @@ export default function AdminPoemsManager() {
                 {poem.italic ? " + Italic" : ""}
                 {poem.underline ? " + Underline" : ""}
               </div>
-              {poem.downloadUrl ? (
-                <a href={poem.downloadUrl} target="_blank" rel="noreferrer">
-                  Download file
-                </a>
-              ) : null}
-              {poem.purchaseUrl ? (
-                <a
-                  href={poem.purchaseUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{ marginLeft: 12 }}
+              <div style={{ color: "#666", fontSize: 12 }}>
+                Layout: L({normalizeBookTextLayout(poem.textLayout).left.x.toFixed(1)}
+                %, {normalizeBookTextLayout(poem.textLayout).left.y.toFixed(1)}%) R(
+                {normalizeBookTextLayout(poem.textLayout).right.x.toFixed(1)}%,{" "}
+                {normalizeBookTextLayout(poem.textLayout).right.y.toFixed(1)}%)
+              </div>
+              <div style={{ color: "#666", fontSize: 12 }}>
+                Image: {poem.bookImageUrl || DEFAULT_BOOK_IMAGE_URL}
+              </div>
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => loadPoemIntoForm(poem)}
+                  style={{
+                    border: "1px solid #111",
+                    borderRadius: 8,
+                    padding: "8px 12px",
+                    background: "#fff",
+                    color: "#111",
+                    cursor: "pointer",
+                  }}
                 >
-                  Amazon
-                </a>
-              ) : null}
+                  Load into editor
+                </button>
+                {poem.downloadUrl ? (
+                  <a href={poem.downloadUrl} target="_blank" rel="noreferrer">
+                    Download file
+                  </a>
+                ) : null}
+                {poem.purchaseUrl ? (
+                  <a href={poem.purchaseUrl} target="_blank" rel="noreferrer">
+                    Amazon
+                  </a>
+                ) : null}
+              </div>
             </li>
           ))}
         </ul>

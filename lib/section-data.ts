@@ -1,4 +1,5 @@
 import { LIBRARY_POINTS } from "@/lib/library-points";
+import type { BookTextLayout, TextAlign } from "@/lib/book-reader";
 
 export type SectionItem = {
   slug: string;
@@ -6,10 +7,12 @@ export type SectionItem = {
   text: string;
   downloadUrl?: string;
   purchaseUrl?: string;
-  textAlign?: "left" | "center" | "justify";
+  bookImageUrl?: string;
+  textAlign?: TextAlign;
   bold?: boolean;
   italic?: boolean;
   underline?: boolean;
+  textLayout?: BookTextLayout;
 };
 
 function buildItems(

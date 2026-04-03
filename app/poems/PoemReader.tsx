@@ -1,64 +1,42 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  DEFAULT_BOOK_IMAGE_URL,
+  chunkBookText,
+  getBookFontSize,
+  normalizeBookTextLayout,
+  type BookTextLayout,
+  type TextAlign,
+} from "@/lib/book-reader";
+import { useBookImageRatio } from "@/lib/use-book-image-ratio";
+import { useElementWidth } from "@/lib/use-element-width";
 import styles from "./reader.module.css";
 
-function getTokenWidth(token: string) {
-  return token.replace(/\t/g, "    ").length;
-}
+type PoemReaderProps = {
+  title?: string;
+  text: string;
+  downloadUrl?: string;
+  purchaseUrl?: string;
+  bookImageUrl?: string;
+  textAlign?: TextAlign;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  textLayout?: BookTextLayout;
+  backHref?: string;
+  downloadName?: string;
+};
 
-function chunkText(text: string, maxCharsPerLine = 34, maxLinesPerPage = 18) {
-  const source = text.replace(/\r\n/g, "\n");
-  if (!source) return [""];
-
-  const tokens = source.split(/(\n|[^\S\n]+|\S+)/).filter(Boolean);
-  const pages: string[] = [];
-  let current = "";
-  let lineLength = 0;
-  let lineCount = 1;
-
-  const pushCurrent = () => {
-    pages.push(current);
-    current = "";
-    lineLength = 0;
-    lineCount = 1;
+function getBoxStyle(box: BookTextLayout["left"]) {
+  return {
+    left: `${box.x}%`,
+    top: `${box.y}%`,
+    width: `${box.width}%`,
+    height: `${box.height}%`,
   };
-
-  for (const token of tokens) {
-    if (token === "\n") {
-      if (lineCount >= maxLinesPerPage && current) {
-        pushCurrent();
-      }
-      current += token;
-      lineCount += 1;
-      lineLength = 0;
-      continue;
-    }
-
-    const tokenWidth = getTokenWidth(token);
-    const nextLineLength = lineLength + tokenWidth;
-
-    if (lineLength > 0 && nextLineLength > maxCharsPerLine) {
-      if (lineCount >= maxLinesPerPage && current) {
-        pushCurrent();
-      } else {
-        lineCount += 1;
-        lineLength = 0;
-      }
-    }
-
-    if (lineCount > maxLinesPerPage && current) {
-      pushCurrent();
-    }
-
-    current += token;
-    lineLength += tokenWidth;
-  }
-
-  if (current || pages.length === 0) pages.push(current);
-  return pages;
 }
 
 export default function PoemReader({
@@ -66,27 +44,21 @@ export default function PoemReader({
   text,
   downloadUrl,
   purchaseUrl,
+  bookImageUrl = DEFAULT_BOOK_IMAGE_URL,
   textAlign = "left",
   bold = false,
   italic = false,
   underline = false,
+  textLayout,
   backHref = "/poems",
   downloadName = "cesoteca.docx",
-}: {
-  title?: string;
-  text: string;
-  downloadUrl?: string; // ej: "/downloads/poema-1.docx"
-  purchaseUrl?: string;
-  textAlign?: "left" | "center" | "justify";
-  bold?: boolean;
-  italic?: boolean;
-  underline?: boolean;
-  backHref?: string;
-  downloadName?: string; // nombre sugerido al descargar
-}) {
+}: PoemReaderProps) {
   const router = useRouter();
-
-  const pages = useMemo(() => chunkText(text, 34, 18), [text]);
+  const stageRef = useRef<HTMLDivElement | null>(null);
+  const layout = useMemo(() => normalizeBookTextLayout(textLayout), [textLayout]);
+  const pages = useMemo(() => chunkBookText(text, 34, 18), [text]);
+  const imageRatio = useBookImageRatio(bookImageUrl);
+  const stageWidth = useElementWidth(stageRef);
   const [pageIndex, setPageIndex] = useState(0);
 
   useEffect(() => {
@@ -141,24 +113,63 @@ export default function PoemReader({
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [backHref, canPrev, canNext, pages.length, router]);
+  }, [backHref, router]);
+
+  const stageStyle = {
+    "--book-ratio": imageRatio,
+  } as CSSProperties;
+  const textStyle = {
+    fontSize: `${getBookFontSize(stageWidth)}px`,
+  };
+  const textClassName = `${styles.text} ${
+    textAlign === "center"
+      ? styles.textCenter
+      : textAlign === "justify"
+        ? styles.textJustify
+        : styles.textLeft
+  } ${bold ? styles.textBold : ""} ${italic ? styles.textItalic : ""} ${
+    underline ? styles.textUnderline : ""
+  }`;
+  const imageHeight = Math.max(1, Math.round(1000 / imageRatio));
 
   return (
     <main className={styles.screen}>
       <div className={styles.fullBleed}>
-        <div className={styles.bookWrap}>
-          <Image
-            src="/open-book.jpeg"
-            alt="Open book"
-            fill
-            priority
-            className={styles.bookImg}
-          />
+        <div className={styles.bookViewport}>
+          <div ref={stageRef} className={styles.bookStage} style={stageStyle}>
+            <Image
+              src={bookImageUrl}
+              alt="Libro abierto"
+              width={1000}
+              height={imageHeight}
+              priority
+              className={styles.bookImage}
+            />
 
-          <div className={styles.pages}>
+            <div className={styles.textLayer}>
+              <div
+                className={styles.textBox}
+                style={getBoxStyle(layout.left)}
+                onClick={() => safeNavigate(goPrev)}
+              >
+                <div className={textClassName} style={textStyle}>
+                  {left}
+                </div>
+              </div>
+
+              <div
+                className={styles.textBox}
+                style={getBoxStyle(layout.right)}
+                onClick={() => safeNavigate(goNext)}
+              >
+                <div className={textClassName} style={textStyle}>
+                  {right}
+                </div>
+              </div>
+            </div>
+
             <div
-              className={`${styles.page} ${styles.pageLeft} ${
+              className={`${styles.navZone} ${styles.navZoneLeft} ${
                 !canPrev ? styles.disabled : ""
               }`}
               onClick={() => safeNavigate(goPrev)}
@@ -167,24 +178,10 @@ export default function PoemReader({
               aria-disabled={!canPrev}
               aria-label="Previous pages"
               onKeyDown={(e) => onPageKeyDown(e, goPrev, canPrev)}
-            >
-              <div
-                className={`${styles.text} ${
-                  textAlign === "center"
-                    ? styles.textCenter
-                    : textAlign === "justify"
-                      ? styles.textJustify
-                      : styles.textLeft
-                } ${bold ? styles.textBold : ""} ${
-                  italic ? styles.textItalic : ""
-                } ${underline ? styles.textUnderline : ""}`}
-              >
-                {left}
-              </div>
-            </div>
+            />
 
             <div
-              className={`${styles.page} ${styles.pageRight} ${
+              className={`${styles.navZone} ${styles.navZoneRight} ${
                 !canNext ? styles.disabled : ""
               }`}
               onClick={() => safeNavigate(goNext)}
@@ -193,24 +190,9 @@ export default function PoemReader({
               aria-disabled={!canNext}
               aria-label="Next pages"
               onKeyDown={(e) => onPageKeyDown(e, goNext, canNext)}
-            >
-              <div
-                className={`${styles.text} ${
-                  textAlign === "center"
-                    ? styles.textCenter
-                    : textAlign === "justify"
-                      ? styles.textJustify
-                      : styles.textLeft
-                } ${bold ? styles.textBold : ""} ${
-                  italic ? styles.textItalic : ""
-                } ${underline ? styles.textUnderline : ""}`}
-              >
-                {right}
-              </div>
-            </div>
+            />
           </div>
 
-          {/* ✅ Botón descargar */}
           {title ? <div className={styles.titleBadge}>{title}</div> : null}
 
           <div className={styles.pageIndicator} aria-live="polite">

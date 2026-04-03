@@ -1,4 +1,4 @@
-/* Cubre toda la pantalla y tapa el header del layout */
+/* Full-screen reader */
 .screen {
   position: fixed;
   inset: 0;
@@ -7,89 +7,59 @@
   overflow: hidden;
 }
 
-/* Full-bleed real (100vw) aunque el layout tenga max-width */
 .fullBleed {
-  width: 100vw;
-  height: 100svh;
-  position: relative;
-  left: 50%;
-  margin-left: -50vw;
-}
-
-/* Wrapper del libro */
-.bookWrap {
-  position: relative;
   width: 100%;
   height: 100%;
 }
 
-/* Imagen del libro */
-.bookImg {
-  object-fit: contain; /* no se deforma */
-}
-
-/* ✅ Área donde vive el texto (dentro del libro) */
-.pages {
-  position: absolute;
-
-  /* Caja de lectura ubicada como una mancha tipografica real */
-  top: 13%;
-  bottom: 11%;
-  left: 14%;
-  right: 14%;
-
+/* This wrapper defines the available area, but the bookStage is the coordinate system. */
+.bookViewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-
-  /* gutter del lomo */
-  column-gap: 7%;
+  place-items: center;
+  padding: 24px;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
-/* cada hoja */
-.page {
-  cursor: pointer;
+.bookStage {
+  position: relative;
+  width: min(100%, calc((100svh - 48px) * var(--book-ratio, 1.3987241)));
+  max-width: 100%;
+  flex: 0 0 auto;
+}
+
+.bookImage {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+}
+
+.textLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.textBox {
+  position: absolute;
+  overflow: hidden;
+  pointer-events: auto;
   user-select: text;
-
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
-
-  overflow: hidden; /* evita “texto volando” */
 }
 
-/* Margenes de libro: outer menor, inner mayor por el binding */
-.pageLeft {
-  padding-top: 7%;
-  padding-bottom: 5%;
-  padding-left: 9%;
-  padding-right: 16%;
-}
-
-.pageRight {
-  padding-top: 7%;
-  padding-bottom: 5%;
-  padding-left: 16%;
-  padding-right: 9%;
-}
-
-.disabled {
-  cursor: default;
-  opacity: 0.75;
-}
-
-/* Texto “de libro” */
 .text {
-  width: 68%;
-  min-width: 24ch;
-  max-width: 36ch;
+  width: 100%;
+  height: 100%;
   white-space: break-spaces;
   tab-size: 4;
-
   font-family: Georgia, "Times New Roman", Times, serif;
-  font-size: clamp(13.5px, 0.98vw, 16.5px);
   line-height: 1.72;
   color: #222;
-
   overflow-wrap: normal;
   word-break: normal;
   text-wrap: wrap;
@@ -122,6 +92,29 @@
   text-decoration: underline;
 }
 
+/* Nav zones stay behind text boxes, so text remains selectable. */
+.navZone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  z-index: 1;
+  cursor: pointer;
+}
+
+.navZoneLeft {
+  left: 0;
+}
+
+.navZoneRight {
+  right: 0;
+}
+
+.disabled {
+  cursor: default;
+  opacity: 0.75;
+}
+
 .actions {
   position: absolute;
   left: 16px;
@@ -137,12 +130,10 @@
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.92);
   border: 1px solid rgba(0, 0, 0, 0.12);
-
   font-family: var(--font-reading);
   font-size: 14px;
   color: #222;
   text-decoration: none;
-
   backdrop-filter: blur(6px);
 }
 
@@ -155,12 +146,10 @@
   right: 16px;
   bottom: 64px;
   z-index: 10;
-
   padding: 10px 14px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.92);
   border: 1px solid rgba(0, 0, 0, 0.12);
-
   font-family: var(--font-reading);
   font-size: 14px;
   color: #222;
@@ -168,7 +157,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-
   backdrop-filter: blur(6px);
 }
 
@@ -177,15 +165,31 @@
   right: 16px;
   bottom: 16px;
   z-index: 10;
-
   padding: 10px 14px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.92);
   border: 1px solid rgba(0, 0, 0, 0.12);
-
   font-family: var(--font-reading);
   font-size: 14px;
   color: #222;
-
   backdrop-filter: blur(6px);
+}
+
+@media (max-width: 768px) {
+  .bookViewport {
+    padding: 0;
+  }
+
+  .bookStage {
+    width: min(100vw, calc(100svh * var(--book-ratio, 1.3987241)));
+    max-width: 100%;
+    margin: 0 auto;
+  }
+
+  .actions,
+  .pageIndicator,
+  .titleBadge {
+    transform: scale(0.92);
+    transform-origin: bottom right;
+  }
 }

@@ -1,4 +1,5 @@
 import { getPublicItemBySlug, getPublicItems } from "@/lib/content-public";
+import type { BookTextLayout, TextAlign } from "@/lib/book-reader";
 
 export type PublicPoem = {
   slug: string;
@@ -6,10 +7,12 @@ export type PublicPoem = {
   text: string;
   downloadUrl?: string;
   purchaseUrl?: string;
-  textAlign?: "left" | "center" | "justify";
+  bookImageUrl?: string;
+  textAlign?: TextAlign;
   bold?: boolean;
   italic?: boolean;
   underline?: boolean;
+  textLayout?: BookTextLayout;
 };
 
 export async function getPublicPoems() {
