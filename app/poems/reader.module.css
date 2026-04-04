@@ -24,11 +24,11 @@
   justify-self: start;
   display: inline-flex;
   align-items: center;
-  padding: 4px 0;
+  padding: 8px 2px;
   border-radius: 999px;
   color: rgba(58, 40, 24, 0.86);
   text-decoration: none;
-  font-size: 0.9rem;
+  font-size: 1rem;
   transition:
     color 140ms ease,
     transform 140ms ease;
@@ -84,14 +84,14 @@
   display: inline-flex;
   justify-content: center;
   align-items: center;
-  min-height: 36px;
-  padding: 7px 0;
+  min-height: 42px;
+  padding: 8px 2px;
   border-radius: 999px;
   border: 0;
   background: transparent;
   color: rgba(46, 31, 18, 0.88);
   font-family: var(--font-reading);
-  font-size: 0.9rem;
+  font-size: 1rem;
   text-decoration: none;
   cursor: pointer;
   transition:

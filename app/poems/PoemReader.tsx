@@ -163,7 +163,6 @@ export default function PoemReader({
 
           <div className={styles.topMeta}>
             {title ? <h1 className={styles.readerTitle}>{title}</h1> : null}
-            <p className={styles.readerHint}>Flechas para avanzar. Escape para volver.</p>
           </div>
 
           {downloadUrl || purchaseUrl ? (
