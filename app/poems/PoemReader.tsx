@@ -3,7 +3,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CSSProperties, useEffect, useMemo, useRef, useState } from "react";
+import {
+  CSSProperties,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import {
   DEFAULT_BOOK_IMAGE_URL,
@@ -89,15 +96,15 @@ export default function PoemReader({
   const canPrev = pageIndex > 0;
   const canNext = pageIndex + 2 < pages.length;
 
-  function goPrev() {
+  const goPrev = useCallback(() => {
     if (!canPrev) return;
     setPageIndex((current) => Math.max(0, current - 2));
-  }
+  }, [canPrev]);
 
-  function goNext() {
+  const goNext = useCallback(() => {
     if (!canNext) return;
     setPageIndex((current) => (current + 2 < pages.length ? current + 2 : current));
-  }
+  }, [canNext, pages.length]);
 
   function safeNavigate(fn: () => void) {
     const selection = window.getSelection?.();
@@ -127,7 +134,7 @@ export default function PoemReader({
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [backHref, router, canNext, canPrev]);
+  }, [backHref, router, goNext, goPrev]);
 
   const stageStyle = {
     "--book-ratio": imageRatio,
@@ -149,18 +156,14 @@ export default function PoemReader({
   return (
     <main className={styles.screen}>
       <div className={styles.readerShell}>
-        <header className={styles.readerHeader}>
+        <div className={styles.readerTopBar}>
           <Link href={backHref} className={styles.backLink}>
-            Volver a poemas
+            Volver
           </Link>
 
-          <div className={styles.readerHeaderText}>
-            {title ? <p className={styles.readerEyebrow}>Lectura</p> : null}
+          <div className={styles.topMeta}>
             {title ? <h1 className={styles.readerTitle}>{title}</h1> : null}
-            <p className={styles.readerHint}>
-              Usa las flechas del teclado o los controles para avanzar en
-              escritorio. En móvil, lee el poema como texto continuo.
-            </p>
+            <p className={styles.readerHint}>Flechas para avanzar. Escape para volver.</p>
           </div>
 
           {downloadUrl || purchaseUrl ? (
@@ -181,16 +184,21 @@ export default function PoemReader({
                   href={purchaseUrl}
                   target="_blank"
                   rel="noreferrer"
-                  aria-label="Comprar edición externa"
+                  aria-label="Comprar edicion externa"
                 >
                   Comprar
                 </a>
               ) : null}
             </div>
-          ) : null}
-        </header>
+          ) : (
+            <div aria-hidden="true" />
+          )}
+        </div>
 
-        <section className={styles.desktopReader} aria-labelledby="desktop-reader-title">
+        <section
+          className={styles.desktopReader}
+          aria-labelledby="desktop-reader-title"
+        >
           <h2 id="desktop-reader-title" className={styles.srOnly}>
             Lector en formato libro
           </h2>
@@ -236,7 +244,7 @@ export default function PoemReader({
                 role="button"
                 tabIndex={canPrev ? 0 : -1}
                 aria-disabled={!canPrev}
-                aria-label="Páginas anteriores"
+                aria-label="Paginas anteriores"
                 onKeyDown={(event) => onPageKeyDown(event, goPrev, canPrev)}
               />
 
@@ -248,7 +256,7 @@ export default function PoemReader({
                 role="button"
                 tabIndex={canNext ? 0 : -1}
                 aria-disabled={!canNext}
-                aria-label="Páginas siguientes"
+                aria-label="Paginas siguientes"
                 onKeyDown={(event) => onPageKeyDown(event, goNext, canNext)}
               />
             </div>

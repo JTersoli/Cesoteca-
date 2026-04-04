@@ -1,6 +1,6 @@
 .screen {
   min-height: 100svh;
-  padding: 22px 16px 28px;
+  padding: 18px 16px 28px;
   background:
     radial-gradient(circle at top, rgba(157, 117, 64, 0.1), transparent 28%),
     linear-gradient(180deg, #f7f2e9 0%, #efe5d6 100%);
@@ -8,46 +8,36 @@
 }
 
 .readerShell {
-  width: min(1320px, 100%);
+  width: min(1200px, 100%);
   margin: 0 auto;
   display: grid;
-  gap: 18px;
+  gap: 12px;
 }
 
-.readerHeader {
+.readerTopBar {
   display: grid;
-  gap: 14px;
-  padding: 18px 20px;
-  border: 1px solid rgba(84, 58, 31, 0.14);
-  border-radius: 24px;
-  background:
-    linear-gradient(180deg, rgba(255, 252, 247, 0.95), rgba(249, 242, 232, 0.88));
-  box-shadow:
-    0 18px 34px rgba(43, 31, 20, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 12px;
 }
 
 .backLink {
   justify-self: start;
   display: inline-flex;
   align-items: center;
-  padding: 8px 12px;
+  padding: 4px 0;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(84, 58, 31, 0.14);
-  color: #3a2818;
+  color: rgba(58, 40, 24, 0.86);
   text-decoration: none;
-  font-size: 0.92rem;
+  font-size: 0.9rem;
   transition:
-    background-color 140ms ease,
-    border-color 140ms ease,
+    color 140ms ease,
     transform 140ms ease;
 }
 
 .backLink:hover {
   transform: translateY(-1px);
-  background: rgba(255, 255, 255, 0.92);
-  border-color: rgba(84, 58, 31, 0.26);
+  color: #2c1e12;
 }
 
 .backLink:focus-visible,
@@ -57,41 +47,37 @@
   outline-offset: 3px;
 }
 
-.readerHeaderText {
+.topMeta {
   display: grid;
-  gap: 10px;
-}
-
-.readerEyebrow {
-  margin: 0;
-  font-size: 0.74rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: rgba(106, 71, 35, 0.78);
+  gap: 6px;
+  justify-items: center;
+  text-align: center;
 }
 
 .readerTitle {
   margin: 0;
-  max-width: 22ch;
-  font-size: clamp(1.55rem, 2.8vw, 2.5rem);
+  max-width: 24ch;
+  font-size: clamp(1.1rem, 2vw, 1.45rem);
   line-height: 1.02;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
   text-wrap: balance;
+  font-weight: 500;
 }
 
 .readerHint {
   margin: 0;
-  max-width: 66ch;
-  font-size: 0.98rem;
-  line-height: 1.6;
-  color: rgba(56, 39, 22, 0.74);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(106, 71, 35, 0.72);
 }
 
 .actions {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .actionBtn,
@@ -99,33 +85,30 @@
   display: inline-flex;
   justify-content: center;
   align-items: center;
-  min-height: 42px;
-  padding: 10px 16px;
+  min-height: 36px;
+  padding: 7px 0;
   border-radius: 999px;
-  border: 1px solid rgba(84, 58, 31, 0.15);
-  background: rgba(255, 255, 255, 0.84);
-  color: #2e1f12;
+  border: 0;
+  background: transparent;
+  color: rgba(46, 31, 18, 0.88);
   font-family: var(--font-reading);
-  font-size: 0.94rem;
+  font-size: 0.9rem;
   text-decoration: none;
   cursor: pointer;
   transition:
     transform 140ms ease,
-    background-color 140ms ease,
-    border-color 140ms ease,
-    box-shadow 140ms ease;
+    color 140ms ease,
+    opacity 140ms ease;
 }
 
 .actionBtn:hover,
 .navButton:hover:not(:disabled) {
   transform: translateY(-1px);
-  background: rgba(255, 255, 255, 0.96);
-  border-color: rgba(84, 58, 31, 0.28);
-  box-shadow: 0 10px 18px rgba(43, 31, 20, 0.06);
+  color: #2c1e12;
 }
 
 .navButton:disabled {
-  opacity: 0.48;
+  opacity: 0.38;
   cursor: not-allowed;
 }
 
@@ -135,15 +118,14 @@
 
 .bookViewport {
   display: grid;
-  gap: 18px;
+  gap: 12px;
   justify-items: center;
 }
 
 .bookStage {
   position: relative;
-  width: min(100%, calc((100svh - 260px) * var(--book-ratio, 1.3987241)));
+  width: min(100%, calc((100svh - 170px) * var(--book-ratio, 1.3987241)));
   max-width: 100%;
-  border-radius: 28px;
   overflow: hidden;
   box-shadow:
     0 26px 54px rgba(43, 31, 20, 0.12),
@@ -238,7 +220,7 @@
 }
 
 .desktopFooter {
-  width: min(760px, 100%);
+  width: min(620px, 100%);
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   gap: 14px;
@@ -251,16 +233,17 @@
 
 .pageIndicator {
   justify-self: center;
-  min-width: 120px;
-  padding: 10px 16px;
+  min-width: 96px;
+  padding: 4px 10px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.76);
-  border: 1px solid rgba(84, 58, 31, 0.12);
+  background: transparent;
+  border: 0;
   text-align: center;
   font-family: var(--font-reading);
-  font-size: 0.92rem;
-  color: rgba(46, 31, 18, 0.88);
-  box-shadow: 0 10px 18px rgba(43, 31, 20, 0.05);
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(46, 31, 18, 0.72);
 }
 
 .mobileReader {
@@ -268,22 +251,20 @@
 }
 
 .mobileTitle {
-  margin: 0 0 12px;
-  font-size: clamp(1.35rem, 6vw, 1.85rem);
+  margin: 0 0 16px;
+  font-size: clamp(1.2rem, 6vw, 1.6rem);
   line-height: 1.15;
   letter-spacing: -0.025em;
   color: #2a1f18;
+  text-align: center;
 }
 
 .mobilePaper {
-  padding: 22px 18px;
-  border: 1px solid rgba(84, 58, 31, 0.12);
-  border-radius: 24px;
-  background:
-    linear-gradient(180deg, rgba(255, 252, 247, 0.96), rgba(250, 243, 233, 0.92));
-  box-shadow:
-    0 18px 34px rgba(43, 31, 20, 0.07),
-    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .mobileText {
@@ -304,34 +285,18 @@
   border: 0;
 }
 
-@media (min-width: 900px) {
-  .readerHeader {
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    align-items: start;
-    gap: 18px;
-  }
-
-  .actions {
-    justify-content: flex-end;
-  }
-}
-
 @media (max-width: 899px) {
   .screen {
     padding: 14px 12px 24px;
   }
 
-  .readerShell {
-    gap: 14px;
-  }
-
-  .readerHeader {
-    padding: 16px;
-    border-radius: 20px;
+  .readerTopBar {
+    grid-template-columns: 1fr;
+    justify-items: center;
   }
 
   .readerHint {
-    font-size: 0.94rem;
+    font-size: 0.76rem;
   }
 
   .desktopReader {
@@ -340,5 +305,9 @@
 
   .mobileReader {
     display: block;
+  }
+
+  .actions {
+    justify-content: center;
   }
 }

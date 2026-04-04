@@ -2,6 +2,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { Caveat, EB_Garamond, Inter } from "next/font/google";
 import CursorBubble from "./components/CursorBubble";
+import SiteFrame from "./components/SiteFrame";
 
 const fontHand = Caveat({
   subsets: ["latin"],
@@ -63,16 +64,7 @@ export default function RootLayout({
     >
       <body className="bg-white text-neutral-950">
         <CursorBubble />
-
-        <div className="mx-auto max-w-6xl px-6 py-6">
-          <header className="mb-2">
-            <h1 className="text-center font-hand font-bold text-[64px] sm:text-[76px] md:text-[96px] lg:text-[112px] leading-none">
-              Cesoteca
-            </h1>
-          </header>
-
-          {children}
-        </div>
+        <SiteFrame>{children}</SiteFrame>
       </body>
     </html>
   );
