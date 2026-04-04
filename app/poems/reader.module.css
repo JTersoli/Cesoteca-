@@ -1,24 +1,23 @@
 .screen {
   min-height: 100svh;
-  padding: 18px 16px 28px;
-  background:
-    radial-gradient(circle at top, rgba(157, 117, 64, 0.1), transparent 28%),
-    linear-gradient(180deg, #f7f2e9 0%, #efe5d6 100%);
+  padding: 0;
+  background: #fff;
   color: #241911;
 }
 
 .readerShell {
-  width: min(1200px, 100%);
+  width: 100%;
   margin: 0 auto;
   display: grid;
-  gap: 12px;
+  gap: 2px;
 }
 
 .readerTopBar {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: start;
-  gap: 12px;
+  gap: 10px;
+  padding: 0 8px;
 }
 
 .backLink {
@@ -66,7 +65,7 @@
 
 .readerHint {
   margin: 0;
-  font-size: 0.82rem;
+  font-size: 0.74rem;
   line-height: 1.45;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -118,18 +117,16 @@
 
 .bookViewport {
   display: grid;
-  gap: 12px;
+  gap: 2px;
   justify-items: center;
 }
 
 .bookStage {
   position: relative;
-  width: min(100%, calc((100svh - 170px) * var(--book-ratio, 1.3987241)));
+  width: min(100vw, calc((100svh - 72px) * var(--book-ratio, 1.3987241)));
   max-width: 100%;
   overflow: hidden;
-  box-shadow:
-    0 26px 54px rgba(43, 31, 20, 0.12),
-    0 8px 18px rgba(43, 31, 20, 0.06);
+  box-shadow: none;
 }
 
 .bookImage {
@@ -220,10 +217,10 @@
 }
 
 .desktopFooter {
-  width: min(620px, 100%);
+  width: min(880px, 100%);
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  gap: 14px;
+  gap: 6px;
   align-items: center;
 }
 
@@ -234,13 +231,13 @@
 .pageIndicator {
   justify-self: center;
   min-width: 96px;
-  padding: 4px 10px;
+  padding: 2px 8px;
   border-radius: 999px;
   background: transparent;
   border: 0;
   text-align: center;
   font-family: var(--font-reading);
-  font-size: 0.82rem;
+  font-size: 0.76rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgba(46, 31, 18, 0.72);
@@ -287,16 +284,18 @@
 
 @media (max-width: 899px) {
   .screen {
-    padding: 14px 12px 24px;
+    padding: 0 0 14px;
   }
 
   .readerTopBar {
     grid-template-columns: 1fr;
     justify-items: center;
+    gap: 4px;
+    padding: 0 10px;
   }
 
   .readerHint {
-    font-size: 0.76rem;
+    font-size: 0.7rem;
   }
 
   .desktopReader {
