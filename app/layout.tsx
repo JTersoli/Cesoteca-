@@ -21,8 +21,36 @@ const fontUI = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Cesoteca",
-  description: "Archivo para leer: poemas, escritos, comentarios y textos largos.",
+  metadataBase: new URL("https://cesoteca.vercel.app"),
+  title: {
+    default: "Cesoteca",
+    template: "%s | Cesoteca",
+  },
+  description:
+    "Archivo personal de lectura y escritura con poemas, ensayos, comentarios de texto y publicaciones.",
+  applicationName: "Cesoteca",
+  keywords: [
+    "poesía",
+    "poemas",
+    "lectura",
+    "ensayos",
+    "archivo literario",
+    "frontend portfolio",
+  ],
+  openGraph: {
+    title: "Cesoteca",
+    description:
+      "Archivo personal de lectura y escritura con poemas, ensayos, comentarios de texto y publicaciones.",
+    siteName: "Cesoteca",
+    locale: "es_AR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Cesoteca",
+    description:
+      "Archivo personal de lectura y escritura con poemas, ensayos, comentarios de texto y publicaciones.",
+  },
 };
 
 export default function RootLayout({
@@ -49,4 +77,3 @@ export default function RootLayout({
     </html>
   );
 }
-

@@ -22,10 +22,10 @@ export default function HomePage() {
             <div className={styles.imageFrame}>
               <Image
                 src="/home-hero.jpeg"
-                alt="Ilustración"
+                alt="Ilustración editorial de Cesoteca"
                 fill
                 priority
-                style={{ objectFit: "contain" }}
+                className={styles.heroImage}
               />
             </div>
           </section>
@@ -40,7 +40,8 @@ export default function HomePage() {
             </nav>
 
             <p className={styles.note}>
-              Publicaciones: acceso a links por copyright.
+              Las publicaciones externas se enlazan cuando los derechos de
+              circulación lo permiten.
             </p>
           </aside>
         </div>
@@ -48,4 +49,3 @@ export default function HomePage() {
     </main>
   );
 }
-

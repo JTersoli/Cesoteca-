@@ -13,7 +13,7 @@ export default function SectionLibraryPage({
   const visible = items.slice(0, maxItems);
 
   function getDisplayTitle(item: SectionItem) {
-    return item.title.trim() || item.slug.trim() || "Sin titulo";
+    return item.title.trim() || item.slug.trim() || "Sin título";
   }
 
   return (

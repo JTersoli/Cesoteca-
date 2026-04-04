@@ -9,12 +9,12 @@ export const SECTION_OPTIONS = [
   },
   {
     key: "publications-academic",
-    label: "Publicaciones academicas",
+    label: "Publicaciones académicas",
     basePath: "/publications/academic",
   },
   {
     key: "publications-non-academic",
-    label: "Publicaciones no academicas",
+    label: "Publicaciones no académicas",
     basePath: "/publications/non-academic",
   },
 ] as const;

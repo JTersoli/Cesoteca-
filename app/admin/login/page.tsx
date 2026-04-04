@@ -35,17 +35,22 @@ export default function AdminLoginPage() {
 
   return (
     <main style={{ maxWidth: 420, margin: "80px auto", padding: 24 }}>
-      <h1 style={{ fontSize: 28, marginBottom: 12 }}>Admin Login</h1>
+      <h1 style={{ fontSize: 28, marginBottom: 12 }}>Acceso de administración</h1>
       <p style={{ marginBottom: 20, color: "#555" }}>
-        Enter the admin password to manage poems.
+        Ingresá la contraseña para administrar el archivo.
       </p>
 
       <form onSubmit={onSubmit} style={{ display: "grid", gap: 12 }}>
+        <label htmlFor="admin-password" style={{ fontSize: 14, fontWeight: 600 }}>
+          Contraseña
+        </label>
         <input
+          id="admin-password"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
+          placeholder="Ingresá tu contraseña"
+          autoComplete="current-password"
           required
           style={{
             border: "1px solid #ccc",
@@ -65,7 +70,7 @@ export default function AdminLoginPage() {
             cursor: loading ? "default" : "pointer",
           }}
         >
-          {loading ? "Signing in..." : "Sign in"}
+          {loading ? "Ingresando..." : "Entrar"}
         </button>
       </form>
 

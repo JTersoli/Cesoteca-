@@ -99,6 +99,34 @@ function getTokenWidth(token: string) {
   return token.replace(/\t/g, "    ").length;
 }
 
+function wrapLine(line: string, maxCharsPerLine: number) {
+  if (!line.trim()) return [""];
+
+  const tokens = line.trim().split(/\s+/);
+  const wrapped: string[] = [];
+  let current = "";
+
+  for (const token of tokens) {
+    const tokenWidth = getTokenWidth(token);
+    const currentWidth = getTokenWidth(current);
+    const nextWidth = current ? currentWidth + 1 + tokenWidth : tokenWidth;
+
+    if (current && nextWidth > maxCharsPerLine) {
+      wrapped.push(current);
+      current = token;
+      continue;
+    }
+
+    current = current ? `${current} ${token}` : token;
+  }
+
+  if (current) {
+    wrapped.push(current);
+  }
+
+  return wrapped;
+}
+
 export function chunkBookText(
   text: string,
   maxCharsPerLine = 34,
@@ -107,58 +135,56 @@ export function chunkBookText(
   const source = text.replace(/\r\n/g, "\n");
   if (!source) return [""];
 
-  const tokens = source.split(/(\n|[^\S\n]+|\S+)/).filter(Boolean);
   const pages: string[] = [];
-  let current = "";
-  let lineLength = 0;
-  let lineCount = 1;
+  let currentPageLines: string[] = [];
 
-  const pushCurrent = () => {
-    const cleaned = current.replace(/[^\S\n]+$/g, "");
-    pages.push(cleaned);
-    current = "";
-    lineLength = 0;
-    lineCount = 1;
+  const pushCurrentPage = () => {
+    pages.push(currentPageLines.join("\n").replace(/[^\S\n]+$/g, ""));
+    currentPageLines = [];
   };
 
-  for (const token of tokens) {
-    if (token === "\n") {
-      if (lineCount >= maxLinesPerPage && current) {
-        pushCurrent();
+  const appendLines = (lines: string[]) => {
+    for (const line of lines) {
+      if (currentPageLines.length >= maxLinesPerPage) {
+        pushCurrentPage();
       }
-      if (!current) {
-        continue;
+      currentPageLines.push(line);
+    }
+  };
+
+  const stanzaBlocks = source.split(/\n{2,}/);
+
+  stanzaBlocks.forEach((stanza, stanzaIndex) => {
+    const stanzaLines = stanza
+      .split("\n")
+      .flatMap((line) => wrapLine(line, maxCharsPerLine));
+
+    const separatorLineCount = stanzaIndex > 0 ? 1 : 0;
+    const stanzaFitsPage =
+      stanzaLines.length + separatorLineCount <= maxLinesPerPage;
+
+    if (
+      stanzaFitsPage &&
+      currentPageLines.length > 0 &&
+      currentPageLines.length + separatorLineCount + stanzaLines.length >
+        maxLinesPerPage
+    ) {
+      pushCurrentPage();
+    }
+
+    if (separatorLineCount) {
+      if (currentPageLines.length >= maxLinesPerPage) {
+        pushCurrentPage();
       }
-      current += token;
-      lineCount += 1;
-      lineLength = 0;
-      continue;
+      currentPageLines.push("");
     }
 
-    if (!current && !token.trim()) {
-      continue;
-    }
+    appendLines(stanzaLines);
+  });
 
-    const tokenWidth = getTokenWidth(token);
-    const nextLineLength = lineLength + tokenWidth;
-
-    if (lineLength > 0 && nextLineLength > maxCharsPerLine) {
-      if (lineCount >= maxLinesPerPage && current) {
-        pushCurrent();
-      } else {
-        lineCount += 1;
-        lineLength = 0;
-      }
-    }
-
-    if (lineCount > maxLinesPerPage && current) {
-      pushCurrent();
-    }
-
-    current += token;
-    lineLength += tokenWidth;
+  if (currentPageLines.length > 0 || pages.length === 0) {
+    pages.push(currentPageLines.join("\n").replace(/[^\S\n]+$/g, ""));
   }
 
-  if (current || pages.length === 0) pages.push(current);
   return pages;
 }

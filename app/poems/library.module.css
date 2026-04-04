@@ -1,73 +1,325 @@
 .page {
-  padding: 24px;
+  padding: 30px clamp(16px, 4vw, 44px) 56px;
+  background:
+    radial-gradient(circle at top left, rgba(173, 124, 67, 0.08), transparent 34%),
+    linear-gradient(180deg, rgba(249, 245, 238, 0.92), rgba(244, 238, 229, 0.78));
+}
+
+.layout {
+  width: min(1200px, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: 24px;
+  align-items: start;
+}
+
+.libraryPanel,
+.listPanel {
+  min-width: 0;
+  border-radius: 26px;
+  backdrop-filter: blur(10px);
+}
+
+.libraryPanel {
+  padding: clamp(20px, 2vw, 28px);
+  background:
+    linear-gradient(180deg, rgba(255, 252, 247, 0.97), rgba(248, 241, 231, 0.9));
+  border: 1px solid rgba(82, 57, 28, 0.12);
+  box-shadow:
+    0 22px 46px rgba(43, 31, 20, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.58);
+}
+
+.listPanel {
+  display: grid;
+  align-content: start;
+  padding: clamp(20px, 2.3vw, 28px);
+  background:
+    linear-gradient(180deg, rgba(255, 253, 249, 0.94), rgba(246, 239, 228, 0.88));
+  border: 1px solid rgba(82, 57, 28, 0.11);
+  box-shadow:
+    0 20px 40px rgba(43, 31, 20, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.52);
+}
+
+.panelHeader {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(106, 71, 35, 0.8);
 }
 
 .title {
-  margin: 0 0 16px 0;
+  margin: 0;
+  font-size: clamp(1.9rem, 2.7vw, 2.9rem);
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+  color: #2b1f14;
+  text-wrap: balance;
 }
 
-.shelf {
+.description {
+  margin: 0;
+  max-width: 52ch;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: rgba(52, 37, 22, 0.78);
+}
+
+.libraryFigure {
+  display: grid;
+  gap: 16px;
+}
+
+.libraryFrame {
   position: relative;
-  width: min(520px, 92vw);
-  margin: 0 auto;
-
-  /* ✅ ratio real de tu imagen: 768x1280 */
-  aspect-ratio: 768 / 1280; /* = 3 / 5 */
-
+  width: 100%;
+  aspect-ratio: 768 / 1053;
+  border-radius: 22px;
   overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(247, 241, 231, 1), rgba(241, 232, 219, 1));
+  box-shadow:
+    inset 0 0 0 1px rgba(43, 31, 20, 0.08),
+    0 14px 28px rgba(43, 31, 20, 0.06);
 }
 
-.image {
-  object-fit: contain;
-}
-
-
-.hotspot {
+.librarySvg {
   position: absolute;
-  display: block;
-  border-radius: 10px;
-  /* invisible por defecto */
-  background: transparent;
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
 
-.hotspot:hover {
-  outline: 2px solid rgba(0, 0, 0, 0.25);
-  background: rgba(0, 0, 0, 0.05);
+.libraryNotes {
+  display: grid;
+  gap: 10px;
 }
 
-.hint {
-  margin-top: 12px;
-  font-size: 14px;
-  opacity: 0.7;
+.libraryStat {
+  margin: 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(106, 71, 35, 0.76);
 }
 
+.libraryDivider {
+  height: 1px;
+  width: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(112, 80, 46, 0.08),
+    rgba(112, 80, 46, 0.34),
+    rgba(112, 80, 46, 0.08)
+  );
+}
+
+.libraryCaption {
+  margin: 0;
+  max-width: 58ch;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: rgba(56, 39, 22, 0.72);
+}
+
+.listHeader {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.listTitle {
+  margin: 0;
+  font-size: clamp(1.22rem, 1.45vw, 1.42rem);
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  color: #2b1f14;
+}
+
+.listDescription {
+  margin: 0;
+  max-width: 33ch;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: rgba(56, 39, 22, 0.71);
+}
+
+.listSummary {
+  margin: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(106, 71, 35, 0.72);
+}
+
+.poemList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.poemListItem {
+  margin: 0;
+}
+
+.poemListLink {
+  display: grid;
+  gap: 7px;
+  width: 100%;
+  padding: 15px 17px;
+  border-radius: 20px;
+  text-decoration: none;
+  background: rgba(250, 246, 239, 0.8);
+  border: 1px solid rgba(106, 71, 35, 0.12);
+  color: inherit;
+  transition:
+    transform 150ms ease,
+    background-color 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.poemListLink:hover {
+  transform: translateY(-1px);
+  background: rgba(242, 234, 221, 0.98);
+  border-color: rgba(106, 71, 35, 0.28);
+  box-shadow: 0 8px 16px rgba(43, 31, 20, 0.07);
+}
+
+.poemListLink:active {
+  transform: translateY(0);
+  background: rgba(234, 223, 205, 0.98);
+}
+
+.poemListLink:focus-visible {
+  outline: 3px solid rgba(160, 106, 28, 0.58);
+  outline-offset: 3px;
+  background: rgba(242, 234, 221, 0.98);
+  border-color: rgba(160, 106, 28, 0.56);
+  box-shadow: 0 0 0 4px rgba(160, 106, 28, 0.16);
+}
+
+.poemTitle {
+  font-size: 1.02rem;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: -0.012em;
+  color: #2b1f14;
+  text-wrap: balance;
+}
+
+.poemMeta {
+  font-size: 0.76rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(106, 71, 35, 0.74);
+}
 
 .bookLink {
   cursor: pointer;
 }
 
 .bookHotspot {
-  /* reposo: invisible */
-  fill: rgba(180, 150, 255, 0);
-  stroke: rgba(180, 150, 255, 0);
+  fill: rgba(160, 106, 28, 0);
+  stroke: rgba(160, 106, 28, 0);
   stroke-width: 2;
   transition: fill 140ms ease, stroke 140ms ease;
 }
 
-/* hover (desktop) */
 .bookLink:hover .bookHotspot {
-  fill: rgba(180, 150, 255, 0.14);   /* lavanda clarito */
-  stroke: rgba(180, 150, 255, 0.35);
+  fill: rgba(160, 106, 28, 0.14);
+  stroke: rgba(160, 106, 28, 0.32);
 }
 
-/* tap (mobile) */
 .bookLink:active .bookHotspot {
-  fill: rgba(180, 150, 255, 0.22);
-  stroke: rgba(180, 150, 255, 0.45);
+  fill: rgba(160, 106, 28, 0.2);
+  stroke: rgba(160, 106, 28, 0.4);
 }
 
-/* focus teclado */
 .bookLink:focus-visible .bookHotspot {
-  fill: rgba(180, 150, 255, 0.18);
-  stroke: rgba(180, 150, 255, 0.55);
+  fill: rgba(160, 106, 28, 0.18);
+  stroke: rgba(160, 106, 28, 0.52);
+}
+
+@media (min-width: 900px) {
+  .layout {
+    grid-template-columns: minmax(0, 1.5fr) minmax(320px, 0.82fr);
+    gap: 32px;
+  }
+
+  .listPanel {
+    position: sticky;
+    top: 28px;
+    max-height: calc(100vh - 56px);
+    overflow: auto;
+    scrollbar-gutter: stable;
+    overscroll-behavior: contain;
+  }
+}
+
+@media (max-width: 899px) {
+  .page {
+    padding: 18px 14px 30px;
+  }
+
+  .layout {
+    gap: 14px;
+  }
+
+  .libraryPanel,
+  .listPanel {
+    border-radius: 20px;
+  }
+
+  .poemListLink {
+    padding: 15px 14px;
+  }
+
+  .description,
+  .listDescription {
+    max-width: none;
+  }
+
+  .libraryCaption {
+    max-width: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .libraryPanel,
+  .listPanel {
+    border-radius: 18px;
+  }
+
+  .libraryPanel {
+    padding: 16px;
+  }
+
+  .listPanel {
+    padding: 18px 16px;
+  }
+
+  .title {
+    font-size: clamp(1.7rem, 8vw, 2.2rem);
+  }
+
+  .listTitle {
+    font-size: 1.16rem;
+  }
+
+  .poemListLink {
+    padding: 14px 14px;
+    border-radius: 18px;
+  }
 }

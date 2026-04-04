@@ -4,11 +4,6 @@
 }
 
 .container {
-  padding-top: 0px;
-}
-
-
-.container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0;
@@ -44,25 +39,25 @@
 .imageFrame {
   width: 100%;
   max-width: 520px;
-  height: 640px;
+  aspect-ratio: 13 / 16;
   position: relative;
 }
 
-/* Subimos los links (antes estaban muy abajo) */
-.nav {
-  padding-top: 40px;
+.heroImage {
+  object-fit: contain;
 }
 
-/* Links parejos con el título: Caveat */
+.nav {
+  padding-top: 24px;
+}
+
 .link {
   display: block;
   width: fit-content;
   margin-bottom: 16px;
-
   font-family: var(--font-hand);
   font-size: 30px;
   line-height: 1.05;
-
   color: #111;
   text-decoration: none;
 }
@@ -72,9 +67,30 @@
   text-underline-offset: 8px;
 }
 
+.link:focus-visible {
+  outline: 3px solid rgba(160, 106, 28, 0.45);
+  outline-offset: 4px;
+  border-radius: 6px;
+}
+
 .note {
   margin-top: 26px;
   font-family: var(--font-ui);
   font-size: 14px;
   color: #666;
+}
+
+@media (max-width: 767px) {
+  .grid {
+    gap: 24px;
+  }
+
+  .nav {
+    padding-top: 0;
+  }
+
+  .link {
+    font-size: 26px;
+    margin-bottom: 14px;
+  }
 }

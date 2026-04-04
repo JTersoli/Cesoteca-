@@ -1,8 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { CSSProperties, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { CSSProperties, useEffect, useMemo, useRef, useState } from "react";
+
 import {
   DEFAULT_BOOK_IMAGE_URL,
   chunkBookText,
@@ -13,6 +15,7 @@ import {
 } from "@/lib/book-reader";
 import { useBookImageRatio } from "@/lib/use-book-image-ratio";
 import { useElementWidth } from "@/lib/use-element-width";
+
 import styles from "./reader.module.css";
 
 type PoemReaderProps = {
@@ -37,6 +40,16 @@ function getBoxStyle(box: BookTextLayout["left"]) {
     width: `${box.width}%`,
     height: `${box.height}%`,
   };
+}
+
+function isInteractiveTarget(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) return false;
+
+  return Boolean(
+    target.closest(
+      'a, button, input, textarea, select, summary, [role="button"], [contenteditable="true"]'
+    )
+  );
 }
 
 export default function PoemReader({
@@ -78,42 +91,43 @@ export default function PoemReader({
 
   function goPrev() {
     if (!canPrev) return;
-    setPageIndex((p) => Math.max(0, p - 2));
+    setPageIndex((current) => Math.max(0, current - 2));
   }
 
   function goNext() {
     if (!canNext) return;
-    setPageIndex((p) => (p + 2 < pages.length ? p + 2 : p));
+    setPageIndex((current) => (current + 2 < pages.length ? current + 2 : current));
   }
 
   function safeNavigate(fn: () => void) {
-    const sel = window.getSelection?.();
-    if (sel && sel.toString().trim().length > 0) return;
+    const selection = window.getSelection?.();
+    if (selection && selection.toString().trim().length > 0) return;
     fn();
   }
 
   function onPageKeyDown(
-    e: React.KeyboardEvent<HTMLDivElement>,
+    event: React.KeyboardEvent<HTMLDivElement>,
     fn: () => void,
     enabled: boolean
   ) {
     if (!enabled) return;
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
       safeNavigate(fn);
     }
   }
 
   useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "ArrowLeft") goPrev();
-      if (e.key === "ArrowRight") goNext();
-      if (e.key === "Escape") router.push(backHref);
+    function onKeyDown(event: KeyboardEvent) {
+      if (isInteractiveTarget(event.target)) return;
+      if (event.key === "ArrowLeft") goPrev();
+      if (event.key === "ArrowRight") goNext();
+      if (event.key === "Escape") router.push(backHref);
     }
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [backHref, router]);
+  }, [backHref, router, canNext, canPrev]);
 
   const stageStyle = {
     "--book-ratio": imageRatio,
@@ -134,69 +148,19 @@ export default function PoemReader({
 
   return (
     <main className={styles.screen}>
-      <div className={styles.fullBleed}>
-        <div className={styles.bookViewport}>
-          <div ref={stageRef} className={styles.bookStage} style={stageStyle}>
-            <Image
-              src={bookImageUrl}
-              alt="Libro abierto"
-              width={1000}
-              height={imageHeight}
-              priority
-              className={styles.bookImage}
-            />
+      <div className={styles.readerShell}>
+        <header className={styles.readerHeader}>
+          <Link href={backHref} className={styles.backLink}>
+            Volver a poemas
+          </Link>
 
-            <div className={styles.textLayer}>
-              <div
-                className={styles.textBox}
-                style={getBoxStyle(layout.left)}
-                onClick={() => safeNavigate(goPrev)}
-              >
-                <div className={textClassName} style={textStyle}>
-                  {left}
-                </div>
-              </div>
-
-              <div
-                className={styles.textBox}
-                style={getBoxStyle(layout.right)}
-                onClick={() => safeNavigate(goNext)}
-              >
-                <div className={textClassName} style={textStyle}>
-                  {right}
-                </div>
-              </div>
-            </div>
-
-            <div
-              className={`${styles.navZone} ${styles.navZoneLeft} ${
-                !canPrev ? styles.disabled : ""
-              }`}
-              onClick={() => safeNavigate(goPrev)}
-              role="button"
-              tabIndex={canPrev ? 0 : -1}
-              aria-disabled={!canPrev}
-              aria-label="Previous pages"
-              onKeyDown={(e) => onPageKeyDown(e, goPrev, canPrev)}
-            />
-
-            <div
-              className={`${styles.navZone} ${styles.navZoneRight} ${
-                !canNext ? styles.disabled : ""
-              }`}
-              onClick={() => safeNavigate(goNext)}
-              role="button"
-              tabIndex={canNext ? 0 : -1}
-              aria-disabled={!canNext}
-              aria-label="Next pages"
-              onKeyDown={(e) => onPageKeyDown(e, goNext, canNext)}
-            />
-          </div>
-
-          {title ? <div className={styles.titleBadge}>{title}</div> : null}
-
-          <div className={styles.pageIndicator} aria-live="polite">
-            {spreadLabel}
+          <div className={styles.readerHeaderText}>
+            {title ? <p className={styles.readerEyebrow}>Lectura</p> : null}
+            {title ? <h1 className={styles.readerTitle}>{title}</h1> : null}
+            <p className={styles.readerHint}>
+              Usa las flechas del teclado o los controles para avanzar en
+              escritorio. En móvil, lee el poema como texto continuo.
+            </p>
           </div>
 
           {downloadUrl || purchaseUrl ? (
@@ -206,10 +170,9 @@ export default function PoemReader({
                   className={styles.actionBtn}
                   href={downloadUrl}
                   download={downloadName}
-                  onClick={(e) => e.stopPropagation()}
-                  aria-label="Download file"
+                  aria-label="Descargar archivo"
                 >
-                  Download
+                  Descargar
                 </a>
               ) : null}
               {purchaseUrl ? (
@@ -218,15 +181,118 @@ export default function PoemReader({
                   href={purchaseUrl}
                   target="_blank"
                   rel="noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  aria-label="Buy on Amazon"
+                  aria-label="Comprar edición externa"
                 >
-                  Buy on Amazon
+                  Comprar
                 </a>
               ) : null}
             </div>
           ) : null}
-        </div>
+        </header>
+
+        <section className={styles.desktopReader} aria-labelledby="desktop-reader-title">
+          <h2 id="desktop-reader-title" className={styles.srOnly}>
+            Lector en formato libro
+          </h2>
+
+          <div className={styles.bookViewport}>
+            <div ref={stageRef} className={styles.bookStage} style={stageStyle}>
+              <Image
+                src={bookImageUrl}
+                alt="Libro abierto"
+                width={1000}
+                height={imageHeight}
+                priority
+                className={styles.bookImage}
+              />
+
+              <div className={styles.textLayer}>
+                <div
+                  className={styles.textBox}
+                  style={getBoxStyle(layout.left)}
+                  onClick={() => safeNavigate(goPrev)}
+                >
+                  <div className={textClassName} style={textStyle}>
+                    {left}
+                  </div>
+                </div>
+
+                <div
+                  className={styles.textBox}
+                  style={getBoxStyle(layout.right)}
+                  onClick={() => safeNavigate(goNext)}
+                >
+                  <div className={textClassName} style={textStyle}>
+                    {right}
+                  </div>
+                </div>
+              </div>
+
+              <div
+                className={`${styles.navZone} ${styles.navZoneLeft} ${
+                  !canPrev ? styles.disabled : ""
+                }`}
+                onClick={() => safeNavigate(goPrev)}
+                role="button"
+                tabIndex={canPrev ? 0 : -1}
+                aria-disabled={!canPrev}
+                aria-label="Páginas anteriores"
+                onKeyDown={(event) => onPageKeyDown(event, goPrev, canPrev)}
+              />
+
+              <div
+                className={`${styles.navZone} ${styles.navZoneRight} ${
+                  !canNext ? styles.disabled : ""
+                }`}
+                onClick={() => safeNavigate(goNext)}
+                role="button"
+                tabIndex={canNext ? 0 : -1}
+                aria-disabled={!canNext}
+                aria-label="Páginas siguientes"
+                onKeyDown={(event) => onPageKeyDown(event, goNext, canNext)}
+              />
+            </div>
+
+            <div className={styles.desktopFooter}>
+              <button
+                type="button"
+                className={styles.navButton}
+                onClick={goPrev}
+                disabled={!canPrev}
+              >
+                Anterior
+              </button>
+
+              <div className={styles.pageIndicator} aria-live="polite">
+                {spreadLabel}
+              </div>
+
+              <button
+                type="button"
+                className={styles.navButton}
+                onClick={goNext}
+                disabled={!canNext}
+              >
+                Siguiente
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <article className={styles.mobileReader} aria-labelledby="mobile-reader-title">
+          {title ? (
+            <h2 id="mobile-reader-title" className={styles.mobileTitle}>
+              {title}
+            </h2>
+          ) : (
+            <h2 id="mobile-reader-title" className={styles.srOnly}>
+              Lectura del poema
+            </h2>
+          )}
+          <div className={styles.mobilePaper}>
+            <div className={`${textClassName} ${styles.mobileText}`}>{text}</div>
+          </div>
+        </article>
       </div>
     </main>
   );

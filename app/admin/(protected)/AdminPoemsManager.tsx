@@ -28,7 +28,7 @@ type Poem = {
 };
 
 function getDisplayTitle(poem: Pick<Poem, "title" | "slug">) {
-  return poem.title.trim() || poem.slug.trim() || "Sin titulo";
+  return poem.title.trim() || poem.slug.trim() || "Sin título";
 }
 
 export default function AdminPoemsManager() {
