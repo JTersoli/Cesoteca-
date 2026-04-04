@@ -12,7 +12,6 @@ const links = [
   { label: "Publicaciones no académicas", href: "/publications/non-academic" },
 ];
 
-
 export default function HomePage() {
   return (
     <main className={styles.wrapper}>
@@ -38,11 +37,6 @@ export default function HomePage() {
                 </Link>
               ))}
             </nav>
-
-            <p className={styles.note}>
-              Las publicaciones externas se enlazan cuando los derechos de
-              circulación lo permiten.
-            </p>
           </aside>
         </div>
       </div>
