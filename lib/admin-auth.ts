@@ -70,19 +70,7 @@ const SCRYPT_PREFIX = "scrypt";
 const SCRYPT_KEYLEN = 64;
 
 function hashPasswordScrypt(password: string, saltHex: string) {
-  const salt = Buffer.from(saltHex, "hex");
-  return scryptSync(password, salt, SCRYPT_KEYLEN).toString("hex");
-}
-
-function parseScryptHash(encoded: string) {
-  const parts = encoded.split("$");
-  if (parts.length !== 3) return null;
-  const [prefix, saltHex, digestHex] = parts;
-  if (prefix !== SCRYPT_PREFIX) return null;
-  if (!/^[a-f0-9]+$/i.test(saltHex)) return null;
-  if (!/^[a-f0-9]+$/i.test(digestHex)) return null;
-  if (digestHex.length !== SCRYPT_KEYLEN * 2) return null;
-  return { saltHex: saltHex.toLowerCase(), digestHex: digestHex.toLowerCase() };
+  return scryptSync(password, saltHex, SCRYPT_KEYLEN).toString("hex");
 }
 
 export function createAdminPasswordHash(password: string) {
@@ -91,13 +79,31 @@ export function createAdminPasswordHash(password: string) {
   return `${SCRYPT_PREFIX}$${saltHex}$${digestHex}`;
 }
 
+export function verifyPassword(inputPassword: string, storedHash: string): boolean {
+  const [algo, salt, key] = storedHash.split("$");
+
+  if (algo !== SCRYPT_PREFIX || !salt || !key) {
+    return false;
+  }
+
+  if (!/^[a-f0-9]+$/i.test(key) || key.length !== SCRYPT_KEYLEN * 2) {
+    return false;
+  }
+
+  const derivedKey = scryptSync(inputPassword, salt, SCRYPT_KEYLEN);
+  const keyBuffer = Buffer.from(key, "hex");
+
+  if (derivedKey.length !== keyBuffer.length) {
+    return false;
+  }
+
+  return timingSafeEqual(derivedKey, keyBuffer);
+}
+
 export async function verifyAdminPassword(password: string) {
   const { passwordHash } = await resolveAdminAuthConfig();
   if (passwordHash) {
-    const parsed = parseScryptHash(passwordHash);
-    if (!parsed) return false;
-    const actualDigest = hashPasswordScrypt(password, parsed.saltHex);
-    return safeEqualText(actualDigest, parsed.digestHex);
+    return verifyPassword(password, passwordHash);
   }
 
   // Backward compatibility while migrating env vars.
