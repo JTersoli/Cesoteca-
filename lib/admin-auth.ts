@@ -3,6 +3,7 @@ import {
   readStoredAdminPasswordHashRecord,
   writeStoredAdminPasswordHash,
 } from "@/lib/admin-credentials-store";
+import { isSupabaseConfigured } from "@/lib/supabase";
 
 export const ADMIN_COOKIE_NAME = "cesoteca_admin";
 const SESSION_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 7; // 7 days
@@ -12,6 +13,16 @@ export type AdminAuthConfig = {
   passwordSource: "supabase" | "file" | "env-hash" | "env-plain" | "none";
   sessionSecret: string;
   sessionSecretSource: "env-secret" | "password-hash" | "env-plain" | "none";
+};
+
+export type AdminAuthDiagnostics = {
+  supabaseConfigured: boolean;
+  storedCredentialSource: "supabase" | "file" | "none";
+  hasStoredCredential: boolean;
+  hasEnvPasswordHash: boolean;
+  hasEnvPassword: boolean;
+  selectedPasswordSource: AdminAuthConfig["passwordSource"];
+  selectedSessionSecretSource: AdminAuthConfig["sessionSecretSource"];
 };
 
 function signPayload(payload: string, secret: string) {
@@ -128,14 +139,23 @@ export async function resolveAdminAuthConfig(): Promise<AdminAuthConfig> {
   const envPlainPassword = getAdminPassword().trim();
   const stored = await readStoredAdminPasswordHashRecord();
 
-  const passwordHash = stored.passwordHash || envPasswordHash;
-  const passwordSource = stored.passwordHash
-    ? stored.source
+  const passwordHash =
+    stored.source === "supabase" && stored.passwordHash
+      ? stored.passwordHash
+      : envPasswordHash
+        ? envPasswordHash
+        : stored.source === "file" && stored.passwordHash
+          ? stored.passwordHash
+          : "";
+  const passwordSource = stored.source === "supabase"
+    ? "supabase"
     : envPasswordHash
       ? "env-hash"
-      : envPlainPassword
-        ? "env-plain"
-        : "none";
+      : stored.source === "file" && stored.passwordHash
+        ? "file"
+        : envPlainPassword
+          ? "env-plain"
+          : "none";
 
   const sessionSecret = envSessionSecret || passwordHash || envPlainPassword;
   const sessionSecretSource = envSessionSecret
@@ -151,5 +171,22 @@ export async function resolveAdminAuthConfig(): Promise<AdminAuthConfig> {
     passwordSource,
     sessionSecret,
     sessionSecretSource,
+  };
+}
+
+export async function getAdminAuthDiagnostics(): Promise<AdminAuthDiagnostics> {
+  const envPasswordHash = getAdminPasswordHash().trim();
+  const envPlainPassword = getAdminPassword().trim();
+  const stored = await readStoredAdminPasswordHashRecord();
+  const config = await resolveAdminAuthConfig();
+
+  return {
+    supabaseConfigured: isSupabaseConfigured(),
+    storedCredentialSource: stored.source,
+    hasStoredCredential: Boolean(stored.passwordHash),
+    hasEnvPasswordHash: Boolean(envPasswordHash),
+    hasEnvPassword: Boolean(envPlainPassword),
+    selectedPasswordSource: config.passwordSource,
+    selectedSessionSecretSource: config.sessionSecretSource,
   };
 }

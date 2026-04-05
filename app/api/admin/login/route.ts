@@ -3,6 +3,7 @@ import {
   ADMIN_COOKIE_NAME,
   createAdminToken,
   getSessionMaxAgeSeconds,
+  getAdminAuthDiagnostics,
   resolveAdminAuthConfig,
   verifyAdminPassword,
 } from "@/lib/admin-auth";
@@ -97,7 +98,10 @@ export async function POST(request: NextRequest) {
     | { password?: string }
     | null;
   const provided = body?.password || "";
+  const diagnostics = await getAdminAuthDiagnostics();
   const authConfig = await resolveAdminAuthConfig();
+
+  console.info("[admin-login] Credential resolution", diagnostics);
 
   if (!authConfig.passwordHash && authConfig.passwordSource !== "env-plain") {
     console.error("[admin-login] Admin password is not configured.", {

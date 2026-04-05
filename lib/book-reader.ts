@@ -1,4 +1,5 @@
 export type TextAlign = "left" | "center" | "justify";
+export type DisplayMode = "book" | "page";
 export const DEFAULT_BOOK_IMAGE_URL = "/open-book.jpeg";
 const DEFAULT_FONT_SIZE = 16;
 
@@ -34,6 +35,8 @@ export const DEFAULT_BOOK_TEXT_LAYOUT: BookTextLayout = {
     height: DEFAULT_BOX_HEIGHT,
   },
 };
+
+export const DEFAULT_DISPLAY_MODE: DisplayMode = "book";
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -93,6 +96,14 @@ export function normalizeBookTextLayout(input: unknown): BookTextLayout {
       DEFAULT_BOOK_TEXT_LAYOUT.right
     ),
   };
+}
+
+export function normalizeDisplayMode(input: unknown): DisplayMode {
+  return input === "page" ? "page" : DEFAULT_DISPLAY_MODE;
+}
+
+export function getDisplayModeLabel(displayMode: DisplayMode) {
+  return displayMode === "page" ? "Pagina simple" : "Libro abierto";
 }
 
 function getTokenWidth(token: string) {

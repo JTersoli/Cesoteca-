@@ -1,5 +1,5 @@
 import { POEMS } from "@/app/poems/data";
-import type { BookTextLayout, TextAlign } from "@/lib/book-reader";
+import type { BookTextLayout, DisplayMode, TextAlign } from "@/lib/book-reader";
 import {
   ESSAYS_ITEMS,
   PUBLICATIONS_ACADEMIC_ITEMS,
@@ -17,6 +17,9 @@ export type PublicItem = {
   downloadUrl?: string;
   purchaseUrl?: string;
   bookImageUrl?: string;
+  libraryPage?: number;
+  librarySlot?: number;
+  displayMode?: DisplayMode;
   textAlign?: TextAlign;
   bold?: boolean;
   italic?: boolean;
@@ -44,6 +47,9 @@ export async function getPublicItems(section: ContentSection) {
       downloadUrl: item.downloadUrl,
       purchaseUrl: item.purchaseUrl,
       bookImageUrl: item.bookImageUrl,
+      libraryPage: item.libraryPage,
+      librarySlot: item.librarySlot,
+      displayMode: item.displayMode,
       textAlign: item.textAlign,
       bold: item.bold,
       italic: item.italic,

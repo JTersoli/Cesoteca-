@@ -13,11 +13,13 @@ import {
 } from "react";
 
 import {
+  DEFAULT_DISPLAY_MODE,
   DEFAULT_BOOK_IMAGE_URL,
   chunkBookText,
   getBookFontSize,
   normalizeBookTextLayout,
   type BookTextLayout,
+  type DisplayMode,
   type TextAlign,
 } from "@/lib/book-reader";
 import { useBookImageRatio } from "@/lib/use-book-image-ratio";
@@ -31,6 +33,7 @@ type PoemReaderProps = {
   downloadUrl?: string;
   purchaseUrl?: string;
   bookImageUrl?: string;
+  displayMode?: DisplayMode;
   textAlign?: TextAlign;
   bold?: boolean;
   italic?: boolean;
@@ -65,6 +68,7 @@ export default function PoemReader({
   downloadUrl,
   purchaseUrl,
   bookImageUrl = DEFAULT_BOOK_IMAGE_URL,
+  displayMode = DEFAULT_DISPLAY_MODE,
   textAlign = "left",
   bold = false,
   italic = false,
@@ -152,6 +156,33 @@ export default function PoemReader({
     underline ? styles.textUnderline : ""
   }`;
   const imageHeight = Math.max(1, Math.round(1000 / imageRatio));
+  const isBookMode = displayMode === "book";
+
+  const actions = downloadUrl || purchaseUrl ? (
+    <>
+      {downloadUrl ? (
+        <a
+          className={styles.actionBtn}
+          href={downloadUrl}
+          download={downloadName}
+          aria-label="Descargar archivo"
+        >
+          Descargar
+        </a>
+      ) : null}
+      {purchaseUrl ? (
+        <a
+          className={styles.actionBtn}
+          href={purchaseUrl}
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Comprar edicion externa"
+        >
+          Comprar
+        </a>
+      ) : null}
+    </>
+  ) : null;
 
   return (
     <main className={styles.screen}>
@@ -165,167 +196,136 @@ export default function PoemReader({
             {title ? <h1 className={styles.readerTitle}>{title}</h1> : null}
           </div>
 
-          {downloadUrl || purchaseUrl ? (
-            <div className={styles.actions}>
-              {downloadUrl ? (
-                <a
-                  className={styles.actionBtn}
-                  href={downloadUrl}
-                  download={downloadName}
-                  aria-label="Descargar archivo"
-                >
-                  Descargar
-                </a>
-              ) : null}
-              {purchaseUrl ? (
-                <a
-                  className={styles.actionBtn}
-                  href={purchaseUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label="Comprar edicion externa"
-                >
-                  Comprar
-                </a>
-              ) : null}
-            </div>
+          {actions ? (
+            <div className={styles.actions}>{actions}</div>
           ) : (
             <div aria-hidden="true" />
           )}
         </div>
 
-        <section
-          className={styles.desktopReader}
-          aria-labelledby="desktop-reader-title"
-        >
-          <h2 id="desktop-reader-title" className={styles.srOnly}>
-            Lector en formato libro
-          </h2>
+        {isBookMode ? (
+          <>
+            <section
+              className={styles.desktopReader}
+              aria-labelledby="desktop-reader-title"
+            >
+              <h2 id="desktop-reader-title" className={styles.srOnly}>
+                Lector en formato libro
+              </h2>
 
-          <div className={styles.bookViewport}>
-            <div ref={stageRef} className={styles.bookStage} style={stageStyle}>
-              <Image
-                src={bookImageUrl}
-                alt="Libro abierto"
-                width={1000}
-                height={imageHeight}
-                priority
-                className={styles.bookImage}
-              />
+              <div className={styles.bookViewport}>
+                <div ref={stageRef} className={styles.bookStage} style={stageStyle}>
+                  <Image
+                    src={bookImageUrl}
+                    alt="Libro abierto"
+                    width={1000}
+                    height={imageHeight}
+                    priority
+                    className={styles.bookImage}
+                  />
 
-              <div className={styles.textLayer}>
-                <div
-                  className={styles.textBox}
-                  style={getBoxStyle(layout.left)}
-                  onClick={() => safeNavigate(goPrev)}
-                >
-                  <div className={textClassName} style={textStyle}>
-                    {left}
+                  <div className={styles.textLayer}>
+                    <div
+                      className={styles.textBox}
+                      style={getBoxStyle(layout.left)}
+                      onClick={() => safeNavigate(goPrev)}
+                    >
+                      <div className={textClassName} style={textStyle}>
+                        {left}
+                      </div>
+                    </div>
+
+                    <div
+                      className={styles.textBox}
+                      style={getBoxStyle(layout.right)}
+                      onClick={() => safeNavigate(goNext)}
+                    >
+                      <div className={textClassName} style={textStyle}>
+                        {right}
+                      </div>
+                    </div>
                   </div>
+
+                  <div
+                    className={`${styles.navZone} ${styles.navZoneLeft} ${
+                      !canPrev ? styles.disabled : ""
+                    }`}
+                    onClick={() => safeNavigate(goPrev)}
+                    role="button"
+                    tabIndex={canPrev ? 0 : -1}
+                    aria-disabled={!canPrev}
+                    aria-label="Paginas anteriores"
+                    onKeyDown={(event) => onPageKeyDown(event, goPrev, canPrev)}
+                  />
+
+                  <div
+                    className={`${styles.navZone} ${styles.navZoneRight} ${
+                      !canNext ? styles.disabled : ""
+                    }`}
+                    onClick={() => safeNavigate(goNext)}
+                    role="button"
+                    tabIndex={canNext ? 0 : -1}
+                    aria-disabled={!canNext}
+                    aria-label="Paginas siguientes"
+                    onKeyDown={(event) => onPageKeyDown(event, goNext, canNext)}
+                  />
                 </div>
 
-                <div
-                  className={styles.textBox}
-                  style={getBoxStyle(layout.right)}
-                  onClick={() => safeNavigate(goNext)}
-                >
-                  <div className={textClassName} style={textStyle}>
-                    {right}
+                <div className={styles.desktopFooter}>
+                  <button
+                    type="button"
+                    className={styles.navButton}
+                    onClick={goPrev}
+                    disabled={!canPrev}
+                  >
+                    Anterior
+                  </button>
+
+                  <div className={styles.pageIndicator} aria-live="polite">
+                    {spreadLabel}
                   </div>
+
+                  <button
+                    type="button"
+                    className={styles.navButton}
+                    onClick={goNext}
+                    disabled={!canNext}
+                  >
+                    Siguiente
+                  </button>
                 </div>
               </div>
+            </section>
 
-              <div
-                className={`${styles.navZone} ${styles.navZoneLeft} ${
-                  !canPrev ? styles.disabled : ""
-                }`}
-                onClick={() => safeNavigate(goPrev)}
-                role="button"
-                tabIndex={canPrev ? 0 : -1}
-                aria-disabled={!canPrev}
-                aria-label="Paginas anteriores"
-                onKeyDown={(event) => onPageKeyDown(event, goPrev, canPrev)}
-              />
-
-              <div
-                className={`${styles.navZone} ${styles.navZoneRight} ${
-                  !canNext ? styles.disabled : ""
-                }`}
-                onClick={() => safeNavigate(goNext)}
-                role="button"
-                tabIndex={canNext ? 0 : -1}
-                aria-disabled={!canNext}
-                aria-label="Paginas siguientes"
-                onKeyDown={(event) => onPageKeyDown(event, goNext, canNext)}
-              />
-            </div>
-
-            <div className={styles.desktopFooter}>
-              <button
-                type="button"
-                className={styles.navButton}
-                onClick={goPrev}
-                disabled={!canPrev}
-              >
-                Anterior
-              </button>
-
-              <div className={styles.pageIndicator} aria-live="polite">
-                {spreadLabel}
+            <article className={styles.mobileReader} aria-labelledby="mobile-reader-title">
+              {title ? (
+                <h2 id="mobile-reader-title" className={styles.mobileTitle}>
+                  {title}
+                </h2>
+              ) : (
+                <h2 id="mobile-reader-title" className={styles.srOnly}>
+                  Lectura del poema
+                </h2>
+              )}
+              <div className={styles.mobilePaper}>
+                <div className={`${textClassName} ${styles.mobileText}`}>{text}</div>
+                {actions ? <div className={styles.mobileActions}>{actions}</div> : null}
               </div>
-
-              <button
-                type="button"
-                className={styles.navButton}
-                onClick={goNext}
-                disabled={!canNext}
-              >
-                Siguiente
-              </button>
+            </article>
+          </>
+        ) : (
+          <section className={styles.pageReader} aria-labelledby="page-reader-title">
+            <h2 id="page-reader-title" className={styles.srOnly}>
+              Lector en formato pagina
+            </h2>
+            <div className={styles.documentViewport}>
+              <article className={styles.documentPage}>
+                <div className={`${textClassName} ${styles.documentText}`}>{text}</div>
+              </article>
+              {actions ? <div className={styles.documentActions}>{actions}</div> : null}
             </div>
-          </div>
-        </section>
-
-        <article className={styles.mobileReader} aria-labelledby="mobile-reader-title">
-          {title ? (
-            <h2 id="mobile-reader-title" className={styles.mobileTitle}>
-              {title}
-            </h2>
-          ) : (
-            <h2 id="mobile-reader-title" className={styles.srOnly}>
-              Lectura del poema
-            </h2>
-          )}
-          <div className={styles.mobilePaper}>
-            <div className={`${textClassName} ${styles.mobileText}`}>{text}</div>
-
-            {downloadUrl || purchaseUrl ? (
-              <div className={styles.mobileActions}>
-                {downloadUrl ? (
-                  <a
-                    className={styles.actionBtn}
-                    href={downloadUrl}
-                    download={downloadName}
-                    aria-label="Descargar archivo"
-                  >
-                    Descargar
-                  </a>
-                ) : null}
-                {purchaseUrl ? (
-                  <a
-                    className={styles.actionBtn}
-                    href={purchaseUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label="Comprar en Amazon"
-                  >
-                    Amazon
-                  </a>
-                ) : null}
-              </div>
-            ) : null}
-          </div>
-        </article>
+          </section>
+        )}
       </div>
     </main>
   );

@@ -30,6 +30,9 @@ type Database = {
           download_url: string | null;
           purchase_url: string | null;
           book_image_url: string | null;
+          library_page: number | null;
+          library_slot: number | null;
+          display_mode: string | null;
           text_align: string | null;
           bold: boolean | null;
           italic: boolean | null;
@@ -45,6 +48,9 @@ type Database = {
           download_url?: string | null;
           purchase_url?: string | null;
           book_image_url?: string | null;
+          library_page?: number | null;
+          library_slot?: number | null;
+          display_mode?: string | null;
           text_align?: string | null;
           bold?: boolean | null;
           italic?: boolean | null;
@@ -60,6 +66,9 @@ type Database = {
           download_url?: string | null;
           purchase_url?: string | null;
           book_image_url?: string | null;
+          library_page?: number | null;
+          library_slot?: number | null;
+          display_mode?: string | null;
           text_align?: string | null;
           bold?: boolean | null;
           italic?: boolean | null;

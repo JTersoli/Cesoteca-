@@ -115,6 +115,12 @@
   display: grid;
 }
 
+.pageReader {
+  display: grid;
+  justify-items: center;
+  padding: 8px 12px 32px;
+}
+
 .bookViewport {
   display: grid;
   gap: 2px;
@@ -224,6 +230,45 @@
   align-items: center;
 }
 
+.documentViewport {
+  width: min(100%, 980px);
+  display: grid;
+  justify-items: center;
+  gap: 24px;
+  padding: 18px clamp(10px, 3vw, 28px) 40px;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.8), rgba(236, 228, 216, 0.72)),
+    linear-gradient(180deg, #f4efe6 0%, #ece4d9 100%);
+}
+
+.documentPage {
+  width: min(100%, 820px);
+  min-height: min(1100px, calc(100svh - 180px));
+  aspect-ratio: 1 / 1.414;
+  background: #fff;
+  border: 1px solid rgba(69, 51, 37, 0.14);
+  border-radius: 12px;
+  box-shadow:
+    0 26px 80px rgba(36, 25, 17, 0.12),
+    0 6px 18px rgba(36, 25, 17, 0.06);
+  overflow: auto;
+}
+
+.documentText {
+  padding: clamp(28px, 7vw, 72px);
+  font-size: clamp(1rem, 1.5vw, 1.08rem);
+  line-height: 1.95;
+  color: #241911;
+}
+
+.documentActions {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
 .desktopFooter .navButton:last-child {
   justify-self: end;
 }
@@ -310,6 +355,10 @@
     display: none;
   }
 
+  .pageReader {
+    padding: 0 10px 16px;
+  }
+
   .mobileReader {
     display: block;
   }
@@ -325,5 +374,23 @@
     gap: 18px;
     flex-wrap: wrap;
     margin-top: 28px;
+  }
+
+  .documentViewport {
+    width: 100%;
+    gap: 18px;
+    padding: 18px 12px 28px;
+    border-radius: 20px;
+  }
+
+  .documentPage {
+    width: min(100%, 640px);
+    min-height: auto;
+  }
+
+  .documentText {
+    padding: 28px 22px 36px;
+    font-size: 1rem;
+    line-height: 1.88;
   }
 }

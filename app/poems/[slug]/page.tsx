@@ -51,6 +51,7 @@ export default async function PoemPage({
       downloadUrl={poem.downloadUrl}
       purchaseUrl={poem.purchaseUrl}
       bookImageUrl={poem.bookImageUrl}
+      displayMode={poem.displayMode}
       textAlign={poem.textAlign}
       bold={poem.bold}
       italic={poem.italic}

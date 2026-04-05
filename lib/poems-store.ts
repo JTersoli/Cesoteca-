@@ -1,7 +1,7 @@
 import { mkdir, readFile, rename, writeFile } from "fs/promises";
 import path from "path";
-import type { BookTextLayout, TextAlign } from "@/lib/book-reader";
-import { normalizeBookTextLayout } from "@/lib/book-reader";
+import type { BookTextLayout, DisplayMode, TextAlign } from "@/lib/book-reader";
+import { normalizeBookTextLayout, normalizeDisplayMode } from "@/lib/book-reader";
 import type { ContentSection } from "@/lib/sections";
 import { getSupabaseAdminClient, isSupabaseConfigured } from "@/lib/supabase";
 
@@ -13,6 +13,9 @@ export type StoredPoem = {
   downloadUrl?: string;
   purchaseUrl?: string;
   bookImageUrl?: string;
+  libraryPage?: number;
+  librarySlot?: number;
+  displayMode?: DisplayMode;
   textAlign?: TextAlign;
   bold?: boolean;
   italic?: boolean;
@@ -29,6 +32,9 @@ type StoredPoemRow = {
   download_url: string | null;
   purchase_url: string | null;
   book_image_url: string | null;
+  library_page: number | null;
+  library_slot: number | null;
+  display_mode: string | null;
   text_align: string | null;
   bold: boolean | null;
   italic: boolean | null;
@@ -79,6 +85,12 @@ function makeUniqueSlug(base: string, used: Set<string>) {
     }
     suffix += 1;
   }
+}
+
+function normalizeOptionalPositiveInteger(value: unknown) {
+  if (typeof value !== "number" || !Number.isFinite(value)) return undefined;
+  const normalized = Math.floor(value);
+  return normalized > 0 ? normalized : undefined;
 }
 
 export function slugifyPoem(input: string) {
@@ -244,6 +256,27 @@ function normalizeStoredPoems(
             : "bookImageUrl" in item && typeof item.bookImageUrl === "string"
               ? item.bookImageUrl
               : undefined,
+        libraryPage: normalizeOptionalPositiveInteger(
+          "library_page" in item
+            ? item.library_page
+            : "libraryPage" in item
+              ? item.libraryPage
+              : undefined
+        ),
+        librarySlot: normalizeOptionalPositiveInteger(
+          "library_slot" in item
+            ? item.library_slot
+            : "librarySlot" in item
+              ? item.librarySlot
+              : undefined
+        ),
+        displayMode: normalizeDisplayMode(
+          "display_mode" in item
+            ? item.display_mode
+            : "displayMode" in item
+              ? item.displayMode
+              : undefined
+        ),
         textAlign:
           textAlignValue === "left" ||
           textAlignValue === "center" ||
@@ -278,6 +311,9 @@ function toStoredPoemRow(poem: StoredPoem): StoredPoemRow {
     download_url: poem.downloadUrl || null,
     purchase_url: poem.purchaseUrl || null,
     book_image_url: poem.bookImageUrl || null,
+    library_page: normalizeOptionalPositiveInteger(poem.libraryPage) || null,
+    library_slot: normalizeOptionalPositiveInteger(poem.librarySlot) || null,
+    display_mode: normalizeDisplayMode(poem.displayMode),
     text_align: poem.textAlign || "left",
     bold: Boolean(poem.bold),
     italic: Boolean(poem.italic),

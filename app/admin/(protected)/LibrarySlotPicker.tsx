@@ -1,0 +1,186 @@
+"use client";
+
+import { LIBRARY_POINTS } from "@/lib/library-points";
+
+type LibrarySlotPickerProps = {
+  page: number;
+  slot: number;
+  onPageChange: (page: number) => void;
+  onSlotChange: (slot: number) => void;
+};
+
+const TOTAL_SLOTS = LIBRARY_POINTS.length;
+
+export default function LibrarySlotPicker({
+  page,
+  slot,
+  onPageChange,
+  onSlotChange,
+}: LibrarySlotPickerProps) {
+  return (
+    <section
+      style={{
+        display: "grid",
+        gap: 16,
+        padding: 24,
+        borderRadius: 16,
+        border: "1px solid #ECEAF4",
+        background: "#FFFFFF",
+        boxShadow: "0 4px 20px rgba(95, 90, 122, 0.06)",
+      }}
+    >
+      <div style={{ display: "grid", gap: 8 }}>
+        <h3 style={{ margin: 0, fontSize: 18, color: "#111111", letterSpacing: "-0.02em" }}>
+          Library position
+        </h3>
+        <p style={{ margin: 0, color: "#6F6F6F", fontSize: 14 }}>
+          Elegi la pagina y hace click sobre el estante para decidir exactamente donde va a aparecer el libro.
+        </p>
+      </div>
+
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <button
+          type="button"
+          onClick={() => onPageChange(Math.max(1, page - 1))}
+          disabled={page <= 1}
+          style={{
+            border: "1px solid #E6E3F0",
+            borderRadius: 999,
+            padding: "9px 14px",
+            background: "#F1F0F7",
+            color: "#6F6F6F",
+            cursor: page <= 1 ? "default" : "pointer",
+            opacity: page <= 1 ? 0.5 : 1,
+          }}
+        >
+          Pagina anterior
+        </button>
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            minWidth: 110,
+            borderRadius: 999,
+            padding: "9px 14px",
+            background: "#5F5A7A",
+            color: "#fff",
+            boxShadow: "0 6px 18px rgba(95, 90, 122, 0.14)",
+          }}
+        >
+          Pagina {page}
+        </div>
+        <button
+          type="button"
+          onClick={() => onPageChange(page + 1)}
+          style={{
+            border: "1px solid #E6E3F0",
+            borderRadius: 999,
+            padding: "9px 14px",
+            background: "#F1F0F7",
+            color: "#6F6F6F",
+            cursor: "pointer",
+          }}
+        >
+          Pagina siguiente
+        </button>
+      </div>
+
+      <div
+        style={{
+          position: "relative",
+          width: "100%",
+          maxWidth: 760,
+          margin: "0 auto",
+          borderRadius: 18,
+          overflow: "hidden",
+          border: "1px solid #ECEAF4",
+          boxShadow:
+            "0 4px 20px rgba(95, 90, 122, 0.06), inset 0 1px 0 rgba(255,255,255,0.8)",
+        }}
+      >
+        <svg
+          style={{ display: "block", width: "100%", height: "auto", background: "#F7F6FB" }}
+          viewBox="0 0 768 1053"
+          preserveAspectRatio="xMidYMin meet"
+        >
+          <image href="/library.jpeg" x="0" y="0" width="768" height="1053" />
+          {LIBRARY_POINTS.map((points, index) => {
+            const currentSlot = index + 1;
+            const active = currentSlot === slot;
+
+            return (
+              <g key={currentSlot}>
+                <polygon
+                  points={points}
+                  onClick={() => onSlotChange(currentSlot)}
+                  style={{
+                    fill: active ? "rgba(95, 90, 122, 0.26)" : "rgba(255,255,255,0.01)",
+                    stroke: active ? "#5F5A7A" : "rgba(95, 90, 122, 0.14)",
+                    strokeWidth: active ? 3 : 1.5,
+                    cursor: "pointer",
+                    transition: "all 180ms ease",
+                  }}
+                />
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gap: 12,
+          gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+          paddingTop: 6,
+          borderTop: "1px solid #F0EDF5",
+        }}
+      >
+        <label style={{ display: "grid", gap: 6 }}>
+          <span style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.04em", color: "#6F6F6F", fontWeight: 600 }}>
+            Library page
+          </span>
+          <input
+            type="number"
+            min={1}
+            step={1}
+            value={page}
+            onChange={(event) => onPageChange(Math.max(1, Number(event.target.value) || 1))}
+            style={{
+              border: "1px solid #E6E3F0",
+              borderRadius: 12,
+              padding: 12,
+              background: "#FAFAFD",
+              color: "#111111",
+            }}
+          />
+        </label>
+        <label style={{ display: "grid", gap: 6 }}>
+          <span style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.04em", color: "#6F6F6F", fontWeight: 600 }}>
+            Library slot
+          </span>
+          <input
+            type="number"
+            min={1}
+            max={TOTAL_SLOTS}
+            step={1}
+            value={slot}
+            onChange={(event) =>
+              onSlotChange(
+                Math.min(TOTAL_SLOTS, Math.max(1, Number(event.target.value) || 1))
+              )
+            }
+            style={{
+              border: "1px solid #E6E3F0",
+              borderRadius: 12,
+              padding: 12,
+              background: "#FAFAFD",
+              color: "#111111",
+            }}
+          />
+        </label>
+      </div>
+    </section>
+  );
+}

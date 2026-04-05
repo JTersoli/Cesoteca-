@@ -22,6 +22,7 @@ export default async function AcademicPublicationPage({
       downloadUrl={item.downloadUrl}
       purchaseUrl={item.purchaseUrl}
       bookImageUrl={item.bookImageUrl}
+      displayMode={item.displayMode}
       textAlign={item.textAlign}
       bold={item.bold}
       italic={item.italic}

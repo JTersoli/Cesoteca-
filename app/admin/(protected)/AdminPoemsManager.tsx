@@ -1,12 +1,15 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } from "react";
-import BookTextLayoutEditor from "./BookTextLayoutEditor";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import LibrarySlotPicker from "./LibrarySlotPicker";
 import {
+  DEFAULT_DISPLAY_MODE,
   DEFAULT_BOOK_IMAGE_URL,
   DEFAULT_BOOK_TEXT_LAYOUT,
+  getDisplayModeLabel,
   normalizeBookTextLayout,
   type BookTextLayout,
+  type DisplayMode,
   type TextAlign,
 } from "@/lib/book-reader";
 import { SECTION_OPTIONS, getSectionBasePath } from "@/lib/sections";
@@ -19,6 +22,9 @@ type Poem = {
   downloadUrl?: string;
   purchaseUrl?: string;
   bookImageUrl?: string;
+  libraryPage?: number;
+  librarySlot?: number;
+  displayMode?: DisplayMode;
   textAlign?: TextAlign;
   bold?: boolean;
   italic?: boolean;
@@ -31,7 +37,46 @@ function getDisplayTitle(poem: Pick<Poem, "title" | "slug">) {
   return poem.title.trim() || poem.slug.trim() || "Sin título";
 }
 
+function getPillButtonStyle(active: boolean) {
+  return {
+    border: active ? "1px solid #5F5A7A" : "1px solid #E6E3F0",
+    borderRadius: 999,
+    padding: "9px 14px",
+    background: active ? "#5F5A7A" : "#F1F0F7",
+    color: active ? "#fff" : "#6F6F6F",
+    cursor: "pointer",
+    boxShadow: active
+      ? "0 6px 18px rgba(95, 90, 122, 0.14)"
+      : "inset 0 1px 0 rgba(255,255,255,0.7)",
+    transition:
+      "background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease, transform 180ms ease",
+  } as const;
+}
+
 export default function AdminPoemsManager() {
+  const pageBackground = "linear-gradient(to bottom, #F7F6FB, #FFFFFF)";
+  const cardBackground = "#FFFFFF";
+  const cardBorder = "#ECEAF4";
+  const fieldBorder = "#E6E3F0";
+  const accent = "#5F5A7A";
+  const accentSoft = "#E8E6F3";
+  const secondarySoft = "#F1F0F7";
+  const textPrimary = "#111111";
+  const textSecondary = "#6F6F6F";
+  const textMuted = "#9CA3AF";
+  const softShadow = "0 4px 20px rgba(95, 90, 122, 0.06)";
+  const divider = "#F0EDF5";
+  const transition = "all 180ms ease";
+  const fieldStyle = {
+    border: `1px solid ${fieldBorder}`,
+    borderRadius: 12,
+    padding: 12,
+    background: "#FAFAFD",
+    color: textPrimary,
+    boxShadow:
+      "inset 0 1px 0 rgba(255,255,255,0.9), 0 0 0 0 rgba(95, 90, 122, 0.08)",
+    transition,
+  } as const;
   const [poems, setPoems] = useState<Poem[]>([]);
   const [section, setSection] = useState<
     (typeof SECTION_OPTIONS)[number]["key"]
@@ -44,7 +89,9 @@ export default function AdminPoemsManager() {
   const [text, setText] = useState("");
   const [purchaseUrl, setPurchaseUrl] = useState("");
   const [bookImageUrl, setBookImageUrl] = useState(DEFAULT_BOOK_IMAGE_URL);
-  const [bookImagePreviewUrl, setBookImagePreviewUrl] = useState<string | null>(null);
+  const [libraryPage, setLibraryPage] = useState(1);
+  const [librarySlot, setLibrarySlot] = useState(1);
+  const [displayMode, setDisplayMode] = useState<DisplayMode>(DEFAULT_DISPLAY_MODE);
   const [textAlign, setTextAlign] = useState<TextAlign>("left");
   const [bold, setBold] = useState(false);
   const [italic, setItalic] = useState(false);
@@ -64,6 +111,10 @@ export default function AdminPoemsManager() {
     () => JSON.stringify(normalizeBookTextLayout(textLayout)),
     [textLayout]
   );
+  const layoutHint =
+    displayMode === "book"
+      ? "Vista con doble pagina e imagen del libro. Se habilitan posicion e imagen."
+      : "Vista de hoja unica, centrada y limpia. Se ocultan los controles del libro.";
 
   const loadPoems = useCallback(async () => {
     setLoading(true);
@@ -88,24 +139,15 @@ export default function AdminPoemsManager() {
     void loadPoems();
   }, [loadPoems]);
 
-  useEffect(() => {
-    return () => {
-      if (bookImagePreviewUrl) {
-        URL.revokeObjectURL(bookImagePreviewUrl);
-      }
-    };
-  }, [bookImagePreviewUrl]);
-
   function resetForm() {
-    if (bookImagePreviewUrl) {
-      URL.revokeObjectURL(bookImagePreviewUrl);
-    }
     setTitle("");
     setSlug("");
     setText("");
     setPurchaseUrl("");
     setBookImageUrl(DEFAULT_BOOK_IMAGE_URL);
-    setBookImagePreviewUrl(null);
+    setLibraryPage(1);
+    setLibrarySlot(1);
+    setDisplayMode(DEFAULT_DISPLAY_MODE);
     setTextAlign("left");
     setBold(false);
     setItalic(false);
@@ -146,16 +188,15 @@ export default function AdminPoemsManager() {
   }
 
   function loadPoemIntoForm(poem: Poem) {
-    if (bookImagePreviewUrl) {
-      URL.revokeObjectURL(bookImagePreviewUrl);
-    }
     setSection(poem.section);
     setTitle(poem.title);
     setSlug(poem.slug);
     setText(poem.text);
     setPurchaseUrl(poem.purchaseUrl || "");
     setBookImageUrl(poem.bookImageUrl || DEFAULT_BOOK_IMAGE_URL);
-    setBookImagePreviewUrl(null);
+    setLibraryPage(poem.libraryPage || 1);
+    setLibrarySlot(poem.librarySlot || 1);
+    setDisplayMode(poem.displayMode || DEFAULT_DISPLAY_MODE);
     setTextAlign(poem.textAlign || "left");
     setBold(Boolean(poem.bold));
     setItalic(Boolean(poem.italic));
@@ -207,54 +248,77 @@ export default function AdminPoemsManager() {
     }
   }
 
-  function onBookImageChange(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (bookImagePreviewUrl) {
-      URL.revokeObjectURL(bookImagePreviewUrl);
-    }
-    if (!file) {
-      setBookImagePreviewUrl(null);
-      return;
-    }
-    setBookImagePreviewUrl(URL.createObjectURL(file));
-  }
-
   return (
-    <main style={{ maxWidth: 980, margin: "30px auto", padding: 24 }}>
+    <main
+      style={{
+        maxWidth: 1020,
+        margin: "32px auto",
+        padding: 24,
+        background: pageBackground,
+        color: textPrimary,
+        borderRadius: 28,
+      }}
+    >
       <div
         style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          marginBottom: 20,
+          marginBottom: 28,
+          paddingBottom: 18,
+          borderBottom: `1px solid ${divider}`,
         }}
       >
-        <h1 style={{ fontSize: 32 }}>Admin Panel</h1>
+        <h1
+          style={{
+            fontSize: 36,
+            fontWeight: 700,
+            letterSpacing: "-0.035em",
+            lineHeight: 1.05,
+            color: textPrimary,
+            margin: 0,
+          }}
+        >
+          Admin Panel
+        </h1>
         <button
           type="button"
           onClick={onLogout}
           style={{
-            border: "1px solid #111",
-            borderRadius: 8,
-            padding: "8px 12px",
-            background: "#fff",
+            border: `1px solid ${cardBorder}`,
+            borderRadius: 12,
+            padding: "10px 14px",
+            background: "rgba(255,255,255,0.9)",
+            color: textSecondary,
             cursor: "pointer",
+            boxShadow: softShadow,
+            transition,
           }}
         >
           Logout
         </button>
       </div>
 
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: 14 }}>
+      <form onSubmit={onSubmit} style={{ display: "grid", gap: 20 }}>
         <label style={{ display: "grid", gap: 6 }}>
-          <span>Section</span>
+          <span
+            style={{
+              fontSize: 12,
+              textTransform: "uppercase",
+              letterSpacing: "0.04em",
+              color: textSecondary,
+              fontWeight: 600,
+            }}
+          >
+            Section
+          </span>
           <select
             name="section"
             value={section}
             onChange={(e) =>
               setSection(e.target.value as (typeof SECTION_OPTIONS)[number]["key"])
             }
-            style={{ border: "1px solid #ccc", borderRadius: 8, padding: 10 }}
+            style={fieldStyle}
           >
             {SECTION_OPTIONS.map((option) => (
               <option key={option.key} value={option.key}>
@@ -269,7 +333,7 @@ export default function AdminPoemsManager() {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Title (optional)"
-          style={{ border: "1px solid #ccc", borderRadius: 8, padding: 10 }}
+          style={fieldStyle}
         />
 
         <input
@@ -277,7 +341,7 @@ export default function AdminPoemsManager() {
           value={slug}
           onChange={(e) => setSlug(e.target.value)}
           placeholder="Slug (optional)"
-          style={{ border: "1px solid #ccc", borderRadius: 8, padding: 10 }}
+          style={fieldStyle}
         />
 
         <textarea
@@ -286,112 +350,148 @@ export default function AdminPoemsManager() {
           onChange={(e) => setText(e.target.value)}
           placeholder="Poem text (optional)"
           rows={8}
-          style={{ border: "1px solid #ccc", borderRadius: 8, padding: 10 }}
+          style={fieldStyle}
         />
 
-        <div style={{ display: "grid", gap: 8 }}>
-          <span>Text format</span>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <button
-              type="button"
-              onClick={() => setTextAlign("left")}
-              aria-pressed={textAlign === "left"}
+        <section
+          style={{
+            display: "grid",
+            gap: 18,
+            padding: 24,
+            borderRadius: 16,
+            border: `1px solid ${cardBorder}`,
+            background: cardBackground,
+            boxShadow: softShadow,
+            transition,
+          }}
+        >
+          <div style={{ display: "grid", gap: 8 }}>
+            <span
               style={{
-                border: "1px solid #111",
-                borderRadius: 999,
-                padding: "8px 12px",
-                background: textAlign === "left" ? "#111" : "#fff",
-                color: textAlign === "left" ? "#fff" : "#111",
-                cursor: "pointer",
-              }}
-            >
-              As written
-            </button>
-            <button
-              type="button"
-              onClick={() => setTextAlign("justify")}
-              aria-pressed={textAlign === "justify"}
-              style={{
-                border: "1px solid #111",
-                borderRadius: 999,
-                padding: "8px 12px",
-                background: textAlign === "justify" ? "#111" : "#fff",
-                color: textAlign === "justify" ? "#fff" : "#111",
-                cursor: "pointer",
-              }}
-            >
-              Justified
-            </button>
-            <button
-              type="button"
-              onClick={() => setTextAlign("center")}
-              aria-pressed={textAlign === "center"}
-              style={{
-                border: "1px solid #111",
-                borderRadius: 999,
-                padding: "8px 12px",
-                background: textAlign === "center" ? "#111" : "#fff",
-                color: textAlign === "center" ? "#fff" : "#111",
-                cursor: "pointer",
-              }}
-            >
-              Centered
-            </button>
-            <button
-              type="button"
-              onClick={() => setBold((value) => !value)}
-              aria-pressed={bold}
-              style={{
-                border: "1px solid #111",
-                borderRadius: 999,
-                padding: "8px 12px",
-                background: bold ? "#111" : "#fff",
-                color: bold ? "#fff" : "#111",
-                cursor: "pointer",
+                fontSize: 12,
                 fontWeight: 700,
+                letterSpacing: "0.04em",
+                textTransform: "uppercase",
+                color: textSecondary,
               }}
             >
-              Bold
-            </button>
-            <button
-              type="button"
-              onClick={() => setItalic((value) => !value)}
-              aria-pressed={italic}
+              Visual layout
+            </span>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button
+                type="button"
+                onClick={() => setDisplayMode("book")}
+                aria-pressed={displayMode === "book"}
+                style={getPillButtonStyle(displayMode === "book")}
+              >
+                Libro abierto
+              </button>
+              <button
+                type="button"
+                onClick={() => setDisplayMode("page")}
+                aria-pressed={displayMode === "page"}
+                style={getPillButtonStyle(displayMode === "page")}
+              >
+                Pagina simple / PDF abierto
+              </button>
+            </div>
+            <div
               style={{
-                border: "1px solid #111",
-                borderRadius: 999,
-                padding: "8px 12px",
-                background: italic ? "#111" : "#fff",
-                color: italic ? "#fff" : "#111",
-                cursor: "pointer",
-                fontStyle: "italic",
+                fontSize: 13,
+                lineHeight: 1.5,
+                padding: "12px 14px",
+                borderRadius: 12,
+                background: secondarySoft,
+                border: `1px solid ${cardBorder}`,
+                color: textSecondary,
               }}
             >
-              Italic
-            </button>
-            <button
-              type="button"
-              onClick={() => setUnderline((value) => !value)}
-              aria-pressed={underline}
-              style={{
-                border: "1px solid #111",
-                borderRadius: 999,
-                padding: "8px 12px",
-                background: underline ? "#111" : "#fff",
-                color: underline ? "#fff" : "#111",
-                cursor: "pointer",
-                textDecoration: "underline",
-              }}
-            >
-              Underline
-            </button>
+              {layoutHint}
+            </div>
           </div>
+
+          <div
+            style={{
+              display: "grid",
+              gap: 8,
+              paddingTop: 2,
+              borderTop: `1px solid ${divider}`,
+            }}
+          >
+            <span
+              style={{
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: "0.04em",
+                textTransform: "uppercase",
+                color: textSecondary,
+              }}
+            >
+              Text format
+            </span>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button
+                type="button"
+                onClick={() => setTextAlign("left")}
+                aria-pressed={textAlign === "left"}
+                style={getPillButtonStyle(textAlign === "left")}
+              >
+                As written
+              </button>
+              <button
+                type="button"
+                onClick={() => setTextAlign("justify")}
+                aria-pressed={textAlign === "justify"}
+                style={getPillButtonStyle(textAlign === "justify")}
+              >
+                Justified
+              </button>
+              <button
+                type="button"
+                onClick={() => setTextAlign("center")}
+                aria-pressed={textAlign === "center"}
+                style={getPillButtonStyle(textAlign === "center")}
+              >
+                Centered
+              </button>
+              <button
+                type="button"
+                onClick={() => setBold((value) => !value)}
+                aria-pressed={bold}
+                style={{ ...getPillButtonStyle(bold), fontWeight: 700 }}
+              >
+                Bold
+              </button>
+              <button
+                type="button"
+                onClick={() => setItalic((value) => !value)}
+                aria-pressed={italic}
+                style={{ ...getPillButtonStyle(italic), fontStyle: "italic" }}
+              >
+                Italic
+              </button>
+              <button
+                type="button"
+                onClick={() => setUnderline((value) => !value)}
+                aria-pressed={underline}
+                style={{ ...getPillButtonStyle(underline), textDecoration: "underline" }}
+              >
+                Underline
+              </button>
+            </div>
+            <div style={{ color: textMuted, fontSize: 12 }}>
+              Estos estilos se aplican tanto al modo libro como al modo pagina.
+            </div>
+          </div>
+          <input type="hidden" name="displayMode" value={displayMode} />
           <input type="hidden" name="textAlign" value={textAlign} />
           <input
             type="hidden"
             name="currentBookImageUrl"
             value={bookImageUrl}
           />
+          <input type="hidden" name="libraryPage" value={String(libraryPage)} />
+          <input type="hidden" name="librarySlot" value={String(librarySlot)} />
           <input type="hidden" name="bold" value={bold ? "true" : "false"} />
           <input type="hidden" name="italic" value={italic ? "true" : "false"} />
           <input
@@ -400,40 +500,21 @@ export default function AdminPoemsManager() {
             value={underline ? "true" : "false"}
           />
           <input type="hidden" name="textLayout" value={serializedTextLayout} />
-        </div>
+        </section>
 
-        <BookTextLayoutEditor
-          text={text}
-          textAlign={textAlign}
-          bold={bold}
-          italic={italic}
-          underline={underline}
-          bookImageUrl={bookImagePreviewUrl || bookImageUrl}
-          value={textLayout}
-          onChange={setTextLayout}
+        <LibrarySlotPicker
+          page={libraryPage}
+          slot={librarySlot}
+          onPageChange={setLibraryPage}
+          onSlotChange={setLibrarySlot}
         />
-
-        <div style={{ display: "grid", gap: 8 }}>
-          <span>Book image (optional)</span>
-          <input
-            key={`book-image-${fileInputKey}`}
-            name="bookImageFile"
-            type="file"
-            accept=".jpg,.jpeg,.png,.webp,.gif,image/*"
-            onChange={onBookImageChange}
-            style={{ border: "1px solid #ccc", borderRadius: 8, padding: 8 }}
-          />
-          <div style={{ color: "#666", fontSize: 13 }}>
-            Current image: {bookImageUrl === DEFAULT_BOOK_IMAGE_URL ? "Default book" : bookImageUrl}
-          </div>
-        </div>
 
         <input
           key={`doc-file-${fileInputKey}`}
           name="file"
           type="file"
           accept=".doc,.docx,.pdf"
-          style={{ border: "1px solid #ccc", borderRadius: 8, padding: 8 }}
+          style={fieldStyle}
         />
 
         <input
@@ -442,20 +523,32 @@ export default function AdminPoemsManager() {
           value={purchaseUrl}
           onChange={(e) => setPurchaseUrl(e.target.value)}
           placeholder="Amazon purchase URL (optional)"
-          style={{ border: "1px solid #ccc", borderRadius: 8, padding: 10 }}
+          style={fieldStyle}
         />
 
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <div
+          style={{
+            display: "flex",
+            gap: 10,
+            flexWrap: "wrap",
+            justifyContent: "space-between",
+            alignItems: "center",
+            paddingTop: 8,
+            borderTop: `1px solid ${divider}`,
+          }}
+        >
           <button
             type="submit"
             disabled={saving}
             style={{
-              border: "1px solid #111",
-              borderRadius: 8,
-              padding: "10px 12px",
-              background: "#111",
+              border: `1px solid ${accent}`,
+              borderRadius: 12,
+              padding: "12px 16px",
+              background: accent,
               color: "#fff",
               cursor: saving ? "default" : "pointer",
+              boxShadow: softShadow,
+              transition,
             }}
           >
             {saving ? "Saving..." : "Save poem"}
@@ -465,12 +558,13 @@ export default function AdminPoemsManager() {
             type="button"
             onClick={resetForm}
             style={{
-              border: "1px solid #111",
-              borderRadius: 8,
-              padding: "10px 12px",
-              background: "#fff",
-              color: "#111",
+              border: `1px solid ${cardBorder}`,
+              borderRadius: 12,
+              padding: "12px 16px",
+              background: "transparent",
+              color: textSecondary,
               cursor: "pointer",
+              transition,
             }}
           >
             Clear form
@@ -478,94 +572,49 @@ export default function AdminPoemsManager() {
         </div>
       </form>
 
-      <section style={{ marginTop: 28 }}>
-        <h2 style={{ fontSize: 22, marginBottom: 10 }}>Change admin password</h2>
-        <form onSubmit={onPasswordSubmit} style={{ display: "grid", gap: 10 }}>
-          <input
-            type="password"
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
-            placeholder="Current password"
-            autoComplete="current-password"
-            required
-            style={{ border: "1px solid #ccc", borderRadius: 8, padding: 10 }}
-          />
-          <input
-            type="password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            placeholder="New password (12+ chars)"
-            autoComplete="new-password"
-            minLength={12}
-            maxLength={128}
-            required
-            style={{ border: "1px solid #ccc", borderRadius: 8, padding: 10 }}
-          />
-          <input
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="Confirm new password"
-            autoComplete="new-password"
-            minLength={12}
-            maxLength={128}
-            required
-            style={{ border: "1px solid #ccc", borderRadius: 8, padding: 10 }}
-          />
-          <button
-            type="submit"
-            disabled={passwordSaving}
-            style={{
-              border: "1px solid #111",
-              borderRadius: 8,
-              padding: "10px 12px",
-              background: "#111",
-              color: "#fff",
-              cursor: passwordSaving ? "default" : "pointer",
-            }}
-          >
-            {passwordSaving ? "Updating..." : "Update password"}
-          </button>
-        </form>
-        {passwordMessage ? (
-          <p style={{ marginTop: 12, color: "#0a7a3a" }} role="status">
-            {passwordMessage}
-          </p>
-        ) : null}
-        {passwordError ? (
-          <p style={{ marginTop: 12, color: "#b00020" }} role="alert">
-            {passwordError}
-          </p>
-        ) : null}
-      </section>
-
       {error ? (
-        <p style={{ marginTop: 12, color: "#b00020" }} role="alert">
+        <p style={{ marginTop: 12, color: "#9F1239" }} role="alert">
           {error}
         </p>
       ) : null}
 
-      <section style={{ marginTop: 28 }}>
-        <h2 style={{ fontSize: 22, marginBottom: 10 }}>Existing entries</h2>
-        {loading ? <p>Loading...</p> : null}
-        {!loading && poems.length === 0 ? <p>No entries yet.</p> : null}
+      <section style={{ marginTop: 36 }}>
+        <h2
+          style={{
+            fontSize: 24,
+            marginBottom: 14,
+            color: textPrimary,
+            fontWeight: 700,
+            letterSpacing: "-0.02em",
+          }}
+        >
+          Existing entries
+        </h2>
+        {loading ? <p style={{ color: textMuted }}>Loading...</p> : null}
+        {!loading && poems.length === 0 ? <p style={{ color: textMuted }}>No entries yet.</p> : null}
         <ul style={{ padding: 0, margin: 0, listStyle: "none" }}>
           {poems.map((poem) => (
             <li
               key={poem.slug}
               style={{
-                padding: "12px 0",
-                borderBottom: "1px solid #eee",
+                padding: "16px 0",
+                borderBottom: `1px solid ${divider}`,
               }}
             >
-              <div style={{ fontWeight: 600 }}>{getDisplayTitle(poem)}</div>
-              <div style={{ color: "#555", fontSize: 13 }}>
+              <div style={{ fontWeight: 600, color: textPrimary }}>{getDisplayTitle(poem)}</div>
+              <div style={{ color: textSecondary, fontSize: 13 }}>
                 {getSectionBasePath(poem.section)}/{poem.slug}
               </div>
-              <div style={{ color: "#666", fontSize: 12 }}>
+              <div style={{ color: textSecondary, fontSize: 12 }}>
                 Updated: {new Date(poem.updatedAt).toLocaleString()}
               </div>
-              <div style={{ color: "#666", fontSize: 12 }}>
+              <div style={{ color: textSecondary, fontSize: 12 }}>
+                Visual: {getDisplayModeLabel(poem.displayMode || DEFAULT_DISPLAY_MODE)}
+              </div>
+              <div style={{ color: textSecondary, fontSize: 12 }}>
+                Biblioteca: pagina {poem.libraryPage || 1}, posicion {poem.librarySlot || 1}
+              </div>
+              <div style={{ color: textSecondary, fontSize: 12 }}>
                 Format:{" "}
                 {poem.textAlign === "center"
                   ? "Centered"
@@ -576,26 +625,32 @@ export default function AdminPoemsManager() {
                 {poem.italic ? " + Italic" : ""}
                 {poem.underline ? " + Underline" : ""}
               </div>
-              <div style={{ color: "#666", fontSize: 12 }}>
-                Layout: L({normalizeBookTextLayout(poem.textLayout).left.x.toFixed(1)}
-                %, {normalizeBookTextLayout(poem.textLayout).left.y.toFixed(1)}%) R(
-                {normalizeBookTextLayout(poem.textLayout).right.x.toFixed(1)}%,{" "}
-                {normalizeBookTextLayout(poem.textLayout).right.y.toFixed(1)}%)
-              </div>
-              <div style={{ color: "#666", fontSize: 12 }}>
-                Image: {poem.bookImageUrl || DEFAULT_BOOK_IMAGE_URL}
-              </div>
+              {(poem.displayMode || DEFAULT_DISPLAY_MODE) === "book" ? (
+                <>
+                  <div style={{ color: "#666", fontSize: 12 }}>
+                    Layout: L({normalizeBookTextLayout(poem.textLayout).left.x.toFixed(1)}
+                    %, {normalizeBookTextLayout(poem.textLayout).left.y.toFixed(1)}%) R(
+                    {normalizeBookTextLayout(poem.textLayout).right.x.toFixed(1)}%,{" "}
+                    {normalizeBookTextLayout(poem.textLayout).right.y.toFixed(1)}%)
+                  </div>
+                  <div style={{ color: textSecondary, fontSize: 12 }}>
+                    Image: {poem.bookImageUrl || DEFAULT_BOOK_IMAGE_URL}
+                  </div>
+                </>
+              ) : null}
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 8 }}>
                 <button
                   type="button"
                   onClick={() => loadPoemIntoForm(poem)}
                   style={{
-                    border: "1px solid #111",
-                    borderRadius: 8,
+                    border: `1px solid ${cardBorder}`,
+                    borderRadius: 12,
                     padding: "8px 12px",
-                    background: "#fff",
-                    color: "#111",
+                    background: accentSoft,
+                    color: "#4C4374",
                     cursor: "pointer",
+                    boxShadow: "0 6px 16px rgba(123, 104, 238, 0.08)",
+                    transition,
                   }}
                 >
                   Load into editor
