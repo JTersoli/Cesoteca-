@@ -322,7 +322,6 @@ export default function PoemReader({
               <article className={styles.documentPage}>
                 <div className={`${textClassName} ${styles.documentText}`}>{text}</div>
               </article>
-              {actions ? <div className={styles.documentActions}>{actions}</div> : null}
             </div>
           </section>
         )}
