@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const slug = slugifyPoem(customSlug || title);
+    const slug = sectionValue === "about" ? "about" : slugifyPoem(customSlug || title);
     let downloadUrl: string | undefined;
     let bookImageUrl: string | undefined;
     const existing = (await readStoredPoems()).find(
@@ -184,6 +184,16 @@ export async function POST(request: NextRequest) {
       const extensionAllowed = ALLOWED_UPLOAD_EXTENSIONS.has(extension);
       const mimeAllowed =
         !mimeType || ALLOWED_UPLOAD_MIME_TYPES.has(mimeType);
+
+      if (
+        sectionValue === "about" &&
+        (extension !== ".pdf" || (mimeType && mimeType !== "application/pdf"))
+      ) {
+        return NextResponse.json(
+          { error: "El CV debe ser un archivo PDF." },
+          { status: 400 }
+        );
+      }
 
       if (!extensionAllowed || !mimeAllowed) {
         return NextResponse.json(

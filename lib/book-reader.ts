@@ -47,7 +47,7 @@ export function getBookFontSize(containerWidth: number) {
     return DEFAULT_FONT_SIZE;
   }
 
-  return clamp(containerWidth * 0.0205, 10, 20);
+  return clamp(containerWidth * 0.0215, 11, 22);
 }
 
 function toFiniteNumber(value: unknown, fallback: number) {

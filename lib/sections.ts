@@ -1,4 +1,5 @@
 export const SECTION_OPTIONS = [
+  { key: "about", label: "Sobre mí", basePath: "/about" },
   { key: "poems", label: "Poemas", basePath: "/poems" },
   { key: "writings", label: "Escritos", basePath: "/writings" },
   { key: "essays", label: "Ensayos", basePath: "/essays" },

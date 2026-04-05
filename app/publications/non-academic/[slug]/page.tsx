@@ -28,8 +28,9 @@ export default async function NonAcademicPublicationPage({
       italic={item.italic}
       underline={item.underline}
       textLayout={item.textLayout}
-      downloadName={`${slug}.docx`}
+      downloadName={slug}
       backHref="/publications/non-academic"
+      backLabel="Volver"
     />
   );
 }

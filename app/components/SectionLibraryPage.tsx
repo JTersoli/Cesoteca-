@@ -33,15 +33,9 @@ export default function SectionLibraryPage({
             </Link>
           </div>
 
-          <div style={{ position: "relative", width: "100%", height: "96vh" }}>
+          <div className={styles.libraryStage}>
             <svg
               className={styles.librarySvg}
-              style={{
-                position: "absolute",
-                inset: 0,
-                width: "100%",
-                height: "100%",
-              }}
               viewBox="0 0 768 1053"
               preserveAspectRatio="xMidYMin meet"
             >

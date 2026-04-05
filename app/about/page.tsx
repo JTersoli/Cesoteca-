@@ -1,12 +1,22 @@
 import { existsSync } from "fs";
+import Image from "next/image";
 import Link from "next/link";
 import path from "path";
+import { getAboutContent } from "@/lib/content-public";
 import styles from "./page.module.css";
 
 const CV_PUBLIC_PATH = "/cv.pdf";
 
-export default function AboutPage() {
-  const hasCv = existsSync(path.join(process.cwd(), "public", "cv.pdf"));
+export const revalidate = 60;
+
+export default async function AboutPage() {
+  const content = await getAboutContent();
+  const hasLegacyCv = existsSync(path.join(process.cwd(), "public", "cv.pdf"));
+  const cvUrl = content.downloadUrl || (hasLegacyCv ? CV_PUBLIC_PATH : undefined);
+  const paragraphs = content.text
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
 
   return (
     <main className={styles.page}>
@@ -15,41 +25,45 @@ export default function AboutPage() {
           Volver
         </Link>
 
-        <h1 className={styles.title}>Sobre mí</h1>
-        <p className={styles.body}>
-          Cesoteca es un archivo personal de lectura y escritura. Reúne poemas,
-          ensayos, comentarios de texto y publicaciones en un formato de
-          biblioteca visual.
-        </p>
-        <p className={styles.body}>
-          El proyecto prioriza una experiencia de lectura simple: tipografía
-          clara, navegación directa y foco en el contenido.
-        </p>
+        <h1 className={styles.title}>{content.title || "Sobre mí"}</h1>
+
+        {content.bookImageUrl ? (
+          <div className={styles.heroImageWrap}>
+            <Image
+              src={content.bookImageUrl}
+              alt={content.title || "Sobre mí"}
+              width={1200}
+              height={900}
+              className={styles.heroImage}
+            />
+          </div>
+        ) : null}
+
+        {paragraphs.map((paragraph, index) => (
+          <p key={index} className={styles.body}>
+            {paragraph}
+          </p>
+        ))}
 
         <section className={styles.cvSection} aria-labelledby="cv-title">
           <h2 id="cv-title" className={styles.cvTitle}>
             CV
           </h2>
 
-          {hasCv ? (
-            <a href={CV_PUBLIC_PATH} download className={styles.cvButton}>
+          {cvUrl ? (
+            <a href={cvUrl} download className={styles.cvButton}>
               Descargar CV
             </a>
           ) : null}
 
-          {hasCv ? (
+          {cvUrl ? (
             <div className={styles.cvViewer}>
-              <iframe
-                src={CV_PUBLIC_PATH}
-                title="CV"
-                className={styles.cvFrame}
-              />
+              <iframe src={cvUrl} title="CV" className={styles.cvFrame} />
             </div>
           ) : (
             <div className={styles.cvEmpty}>
               <p className={styles.cvEmptyText}>
-                La página ya está lista para mostrar el CV. Sólo falta agregar
-                el archivo en <code>public/cv.pdf</code>.
+                La página ya está lista para mostrar el CV. Solo falta subir el PDF desde el admin.
               </p>
             </div>
           )}

@@ -37,6 +37,20 @@
   line-height: 1.02;
 }
 
+.heroImageWrap {
+  margin: 0 0 24px;
+  border-radius: 22px;
+  overflow: hidden;
+  background: #f8f8fb;
+  border: 1px solid rgba(17, 17, 17, 0.08);
+}
+
+.heroImage {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
 .body {
   margin: 0 0 14px;
   font-size: 1.05rem;

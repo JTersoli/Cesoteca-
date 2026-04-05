@@ -1,6 +1,7 @@
 import { POEMS } from "@/app/poems/data";
 import type { BookTextLayout, DisplayMode, TextAlign } from "@/lib/book-reader";
 import {
+  ABOUT_ITEM,
   ESSAYS_ITEMS,
   PUBLICATIONS_ACADEMIC_ITEMS,
   PUBLICATIONS_NON_ACADEMIC_ITEMS,
@@ -28,6 +29,7 @@ export type PublicItem = {
 };
 
 const FALLBACK_BY_SECTION: Record<ContentSection, PublicItem[]> = {
+  about: [ABOUT_ITEM],
   poems: POEMS,
   writings: WRITINGS_ITEMS,
   essays: ESSAYS_ITEMS,
@@ -35,6 +37,30 @@ const FALLBACK_BY_SECTION: Record<ContentSection, PublicItem[]> = {
   "publications-academic": PUBLICATIONS_ACADEMIC_ITEMS,
   "publications-non-academic": PUBLICATIONS_NON_ACADEMIC_ITEMS,
 };
+
+export async function getAboutContent() {
+  const stored = await readStoredPoems();
+  const aboutItem = stored.find((item) => item.section === "about" && item.slug === "about");
+
+  if (aboutItem) {
+    return {
+      slug: aboutItem.slug,
+      title: aboutItem.title,
+      text: aboutItem.text,
+      downloadUrl: aboutItem.downloadUrl,
+      purchaseUrl: aboutItem.purchaseUrl,
+      bookImageUrl: aboutItem.bookImageUrl,
+      displayMode: aboutItem.displayMode,
+      textAlign: aboutItem.textAlign,
+      bold: aboutItem.bold,
+      italic: aboutItem.italic,
+      underline: aboutItem.underline,
+      textLayout: aboutItem.textLayout,
+    } satisfies PublicItem;
+  }
+
+  return ABOUT_ITEM;
+}
 
 export async function getPublicItems(section: ContentSection) {
   const stored = await readStoredPoems();

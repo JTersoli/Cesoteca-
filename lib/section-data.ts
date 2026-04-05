@@ -18,6 +18,14 @@ export type SectionItem = {
   textLayout?: BookTextLayout;
 };
 
+export const ABOUT_ITEM: SectionItem = {
+  slug: "about",
+  title: "Sobre mí",
+  text:
+    "Cesoteca es un archivo personal de lectura y escritura. Reúne poemas, ensayos, comentarios de texto y publicaciones en un formato de biblioteca visual.\n\nEl proyecto prioriza una experiencia de lectura simple: tipografía clara, navegación directa y foco en el contenido.",
+  downloadUrl: "/cv.pdf",
+};
+
 function buildItems(
   prefix: string,
   label: string,

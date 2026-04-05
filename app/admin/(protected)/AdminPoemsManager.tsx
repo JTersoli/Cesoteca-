@@ -111,6 +111,19 @@ export default function AdminPoemsManager() {
     () => JSON.stringify(normalizeBookTextLayout(textLayout)),
     [textLayout]
   );
+  const isAboutSection = section === "about";
+  const supportsLayoutControls = !isAboutSection;
+  const supportsLibraryPlacement = !isAboutSection;
+  const supportsPurchaseUrl = !isAboutSection;
+  const supportsImageUpload = isAboutSection || displayMode === "book";
+  const documentInputLabel = isAboutSection ? "CV (PDF)" : "Archivo";
+  const documentInputHelp = isAboutSection
+    ? "Subí el CV en PDF para mostrarlo y descargarlo luego desde Sobre mí."
+    : "Subí el archivo principal de la entrada para ofrecer descarga pública.";
+  const imageInputLabel = isAboutSection ? "Imagen de perfil / portada" : "Imagen del libro";
+  const imageInputHelp = isAboutSection
+    ? "Imagen opcional para acompañar la página Sobre mí."
+    : "Imagen opcional para el modo libro abierto.";
   const layoutHint =
     displayMode === "book"
       ? "Vista con doble pagina e imagen del libro. Se habilitan posicion e imagen."
@@ -139,9 +152,19 @@ export default function AdminPoemsManager() {
     void loadPoems();
   }, [loadPoems]);
 
+  useEffect(() => {
+    if (section === "about") {
+      setSlug("about");
+      if (!title.trim()) {
+        setTitle("Sobre mí");
+      }
+      setDisplayMode("page");
+    }
+  }, [section, title]);
+
   function resetForm() {
-    setTitle("");
-    setSlug("");
+    setTitle(isAboutSection ? "Sobre mí" : "");
+    setSlug(isAboutSection ? "about" : "");
     setText("");
     setPurchaseUrl("");
     setBookImageUrl(DEFAULT_BOOK_IMAGE_URL);
@@ -332,7 +355,7 @@ export default function AdminPoemsManager() {
           name="title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Title (optional)"
+          placeholder={isAboutSection ? "Título de la página" : "Title (optional)"}
           style={fieldStyle}
         />
 
@@ -340,7 +363,8 @@ export default function AdminPoemsManager() {
           name="slug"
           value={slug}
           onChange={(e) => setSlug(e.target.value)}
-          placeholder="Slug (optional)"
+          placeholder={isAboutSection ? "about" : "Slug (optional)"}
+          readOnly={isAboutSection}
           style={fieldStyle}
         />
 
@@ -348,23 +372,24 @@ export default function AdminPoemsManager() {
           name="text"
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Poem text (optional)"
+          placeholder={isAboutSection ? "Texto de presentación / biografía" : "Poem text (optional)"}
           rows={8}
           style={fieldStyle}
         />
 
-        <section
-          style={{
-            display: "grid",
-            gap: 18,
-            padding: 24,
-            borderRadius: 16,
-            border: `1px solid ${cardBorder}`,
-            background: cardBackground,
-            boxShadow: softShadow,
-            transition,
-          }}
-        >
+        {supportsLayoutControls ? (
+          <section
+            style={{
+              display: "grid",
+              gap: 18,
+              padding: 24,
+              borderRadius: 16,
+              border: `1px solid ${cardBorder}`,
+              background: cardBackground,
+              boxShadow: softShadow,
+              transition,
+            }}
+          >
           <div style={{ display: "grid", gap: 8 }}>
             <span
               style={{
@@ -499,32 +524,98 @@ export default function AdminPoemsManager() {
             name="underline"
             value={underline ? "true" : "false"}
           />
-          <input type="hidden" name="textLayout" value={serializedTextLayout} />
+            <input type="hidden" name="textLayout" value={serializedTextLayout} />
+          </section>
+        ) : (
+          <>
+            <input type="hidden" name="displayMode" value="page" />
+            <input type="hidden" name="textAlign" value={textAlign} />
+            <input type="hidden" name="currentBookImageUrl" value={bookImageUrl} />
+            <input type="hidden" name="libraryPage" value="1" />
+            <input type="hidden" name="librarySlot" value="1" />
+            <input type="hidden" name="bold" value={bold ? "true" : "false"} />
+            <input type="hidden" name="italic" value={italic ? "true" : "false"} />
+            <input type="hidden" name="underline" value={underline ? "true" : "false"} />
+            <input type="hidden" name="textLayout" value={serializedTextLayout} />
+          </>
+        )}
+
+        {supportsLibraryPlacement ? (
+          <LibrarySlotPicker
+            page={libraryPage}
+            slot={librarySlot}
+            onPageChange={setLibraryPage}
+            onSlotChange={setLibrarySlot}
+          />
+        ) : null}
+
+        <section
+          style={{
+            display: "grid",
+            gap: 14,
+            padding: 24,
+            borderRadius: 16,
+            border: `1px solid ${cardBorder}`,
+            background: cardBackground,
+            boxShadow: softShadow,
+          }}
+        >
+          <div style={{ display: "grid", gap: 4 }}>
+            <span
+              style={{
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: "0.04em",
+                textTransform: "uppercase",
+                color: textSecondary,
+              }}
+            >
+              Assets
+            </span>
+            <span style={{ color: textMuted, fontSize: 12 }}>{documentInputHelp}</span>
+          </div>
+
+          <label style={{ display: "grid", gap: 8 }}>
+            <span style={{ color: textSecondary, fontSize: 12 }}>{documentInputLabel}</span>
+            <input
+              key={`doc-file-${fileInputKey}`}
+              name="file"
+              type="file"
+              accept={isAboutSection ? ".pdf,application/pdf" : ".doc,.docx,.pdf"}
+              style={fieldStyle}
+            />
+          </label>
+
+          {supportsImageUpload ? (
+            <label style={{ display: "grid", gap: 8 }}>
+              <span style={{ color: textSecondary, fontSize: 12 }}>{imageInputLabel}</span>
+              <input
+                key={`image-file-${fileInputKey}`}
+                name="bookImageFile"
+                type="file"
+                accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif"
+                style={fieldStyle}
+              />
+              <span style={{ color: textMuted, fontSize: 12 }}>{imageInputHelp}</span>
+              {bookImageUrl ? (
+                <span style={{ color: textSecondary, fontSize: 12 }}>
+                  Imagen actual: {bookImageUrl}
+                </span>
+              ) : null}
+            </label>
+          ) : null}
         </section>
 
-        <LibrarySlotPicker
-          page={libraryPage}
-          slot={librarySlot}
-          onPageChange={setLibraryPage}
-          onSlotChange={setLibrarySlot}
-        />
-
-        <input
-          key={`doc-file-${fileInputKey}`}
-          name="file"
-          type="file"
-          accept=".doc,.docx,.pdf"
-          style={fieldStyle}
-        />
-
-        <input
-          name="purchaseUrl"
-          type="url"
-          value={purchaseUrl}
-          onChange={(e) => setPurchaseUrl(e.target.value)}
-          placeholder="Amazon purchase URL (optional)"
-          style={fieldStyle}
-        />
+        {supportsPurchaseUrl ? (
+          <input
+            name="purchaseUrl"
+            type="url"
+            value={purchaseUrl}
+            onChange={(e) => setPurchaseUrl(e.target.value)}
+            placeholder="Amazon purchase URL (optional)"
+            style={fieldStyle}
+          />
+        ) : null}
 
         <div
           style={{
@@ -551,7 +642,7 @@ export default function AdminPoemsManager() {
               transition,
             }}
           >
-            {saving ? "Saving..." : "Save poem"}
+            {saving ? "Saving..." : isAboutSection ? "Save profile" : "Save entry"}
           </button>
 
           <button
@@ -603,7 +694,9 @@ export default function AdminPoemsManager() {
             >
               <div style={{ fontWeight: 600, color: textPrimary }}>{getDisplayTitle(poem)}</div>
               <div style={{ color: textSecondary, fontSize: 13 }}>
-                {getSectionBasePath(poem.section)}/{poem.slug}
+                {poem.section === "about"
+                  ? getSectionBasePath(poem.section)
+                  : `${getSectionBasePath(poem.section)}/${poem.slug}`}
               </div>
               <div style={{ color: textSecondary, fontSize: 12 }}>
                 Updated: {new Date(poem.updatedAt).toLocaleString()}
@@ -611,9 +704,11 @@ export default function AdminPoemsManager() {
               <div style={{ color: textSecondary, fontSize: 12 }}>
                 Visual: {getDisplayModeLabel(poem.displayMode || DEFAULT_DISPLAY_MODE)}
               </div>
-              <div style={{ color: textSecondary, fontSize: 12 }}>
-                Biblioteca: pagina {poem.libraryPage || 1}, posicion {poem.librarySlot || 1}
-              </div>
+              {poem.section !== "about" ? (
+                <div style={{ color: textSecondary, fontSize: 12 }}>
+                  Biblioteca: pagina {poem.libraryPage || 1}, posicion {poem.librarySlot || 1}
+                </div>
+              ) : null}
               <div style={{ color: textSecondary, fontSize: 12 }}>
                 Format:{" "}
                 {poem.textAlign === "center"

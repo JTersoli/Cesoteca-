@@ -40,8 +40,36 @@ type PoemReaderProps = {
   underline?: boolean;
   textLayout?: BookTextLayout;
   backHref?: string;
+  backLabel?: string;
   downloadName?: string;
 };
+
+function getDownloadExtension(downloadUrl?: string) {
+  if (!downloadUrl) return "";
+
+  try {
+    const pathname = new URL(downloadUrl).pathname;
+    const match = pathname.match(/(\.[a-z0-9]+)$/i);
+    return match ? match[1] : "";
+  } catch {
+    const cleanUrl = downloadUrl.split("?")[0] || "";
+    const match = cleanUrl.match(/(\.[a-z0-9]+)$/i);
+    return match ? match[1] : "";
+  }
+}
+
+function resolveDownloadName(downloadUrl?: string, downloadName?: string, title?: string) {
+  const fallbackBase = (downloadName || title || "cesoteca").trim() || "cesoteca";
+  if (/\.[a-z0-9]+$/i.test(fallbackBase)) {
+    return fallbackBase;
+  }
+
+  return `${fallbackBase}${getDownloadExtension(downloadUrl)}`;
+}
+
+function isPdfUrl(downloadUrl?: string) {
+  return getDownloadExtension(downloadUrl).toLowerCase() === ".pdf";
+}
 
 function getBoxStyle(box: BookTextLayout["left"]) {
   return {
@@ -75,7 +103,8 @@ export default function PoemReader({
   underline = false,
   textLayout,
   backHref = "/poems",
-  downloadName = "cesoteca.docx",
+  backLabel = "Volver",
+  downloadName,
 }: PoemReaderProps) {
   const router = useRouter();
   const stageRef = useRef<HTMLDivElement | null>(null);
@@ -157,14 +186,28 @@ export default function PoemReader({
   }`;
   const imageHeight = Math.max(1, Math.round(1000 / imageRatio));
   const isBookMode = displayMode === "book";
+  const resolvedDownloadName = resolveDownloadName(downloadUrl, downloadName, title);
+  const canPreviewFile = Boolean(downloadUrl);
+  const canPreviewPdf = isPdfUrl(downloadUrl);
 
   const actions = downloadUrl || purchaseUrl ? (
-    <>
+    <div className={styles.actionGroup}>
+      {canPreviewFile ? (
+        <a
+          className={`${styles.actionBtn} ${styles.actionBtnPrimary}`}
+          href={downloadUrl}
+          target="_blank"
+          rel="noreferrer"
+          aria-label={canPreviewPdf ? "Ver PDF" : "Previsualizar archivo"}
+        >
+          {canPreviewPdf ? "Vista PDF" : "Previsualizar"}
+        </a>
+      ) : null}
       {downloadUrl ? (
         <a
-          className={styles.actionBtn}
+          className={`${styles.actionBtn} ${styles.actionBtnSecondary}`}
           href={downloadUrl}
-          download={downloadName}
+          download={resolvedDownloadName}
           aria-label="Descargar archivo"
         >
           Descargar
@@ -172,7 +215,7 @@ export default function PoemReader({
       ) : null}
       {purchaseUrl ? (
         <a
-          className={styles.actionBtn}
+          className={`${styles.actionBtn} ${styles.actionBtnGhost}`}
           href={purchaseUrl}
           target="_blank"
           rel="noreferrer"
@@ -181,7 +224,7 @@ export default function PoemReader({
           Comprar
         </a>
       ) : null}
-    </>
+    </div>
   ) : null;
 
   return (
@@ -189,7 +232,7 @@ export default function PoemReader({
       <div className={styles.readerShell}>
         <div className={styles.readerTopBar}>
           <Link href={backHref} className={styles.backLink}>
-            Volver
+            {backLabel}
           </Link>
 
           <div className={styles.topMeta}>

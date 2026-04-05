@@ -9,15 +9,17 @@
   width: 100%;
   margin: 0 auto;
   display: grid;
-  gap: 2px;
+  gap: 8px;
 }
 
 .readerTopBar {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: start;
+  align-items: center;
   gap: 10px;
-  padding: 0 8px;
+  width: min(100%, 1680px);
+  margin: 0 auto;
+  padding: 0 clamp(8px, 2vw, 18px);
 }
 
 .backLink {
@@ -56,8 +58,8 @@
 .readerTitle {
   margin: 0;
   max-width: 24ch;
-  font-size: clamp(1.1rem, 2vw, 1.45rem);
-  line-height: 1.02;
+  font-size: clamp(1.08rem, 1.8vw, 1.5rem);
+  line-height: 1.08;
   letter-spacing: -0.02em;
   text-wrap: balance;
   font-weight: 500;
@@ -74,7 +76,13 @@
 
 .actions {
   display: flex;
-  gap: 12px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.actionGroup {
+  display: flex;
+  gap: 10px;
   flex-wrap: wrap;
   justify-content: flex-end;
 }
@@ -85,25 +93,64 @@
   justify-content: center;
   align-items: center;
   min-height: 42px;
-  padding: 8px 2px;
+  padding: 10px 16px;
   border-radius: 999px;
-  border: 0;
+  border: 1px solid transparent;
   background: transparent;
   color: rgba(46, 31, 18, 0.88);
   font-family: var(--font-reading);
-  font-size: 1rem;
+  font-size: 0.96rem;
+  line-height: 1;
   text-decoration: none;
   cursor: pointer;
   transition:
     transform 140ms ease,
     color 140ms ease,
-    opacity 140ms ease;
+    opacity 140ms ease,
+    background-color 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.actionBtnPrimary {
+  background: rgba(234, 228, 221, 0.72);
+  border-color: rgba(121, 103, 83, 0.18);
+  color: #2c1e12;
+  box-shadow: 0 10px 24px rgba(43, 31, 20, 0.06);
+}
+
+.actionBtnSecondary {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(121, 103, 83, 0.14);
+  color: rgba(46, 31, 18, 0.86);
+}
+
+.actionBtnGhost {
+  background: transparent;
+  border-color: rgba(121, 103, 83, 0.12);
+  color: rgba(46, 31, 18, 0.78);
 }
 
 .actionBtn:hover,
 .navButton:hover:not(:disabled) {
   transform: translateY(-1px);
   color: #2c1e12;
+}
+
+.actionBtnPrimary:hover {
+  background: rgba(230, 222, 212, 0.86);
+  border-color: rgba(121, 103, 83, 0.24);
+  box-shadow: 0 14px 30px rgba(43, 31, 20, 0.08);
+}
+
+.actionBtnSecondary:hover {
+  background: rgba(249, 246, 241, 0.96);
+  border-color: rgba(121, 103, 83, 0.2);
+}
+
+.actionBtnGhost:hover {
+  background: rgba(249, 246, 241, 0.64);
+  border-color: rgba(121, 103, 83, 0.18);
 }
 
 .navButton:disabled {
@@ -123,13 +170,15 @@
 
 .bookViewport {
   display: grid;
-  gap: 2px;
+  gap: 8px;
   justify-items: center;
+  width: min(100%, 1680px);
+  margin: 0 auto;
 }
 
 .bookStage {
   position: relative;
-  width: min(100vw, calc((100svh - 72px) * var(--book-ratio, 1.3987241)));
+  width: min(calc(100vw - 24px), calc((100dvh - 8px) * var(--book-ratio, 1.3987241)));
   max-width: 100%;
   overflow: hidden;
   box-shadow: none;
@@ -163,7 +212,8 @@
   white-space: break-spaces;
   tab-size: 4;
   font-family: Georgia, "Times New Roman", Times, serif;
-  line-height: 1.72;
+  line-height: 1.66;
+  letter-spacing: 0.003em;
   color: #2a1f18;
   overflow-wrap: normal;
   word-break: normal;
@@ -223,7 +273,7 @@
 }
 
 .desktopFooter {
-  width: min(880px, 100%);
+  width: min(calc(100vw - 24px), calc((100dvh - 8px) * var(--book-ratio, 1.3987241)));
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   gap: 6px;
@@ -329,10 +379,9 @@
   }
 
   .readerTopBar {
-    grid-template-columns: 1fr;
-    justify-items: center;
-    gap: 4px;
-    padding: 0 10px;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 8px;
+    padding: 0 12px;
   }
 
   .readerHint {
@@ -340,7 +389,8 @@
   }
 
   .topMeta {
-    display: none;
+    display: grid;
+    min-width: 0;
   }
 
   .desktopReader {
@@ -356,16 +406,35 @@
   }
 
   .actions {
-    justify-content: center;
+    display: none;
+  }
+
+  .readerTitle {
+    max-width: 18ch;
+    font-size: clamp(0.98rem, 4vw, 1.14rem);
+    line-height: 1.1;
+  }
+
+  .mobileTitle {
     display: none;
   }
 
   .mobileActions {
     display: flex;
     justify-content: center;
-    gap: 18px;
+    gap: 14px;
     flex-wrap: wrap;
     margin-top: 28px;
+  }
+
+  .actionGroup {
+    justify-content: center;
+  }
+
+  .actionBtn {
+    min-height: 40px;
+    padding: 10px 14px;
+    font-size: 0.92rem;
   }
 
   .documentViewport {
