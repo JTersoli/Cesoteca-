@@ -298,6 +298,32 @@ export default function PoemReader({
           )}
           <div className={styles.mobilePaper}>
             <div className={`${textClassName} ${styles.mobileText}`}>{text}</div>
+
+            {downloadUrl || purchaseUrl ? (
+              <div className={styles.mobileActions}>
+                {downloadUrl ? (
+                  <a
+                    className={styles.actionBtn}
+                    href={downloadUrl}
+                    download={downloadName}
+                    aria-label="Descargar archivo"
+                  >
+                    Descargar
+                  </a>
+                ) : null}
+                {purchaseUrl ? (
+                  <a
+                    className={styles.actionBtn}
+                    href={purchaseUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="Comprar en Amazon"
+                  >
+                    Amazon
+                  </a>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         </article>
       </div>

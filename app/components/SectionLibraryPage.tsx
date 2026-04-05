@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { LIBRARY_POINTS } from "@/lib/library-points";
 import type { SectionItem } from "@/lib/section-data";
 import styles from "@/app/poems/library.module.css";
@@ -5,12 +6,18 @@ import styles from "@/app/poems/library.module.css";
 export default function SectionLibraryPage({
   basePath,
   items,
+  page = 1,
 }: {
   basePath: string;
   items: SectionItem[];
+  page?: number;
 }) {
-  const maxItems = Math.min(items.length, LIBRARY_POINTS.length);
-  const visible = items.slice(0, maxItems);
+  const capacity = LIBRARY_POINTS.length;
+  const safePage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
+  const startIndex = (safePage - 1) * capacity;
+  const visible = items.slice(startIndex, startIndex + capacity);
+  const hasMore = items.length > startIndex + capacity;
+  const nextPageHref = `${basePath}?page=${safePage + 1}`;
 
   function getDisplayTitle(item: SectionItem) {
     return item.title.trim() || item.slug.trim() || "Sin título";
@@ -20,8 +27,15 @@ export default function SectionLibraryPage({
     <main style={{ padding: 0 }}>
       <div style={{ width: "100%", display: "flex", justifyContent: "center" }}>
         <div style={{ width: "100%", maxWidth: 2000 }}>
+          <div className={styles.libraryTopBar}>
+            <Link href="/" className={styles.libraryBackLink}>
+              Volver
+            </Link>
+          </div>
+
           <div style={{ position: "relative", width: "100%", height: "96vh" }}>
             <svg
+              className={styles.librarySvg}
               style={{
                 position: "absolute",
                 inset: 0,
@@ -29,7 +43,7 @@ export default function SectionLibraryPage({
                 height: "100%",
               }}
               viewBox="0 0 768 1053"
-              preserveAspectRatio="xMidYMid meet"
+              preserveAspectRatio="xMidYMin meet"
             >
               <image href="/library.jpeg" x="0" y="0" width="768" height="1053" />
 
@@ -49,6 +63,14 @@ export default function SectionLibraryPage({
               ))}
             </svg>
           </div>
+
+          {hasMore ? (
+            <div className={styles.libraryFooter}>
+              <Link href={nextPageHref} className={styles.libraryMoreLink}>
+                Otros textos...
+              </Link>
+            </div>
+          ) : null}
         </div>
       </div>
     </main>

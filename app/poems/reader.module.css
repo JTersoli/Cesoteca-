@@ -270,6 +270,10 @@
   color: #2b2018;
 }
 
+.mobileActions {
+  display: none;
+}
+
 .srOnly {
   position: absolute;
   width: 1px;
@@ -298,6 +302,10 @@
     font-size: 0.7rem;
   }
 
+  .topMeta {
+    display: none;
+  }
+
   .desktopReader {
     display: none;
   }
@@ -308,5 +316,14 @@
 
   .actions {
     justify-content: center;
+    display: none;
+  }
+
+  .mobileActions {
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-top: 28px;
   }
 }

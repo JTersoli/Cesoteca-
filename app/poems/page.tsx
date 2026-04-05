@@ -3,7 +3,14 @@ import { getPublicPoems } from "@/lib/poems-public";
 
 export const revalidate = 60;
 
-export default async function PoemsPage() {
+export default async function PoemsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ page?: string }>;
+}) {
   const poems = await getPublicPoems();
-  return <SectionLibraryPage basePath="/poems" items={poems} />;
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const page = Number(resolvedSearchParams?.page || "1");
+
+  return <SectionLibraryPage basePath="/poems" items={poems} page={page} />;
 }

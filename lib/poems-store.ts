@@ -3,6 +3,7 @@ import path from "path";
 import type { BookTextLayout, TextAlign } from "@/lib/book-reader";
 import { normalizeBookTextLayout } from "@/lib/book-reader";
 import type { ContentSection } from "@/lib/sections";
+import { getSupabaseAdminClient, isSupabaseConfigured } from "@/lib/supabase";
 
 export type StoredPoem = {
   section: ContentSection;
@@ -18,6 +19,22 @@ export type StoredPoem = {
   underline?: boolean;
   textLayout?: BookTextLayout;
   updatedAt: string;
+};
+
+type StoredPoemRow = {
+  section: string;
+  slug: string;
+  title: string;
+  text: string;
+  download_url: string | null;
+  purchase_url: string | null;
+  book_image_url: string | null;
+  text_align: string | null;
+  bold: boolean | null;
+  italic: boolean | null;
+  underline: boolean | null;
+  text_layout: unknown | null;
+  updated_at: string;
 };
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -70,47 +87,28 @@ export function slugifyPoem(input: string) {
 }
 
 export async function readStoredPoems() {
+  if (isSupabaseConfigured()) {
+    const client = getSupabaseAdminClient();
+    if (!client) return [];
+
+    const { data, error } = await client
+      .from("content_entries")
+      .select("*")
+      .order("updated_at", { ascending: false });
+
+    if (error) {
+      console.error("[poems-store] Failed to read Supabase content:", error);
+      return [];
+    }
+
+    return normalizeStoredPoems((data || []) as StoredPoemRow[]);
+  }
+
   try {
     const raw = await readFile(POEMS_PATH, "utf8");
     const parsed = JSON.parse(raw) as Array<StoredPoem | Omit<StoredPoem, "section">>;
     if (!Array.isArray(parsed)) return [];
-    const usedSlugs = new Set<string>();
-
-    return parsed
-      .filter((item) => item && typeof item.slug === "string")
-      .map((item, index) => {
-        const rawSlug = typeof item.slug === "string" ? item.slug : "";
-        const fromTitle = "title" in item && typeof item.title === "string" ? item.title : "";
-        const baseSlug = toSlug(rawSlug) || toSlug(fromTitle) || `poem-${index + 1}`;
-        const safeSlug = makeUniqueSlug(baseSlug, usedSlugs);
-
-        return {
-          ...item,
-          slug: safeSlug,
-          textAlign:
-            "textAlign" in item &&
-            (item.textAlign === "left" ||
-              item.textAlign === "center" ||
-              item.textAlign === "justify")
-              ? item.textAlign
-              : "left",
-          bold: "bold" in item ? Boolean(item.bold) : false,
-          italic: "italic" in item ? Boolean(item.italic) : false,
-          underline: "underline" in item ? Boolean(item.underline) : false,
-          bookImageUrl:
-            "bookImageUrl" in item && typeof item.bookImageUrl === "string"
-              ? item.bookImageUrl
-              : undefined,
-          textLayout:
-            "textLayout" in item
-              ? normalizeBookTextLayout(item.textLayout)
-              : undefined,
-          section:
-            "section" in item && typeof item.section === "string"
-              ? item.section
-              : "poems",
-        };
-      }) as StoredPoem[];
+    return normalizeStoredPoems(parsed);
   } catch (error) {
     const code =
       typeof error === "object" && error && "code" in error
@@ -124,6 +122,32 @@ export async function readStoredPoems() {
 }
 
 export async function writeStoredPoems(poems: StoredPoem[]) {
+  if (isSupabaseConfigured()) {
+    const client = getSupabaseAdminClient();
+    if (!client) return;
+
+    const { error: deleteError } = await client
+      .from("content_entries")
+      .delete()
+      .not("slug", "is", null);
+
+    if (deleteError) {
+      throw new Error(`[poems-store] Failed to replace Supabase content: ${deleteError.message}`);
+    }
+
+    if (poems.length === 0) return;
+
+    const { error } = await client
+      .from("content_entries")
+      .insert(poems.map(toStoredPoemRow));
+
+    if (error) {
+      throw new Error(`[poems-store] Failed to write Supabase content: ${error.message}`);
+    }
+
+    return;
+  }
+
   await withWriteLock(async () => {
     await mkdir(DATA_DIR, { recursive: true });
     const payload = JSON.stringify(poems, null, 2);
@@ -135,6 +159,26 @@ export async function writeStoredPoems(poems: StoredPoem[]) {
 export async function upsertStoredPoem(
   input: Omit<StoredPoem, "updatedAt"> & { updatedAt?: string }
 ) {
+  if (isSupabaseConfigured()) {
+    const client = getSupabaseAdminClient();
+    if (!client) throw new Error("[poems-store] Supabase client unavailable.");
+
+    const next: StoredPoem = {
+      ...input,
+      updatedAt: input.updatedAt || new Date().toISOString(),
+    };
+
+    const { error } = await client
+      .from("content_entries")
+      .upsert(toStoredPoemRow(next), { onConflict: "section,slug" });
+
+    if (error) {
+      throw new Error(`[poems-store] Failed to upsert Supabase content: ${error.message}`);
+    }
+
+    return next;
+  }
+
   let saved: StoredPoem | undefined;
   await withWriteLock(async () => {
     const poems = await readStoredPoems();
@@ -156,6 +200,91 @@ export async function upsertStoredPoem(
   });
 
   return saved as StoredPoem;
+}
+
+function normalizeStoredPoems(
+  parsed: Array<StoredPoem | Omit<StoredPoem, "section"> | StoredPoemRow>
+) {
+  const usedSlugs = new Set<string>();
+
+  return parsed
+    .filter((item) => item && typeof item.slug === "string")
+    .map((item, index) => {
+      const rawSlug = typeof item.slug === "string" ? item.slug : "";
+      const fromTitle =
+        "title" in item && typeof item.title === "string" ? item.title : "";
+      const baseSlug = toSlug(rawSlug) || toSlug(fromTitle) || `poem-${index + 1}`;
+      const safeSlug = makeUniqueSlug(baseSlug, usedSlugs);
+
+      const textAlignValue =
+        "text_align" in item ? item.text_align : "textAlign" in item ? item.textAlign : null;
+      const sectionValue =
+        "section" in item && typeof item.section === "string" ? item.section : "poems";
+
+      return {
+        slug: safeSlug,
+        section: sectionValue as ContentSection,
+        title: typeof item.title === "string" ? item.title : "",
+        text: typeof item.text === "string" ? item.text : "",
+        downloadUrl:
+          "download_url" in item
+            ? item.download_url || undefined
+            : "downloadUrl" in item && typeof item.downloadUrl === "string"
+              ? item.downloadUrl
+              : undefined,
+        purchaseUrl:
+          "purchase_url" in item
+            ? item.purchase_url || undefined
+            : "purchaseUrl" in item && typeof item.purchaseUrl === "string"
+              ? item.purchaseUrl
+              : undefined,
+        bookImageUrl:
+          "book_image_url" in item
+            ? item.book_image_url || undefined
+            : "bookImageUrl" in item && typeof item.bookImageUrl === "string"
+              ? item.bookImageUrl
+              : undefined,
+        textAlign:
+          textAlignValue === "left" ||
+          textAlignValue === "center" ||
+          textAlignValue === "justify"
+            ? textAlignValue
+            : "left",
+        bold:
+          "bold" in item ? Boolean(item.bold) : false,
+        italic:
+          "italic" in item ? Boolean(item.italic) : false,
+        underline:
+          "underline" in item ? Boolean(item.underline) : false,
+        textLayout: normalizeBookTextLayout(
+          "text_layout" in item ? item.text_layout : "textLayout" in item ? item.textLayout : undefined
+        ),
+        updatedAt:
+          "updated_at" in item
+            ? item.updated_at
+            : "updatedAt" in item && typeof item.updatedAt === "string"
+              ? item.updatedAt
+              : new Date().toISOString(),
+      };
+    }) as StoredPoem[];
+}
+
+function toStoredPoemRow(poem: StoredPoem): StoredPoemRow {
+  return {
+    section: poem.section,
+    slug: poem.slug,
+    title: poem.title,
+    text: poem.text,
+    download_url: poem.downloadUrl || null,
+    purchase_url: poem.purchaseUrl || null,
+    book_image_url: poem.bookImageUrl || null,
+    text_align: poem.textAlign || "left",
+    bold: Boolean(poem.bold),
+    italic: Boolean(poem.italic),
+    underline: Boolean(poem.underline),
+    text_layout: normalizeBookTextLayout(poem.textLayout),
+    updated_at: poem.updatedAt,
+  };
 }
 
 async function withWriteLock<T>(task: () => Promise<T>) {

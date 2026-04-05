@@ -18,8 +18,17 @@ Sitio editorial construido con Next.js (App Router), TypeScript y Tailwind.
 
 Crear `.env.local` con:
 
-- `ADMIN_SESSION_SECRET=<hex-largo-seguro>`
 - `ADMIN_PASSWORD_HASH=<hash scrypt>`
+
+Opcional pero recomendado:
+
+- `ADMIN_SESSION_SECRET=<hex-largo-seguro>`
+
+Opcional para persistencia en Supabase:
+
+- `SUPABASE_URL=<project-url>`
+- `SUPABASE_SERVICE_ROLE_KEY=<service-role-key>`
+- `SUPABASE_STORAGE_BUCKET=cesoteca-assets`
 
 Compatibilidad temporal (no recomendado):
 
@@ -42,7 +51,15 @@ node -e "const c=require('crypto');const p=process.argv[1];const s=c.randomBytes
 
 - Contenido: `data/poems.json`
 - Credenciales admin persistidas: `data/admin-credentials.json`
-- Archivos subidos: `public/uploads/`
+
+Si `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` están configurados:
+
+- Contenido: tabla `public.content_entries`
+- Credenciales admin: tabla `public.admin_credentials`
+- Schema base: `supabase/schema.sql`
+- Uploads: bucket de Storage `cesoteca-assets` (o el valor de `SUPABASE_STORAGE_BUCKET`)
+- SQL de bucket: `supabase/storage.sql`
+- Script de migración de assets locales previos: `node scripts/migrate-local-uploads-to-supabase.mjs`
 
 ## Seguridad implementada
 
@@ -60,5 +77,8 @@ node -e "const c=require('crypto');const p=process.argv[1];const s=c.randomBytes
 
 ## Notas de despliegue
 
-Este proyecto hoy usa filesystem local para datos (`data/*.json`, `public/uploads`).
-Para producción con múltiples instancias o serverless, migrar a DB/almacenamiento persistente.
+Para producción con múltiples instancias o serverless:
+
+- usar `public.content_entries` + `public.admin_credentials` en Supabase
+- usar Supabase Storage para uploads admin
+- evitar depender de `data/*.json` como fuente principal

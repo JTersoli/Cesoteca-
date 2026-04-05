@@ -1,11 +1,18 @@
-﻿import SectionLibraryPage from "@/app/components/SectionLibraryPage";
+import SectionLibraryPage from "@/app/components/SectionLibraryPage";
 import { getPublicItems } from "@/lib/content-public";
 
 export const revalidate = 60;
 
-export default async function TextCommentsPage() {
+export default async function TextCommentsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ page?: string }>;
+}) {
   const items = await getPublicItems("text-comments");
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const page = Number(resolvedSearchParams?.page || "1");
+
   return (
-    <SectionLibraryPage basePath="/text-comments" items={items} />
+    <SectionLibraryPage basePath="/text-comments" items={items} page={page} />
   );
 }

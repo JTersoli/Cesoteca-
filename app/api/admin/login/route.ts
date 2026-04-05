@@ -2,9 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   ADMIN_COOKIE_NAME,
   createAdminToken,
-  hasConfiguredAdminPassword,
   getSessionMaxAgeSeconds,
-  getSessionSecret,
+  resolveAdminAuthConfig,
   verifyAdminPassword,
 } from "@/lib/admin-auth";
 import { isSameOriginRequest } from "@/lib/request-security";
@@ -98,9 +97,24 @@ export async function POST(request: NextRequest) {
     | { password?: string }
     | null;
   const provided = body?.password || "";
-  const sessionSecret = getSessionSecret();
+  const authConfig = await resolveAdminAuthConfig();
 
-  if (!(await hasConfiguredAdminPassword()) || !sessionSecret) {
+  if (!authConfig.passwordHash && authConfig.passwordSource !== "env-plain") {
+    console.error("[admin-login] Admin password is not configured.", {
+      passwordSource: authConfig.passwordSource,
+      sessionSecretSource: authConfig.sessionSecretSource,
+    });
+    return NextResponse.json(
+      { error: "Admin auth is not configured." },
+      { status: 500 }
+    );
+  }
+
+  if (!authConfig.sessionSecret) {
+    console.error("[admin-login] Session secret is not configured.", {
+      passwordSource: authConfig.passwordSource,
+      sessionSecretSource: authConfig.sessionSecretSource,
+    });
     return NextResponse.json(
       { error: "Admin auth is not configured." },
       { status: 500 }
@@ -122,7 +136,7 @@ export async function POST(request: NextRequest) {
 
   loginRateMap.delete(clientKey);
 
-  const token = createAdminToken(sessionSecret);
+  const token = createAdminToken(authConfig.sessionSecret);
   const response = NextResponse.json({ ok: true });
   response.cookies.set({
     name: ADMIN_COOKIE_NAME,

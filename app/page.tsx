@@ -32,7 +32,13 @@ export default function HomePage() {
           <aside className={styles.nav}>
             <nav aria-label="Secciones">
               {links.map((item) => (
-                <Link key={item.href} href={item.href} className={styles.link}>
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={
+                    item.href === "/about" ? styles.aboutLink : styles.libraryLink
+                  }
+                >
                   {item.label}
                 </Link>
               ))}

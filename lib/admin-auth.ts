@@ -1,18 +1,26 @@
 import { createHmac, randomBytes, scryptSync, timingSafeEqual } from "crypto";
 import {
-  readStoredAdminPasswordHash,
+  readStoredAdminPasswordHashRecord,
   writeStoredAdminPasswordHash,
 } from "@/lib/admin-credentials-store";
 
 export const ADMIN_COOKIE_NAME = "cesoteca_admin";
 const SESSION_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 7; // 7 days
 
+export type AdminAuthConfig = {
+  passwordHash: string;
+  passwordSource: "supabase" | "file" | "env-hash" | "env-plain" | "none";
+  sessionSecret: string;
+  sessionSecretSource: "env-secret" | "password-hash" | "env-plain" | "none";
+};
+
 function signPayload(payload: string, secret: string) {
   return createHmac("sha256", secret).update(payload).digest("hex");
 }
 
-export function getSessionSecret() {
-  return process.env.ADMIN_SESSION_SECRET || process.env.ADMIN_PASSWORD || "";
+export async function getSessionSecret() {
+  const config = await resolveAdminAuthConfig();
+  return config.sessionSecret;
 }
 
 export function getAdminPassword() {
@@ -84,7 +92,7 @@ export function createAdminPasswordHash(password: string) {
 }
 
 export async function verifyAdminPassword(password: string) {
-  const passwordHash = await getActiveAdminPasswordHash();
+  const { passwordHash } = await resolveAdminAuthConfig();
   if (passwordHash) {
     const parsed = parseScryptHash(passwordHash);
     if (!parsed) return false;
@@ -99,8 +107,8 @@ export async function verifyAdminPassword(password: string) {
 }
 
 export async function hasConfiguredAdminPassword() {
-  if (await getActiveAdminPasswordHash()) return true;
-  return Boolean(getAdminPassword());
+  const config = await resolveAdminAuthConfig();
+  return Boolean(config.passwordHash || config.passwordSource === "env-plain");
 }
 
 export async function updateStoredAdminPassword(password: string) {
@@ -108,8 +116,34 @@ export async function updateStoredAdminPassword(password: string) {
   await writeStoredAdminPasswordHash(hash);
 }
 
-async function getActiveAdminPasswordHash() {
-  const storedHash = await readStoredAdminPasswordHash();
-  if (storedHash) return storedHash;
-  return getAdminPasswordHash().trim();
+export async function resolveAdminAuthConfig(): Promise<AdminAuthConfig> {
+  const envSessionSecret = process.env.ADMIN_SESSION_SECRET?.trim() || "";
+  const envPasswordHash = getAdminPasswordHash().trim();
+  const envPlainPassword = getAdminPassword().trim();
+  const stored = await readStoredAdminPasswordHashRecord();
+
+  const passwordHash = stored.passwordHash || envPasswordHash;
+  const passwordSource = stored.passwordHash
+    ? stored.source
+    : envPasswordHash
+      ? "env-hash"
+      : envPlainPassword
+        ? "env-plain"
+        : "none";
+
+  const sessionSecret = envSessionSecret || passwordHash || envPlainPassword;
+  const sessionSecretSource = envSessionSecret
+    ? "env-secret"
+    : passwordHash
+      ? "password-hash"
+      : envPlainPassword
+        ? "env-plain"
+        : "none";
+
+  return {
+    passwordHash,
+    passwordSource,
+    sessionSecret,
+    sessionSecretSource,
+  };
 }

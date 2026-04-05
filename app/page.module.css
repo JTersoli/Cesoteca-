@@ -4,7 +4,7 @@
 }
 
 .container {
-  max-width: 1200px;
+  max-width: 1320px;
   margin: 0 auto;
   padding: 0;
 }
@@ -13,21 +13,21 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 40px;
-  align-items: start;
+  align-items: center;
 }
 
 @media (min-width: 768px) {
   .grid {
-    grid-template-columns: 520px 1fr;
-    gap: 90px;
-    align-items: start;
+    grid-template-columns: 620px minmax(320px, 1fr);
+    gap: 88px;
+    align-items: center;
   }
 }
 
 .imageBox {
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
 }
 
 @media (min-width: 768px) {
@@ -38,7 +38,7 @@
 
 .imageFrame {
   width: 100%;
-  max-width: 520px;
+  max-width: 620px;
   aspect-ratio: 13 / 16;
   position: relative;
 }
@@ -48,26 +48,43 @@
 }
 
 .nav {
-  padding-top: 24px;
+  display: flex;
+  align-items: flex-start;
+  padding-top: 70px;
+  min-height: 100%;
 }
 
-.link {
+.aboutLink,
+.libraryLink {
   display: block;
   width: fit-content;
-  margin-bottom: 16px;
-  font-family: var(--font-hand);
-  font-size: 30px;
-  line-height: 1.05;
-  color: #111;
   text-decoration: none;
 }
 
-.link:hover {
+.aboutLink {
+  margin-bottom: 20px;
+  font-family: var(--font-hand);
+  font-size: 31px;
+  line-height: 1.05;
+  color: #111;
+}
+
+.libraryLink {
+  margin-bottom: 18px;
+  font-family: var(--font-hand);
+  font-size: 34px;
+  line-height: 1.05;
+  color: #111;
+}
+
+.aboutLink:hover,
+.libraryLink:hover {
   text-decoration: underline;
   text-underline-offset: 8px;
 }
 
-.link:focus-visible {
+.aboutLink:focus-visible,
+.libraryLink:focus-visible {
   outline: 3px solid rgba(160, 106, 28, 0.45);
   outline-offset: 4px;
   border-radius: 6px;
@@ -86,11 +103,17 @@
   }
 
   .nav {
+    display: block;
     padding-top: 0;
   }
 
-  .link {
-    font-size: 26px;
+  .aboutLink {
+    font-size: 27px;
+    margin-bottom: 16px;
+  }
+
+  .libraryLink {
+    font-size: 29px;
     margin-bottom: 14px;
   }
 }

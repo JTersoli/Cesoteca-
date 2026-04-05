@@ -13,9 +13,9 @@ export default function SiteFrame({
 
   if (isPoemsLibrary) {
     return (
-      <div className="px-6 py-6">
-        <header className="mb-2">
-          <h1 className="text-center font-hand font-bold text-[64px] sm:text-[76px] md:text-[96px] lg:text-[112px] leading-none">
+      <div className="px-4 py-3 sm:px-6 sm:py-6">
+        <header className="mb-0 sm:mb-2">
+          <h1 className="text-center font-hand font-bold text-[52px] sm:text-[76px] md:text-[96px] lg:text-[112px] leading-none">
             Cesoteca
           </h1>
         </header>

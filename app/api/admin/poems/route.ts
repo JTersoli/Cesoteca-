@@ -1,4 +1,3 @@
-import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import { NextRequest, NextResponse } from "next/server";
 import {
@@ -14,6 +13,10 @@ import {
   upsertStoredPoem,
 } from "@/lib/poems-store";
 import { isContentSection } from "@/lib/sections";
+import {
+  isSupabaseStorageConfigured,
+  uploadAssetToSupabaseStorage,
+} from "@/lib/supabase-storage";
 
 const MAX_UPLOAD_SIZE_BYTES = 8 * 1024 * 1024; // 8MB
 const ALLOWED_UPLOAD_MIME_TYPES = new Set([
@@ -30,9 +33,9 @@ const ALLOWED_IMAGE_MIME_TYPES = new Set([
 ]);
 const ALLOWED_IMAGE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp", ".gif"]);
 
-function isAuthorized(request: NextRequest) {
+async function isAuthorized(request: NextRequest) {
   const token = request.cookies.get(ADMIN_COOKIE_NAME)?.value;
-  const secret = getSessionSecret();
+  const secret = await getSessionSecret();
   return verifyAdminToken(token, secret);
 }
 
@@ -59,7 +62,7 @@ function normalizeOptionalHttpUrl(input: string) {
 }
 
 export async function GET(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  if (!(await isAuthorized(request))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -77,7 +80,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Forbidden origin." }, { status: 403 });
   }
 
-  if (!isAuthorized(request)) {
+  if (!(await isAuthorized(request))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -137,6 +140,13 @@ export async function POST(request: NextRequest) {
   );
 
   if (file instanceof File && file.size > 0) {
+    if (!isSupabaseStorageConfigured()) {
+      return NextResponse.json(
+        { error: "Supabase Storage is not configured for document uploads." },
+        { status: 500 }
+      );
+    }
+
     if (file.size > MAX_UPLOAD_SIZE_BYTES) {
       return NextResponse.json(
         { error: "File is too large. Max allowed size is 8MB." },
@@ -157,17 +167,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const uploadsDir = path.join(process.cwd(), "public", "uploads");
-    await mkdir(uploadsDir, { recursive: true });
-    const safeName = sanitizeFilename(file.name || "file.bin");
-    const filename = `${slug}-${Date.now()}-${safeName}`;
-    const destination = path.join(uploadsDir, filename);
     const buffer = Buffer.from(await file.arrayBuffer());
-    await writeFile(destination, buffer);
-    downloadUrl = `/uploads/${filename}`;
+    const { publicUrl } = await uploadAssetToSupabaseStorage({
+      buffer,
+      contentType: mimeType || undefined,
+      fileName: sanitizeFilename(file.name || "file.bin"),
+      section: sectionValue,
+      slug,
+      kind: "documents",
+    });
+    downloadUrl = publicUrl;
   }
 
   if (bookImageFile instanceof File && bookImageFile.size > 0) {
+    if (!isSupabaseStorageConfigured()) {
+      return NextResponse.json(
+        { error: "Supabase Storage is not configured for image uploads." },
+        { status: 500 }
+      );
+    }
+
     if (bookImageFile.size > MAX_UPLOAD_SIZE_BYTES) {
       return NextResponse.json(
         { error: "Image is too large. Max allowed size is 8MB." },
@@ -187,14 +206,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const uploadsDir = path.join(process.cwd(), "public", "uploads");
-    await mkdir(uploadsDir, { recursive: true });
-    const safeName = sanitizeFilename(bookImageFile.name || "book-image.bin");
-    const filename = `${slug}-book-${Date.now()}-${safeName}`;
-    const destination = path.join(uploadsDir, filename);
     const buffer = Buffer.from(await bookImageFile.arrayBuffer());
-    await writeFile(destination, buffer);
-    bookImageUrl = `/uploads/${filename}`;
+    const { publicUrl } = await uploadAssetToSupabaseStorage({
+      buffer,
+      contentType: mimeType || undefined,
+      fileName: sanitizeFilename(bookImageFile.name || "book-image.bin"),
+      section: sectionValue,
+      slug,
+      kind: "images",
+    });
+    bookImageUrl = publicUrl;
   }
 
   const saved = await upsertStoredPoem({

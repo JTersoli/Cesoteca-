@@ -11,9 +11,9 @@ import { isSameOriginRequest } from "@/lib/request-security";
 const MIN_PASSWORD_LENGTH = 12;
 const MAX_PASSWORD_LENGTH = 128;
 
-function isAuthorized(request: NextRequest) {
+async function isAuthorized(request: NextRequest) {
   const token = request.cookies.get(ADMIN_COOKIE_NAME)?.value;
-  const secret = getSessionSecret();
+  const secret = await getSessionSecret();
   return verifyAdminToken(token, secret);
 }
 
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
   if (!isSameOriginRequest(request)) {
     return NextResponse.json({ error: "Forbidden origin." }, { status: 403 });
   }
-  if (!isAuthorized(request)) {
+  if (!(await isAuthorized(request))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
