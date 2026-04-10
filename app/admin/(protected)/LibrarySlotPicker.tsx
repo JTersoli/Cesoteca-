@@ -5,6 +5,11 @@ import { LIBRARY_POINTS } from "@/lib/library-points";
 type LibrarySlotPickerProps = {
   page: number;
   slot: number;
+  occupiedSlots?: Array<{
+    page: number;
+    slot: number;
+    label: string;
+  }>;
   onPageChange: (page: number) => void;
   onSlotChange: (slot: number) => void;
 };
@@ -14,9 +19,14 @@ const TOTAL_SLOTS = LIBRARY_POINTS.length;
 export default function LibrarySlotPicker({
   page,
   slot,
+  occupiedSlots = [],
   onPageChange,
   onSlotChange,
 }: LibrarySlotPickerProps) {
+  const occupiedByKey = new Map(
+    occupiedSlots.map((occupied) => [`${occupied.page}:${occupied.slot}`, occupied.label])
+  );
+
   return (
     <section
       style={{
@@ -108,25 +118,63 @@ export default function LibrarySlotPicker({
           {LIBRARY_POINTS.map((points, index) => {
             const currentSlot = index + 1;
             const active = currentSlot === slot;
+            const occupiedLabel = occupiedByKey.get(`${page}:${currentSlot}`);
+            const occupied = Boolean(occupiedLabel);
 
             return (
               <g key={currentSlot}>
                 <polygon
                   points={points}
-                  onClick={() => onSlotChange(currentSlot)}
+                  onClick={() => {
+                    if (!occupied || active) {
+                      onSlotChange(currentSlot);
+                    }
+                  }}
+                  aria-label={
+                    occupiedLabel
+                      ? `Posición ocupada por ${occupiedLabel}`
+                      : `Posición ${currentSlot}`
+                  }
+                  role="button"
                   style={{
-                    fill: active ? "rgba(95, 90, 122, 0.26)" : "rgba(255,255,255,0.01)",
-                    stroke: active ? "#5F5A7A" : "rgba(95, 90, 122, 0.14)",
+                    fill: active
+                      ? "rgba(95, 90, 122, 0.26)"
+                      : occupied
+                        ? "rgba(159, 18, 57, 0.14)"
+                        : "rgba(255,255,255,0.01)",
+                    stroke: active
+                      ? "#5F5A7A"
+                      : occupied
+                        ? "rgba(159, 18, 57, 0.45)"
+                        : "rgba(95, 90, 122, 0.14)",
                     strokeWidth: active ? 3 : 1.5,
-                    cursor: "pointer",
+                    cursor: occupied && !active ? "not-allowed" : "pointer",
                     transition: "all 180ms ease",
                   }}
                 />
+                {occupied ? (
+                  <title>{`${occupiedLabel} ocupa esta posición`}</title>
+                ) : null}
               </g>
             );
           })}
         </svg>
       </div>
+
+      {occupiedSlots.some((occupied) => occupied.page === page) ? (
+        <div
+          style={{
+            color: "#6F6F6F",
+            fontSize: 12,
+            padding: "10px 12px",
+            borderRadius: 12,
+            background: "#F9F4F6",
+            border: "1px solid #F2D6DF",
+          }}
+        >
+          Las posiciones marcadas en rosa ya están ocupadas en esta sección.
+        </div>
+      ) : null}
 
       <div
         style={{

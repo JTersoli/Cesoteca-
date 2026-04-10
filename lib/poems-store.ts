@@ -1,7 +1,11 @@
 import { mkdir, readFile, rename, writeFile } from "fs/promises";
 import path from "path";
 import type { BookTextLayout, DisplayMode, TextAlign } from "@/lib/book-reader";
-import { normalizeBookTextLayout, normalizeDisplayMode } from "@/lib/book-reader";
+import {
+  DEFAULT_BOOK_IMAGE_URL,
+  normalizeBookTextLayout,
+  normalizeDisplayMode,
+} from "@/lib/book-reader";
 import type { ContentSection } from "@/lib/sections";
 import { getSupabaseAdminClient, isSupabaseConfigured } from "@/lib/supabase";
 
@@ -23,6 +27,8 @@ export type StoredPoem = {
   textLayout?: BookTextLayout;
   updatedAt: string;
 };
+
+export type StoredPoemIdentity = Pick<StoredPoem, "section" | "slug">;
 
 type StoredPoemRow = {
   section: string;
@@ -91,6 +97,12 @@ function normalizeOptionalPositiveInteger(value: unknown) {
   if (typeof value !== "number" || !Number.isFinite(value)) return undefined;
   const normalized = Math.floor(value);
   return normalized > 0 ? normalized : undefined;
+}
+
+function normalizeOptionalBookImageUrl(value: unknown) {
+  return typeof value === "string" && value && value !== DEFAULT_BOOK_IMAGE_URL
+    ? value
+    : undefined;
 }
 
 export function slugifyPoem(input: string) {
@@ -169,8 +181,13 @@ export async function writeStoredPoems(poems: StoredPoem[]) {
 }
 
 export async function upsertStoredPoem(
-  input: Omit<StoredPoem, "updatedAt"> & { updatedAt?: string }
+  input: Omit<StoredPoem, "updatedAt"> & { updatedAt?: string },
+  options?: {
+    originalIdentity?: StoredPoemIdentity;
+  }
 ) {
+  const originalIdentity = options?.originalIdentity;
+
   if (isSupabaseConfigured()) {
     const client = getSupabaseAdminClient();
     if (!client) throw new Error("[poems-store] Supabase client unavailable.");
@@ -179,6 +196,28 @@ export async function upsertStoredPoem(
       ...input,
       updatedAt: input.updatedAt || new Date().toISOString(),
     };
+    const targetChanged =
+      Boolean(originalIdentity) &&
+      (originalIdentity?.section !== next.section || originalIdentity?.slug !== next.slug);
+
+    if (targetChanged && originalIdentity) {
+      const { data: collision, error: collisionError } = await client
+        .from("content_entries")
+        .select("section, slug")
+        .eq("section", next.section)
+        .eq("slug", next.slug)
+        .maybeSingle();
+
+      if (collisionError) {
+        throw new Error(
+          `[poems-store] Failed to validate renamed content: ${collisionError.message}`
+        );
+      }
+
+      if (collision) {
+        throw new Error("Ya existe una entrada con ese slug en la sección elegida.");
+      }
+    }
 
     const { error } = await client
       .from("content_entries")
@@ -186,6 +225,20 @@ export async function upsertStoredPoem(
 
     if (error) {
       throw new Error(`[poems-store] Failed to upsert Supabase content: ${error.message}`);
+    }
+
+    if (targetChanged && originalIdentity) {
+      const { error: deleteError } = await client
+        .from("content_entries")
+        .delete()
+        .eq("section", originalIdentity.section)
+        .eq("slug", originalIdentity.slug);
+
+      if (deleteError) {
+        throw new Error(
+          `[poems-store] Failed to remove previous content entry: ${deleteError.message}`
+        );
+      }
     }
 
     return next;
@@ -198,6 +251,32 @@ export async function upsertStoredPoem(
       ...input,
       updatedAt: input.updatedAt || new Date().toISOString(),
     };
+    const targetChanged =
+      Boolean(originalIdentity) &&
+      (originalIdentity?.section !== next.section || originalIdentity?.slug !== next.slug);
+    const collisionIndex = poems.findIndex(
+      (p) =>
+        p.section === next.section &&
+        p.slug === next.slug &&
+        (!originalIdentity ||
+          p.section !== originalIdentity.section ||
+          p.slug !== originalIdentity.slug)
+    );
+
+    if (collisionIndex >= 0) {
+      throw new Error("Ya existe una entrada con ese slug en la sección elegida.");
+    }
+
+    if (targetChanged && originalIdentity) {
+      const originalIndex = poems.findIndex(
+        (p) => p.section === originalIdentity.section && p.slug === originalIdentity.slug
+      );
+
+      if (originalIndex >= 0) {
+        poems.splice(originalIndex, 1);
+      }
+    }
+
     const index = poems.findIndex(
       (p) => p.section === next.section && p.slug === next.slug
     );
@@ -217,7 +296,7 @@ export async function upsertStoredPoem(
 function normalizeStoredPoems(
   parsed: Array<StoredPoem | Omit<StoredPoem, "section"> | StoredPoemRow>
 ) {
-  const usedSlugs = new Set<string>();
+  const usedSlugsBySection = new Map<string, Set<string>>();
 
   return parsed
     .filter((item) => item && typeof item.slug === "string")
@@ -225,13 +304,19 @@ function normalizeStoredPoems(
       const rawSlug = typeof item.slug === "string" ? item.slug : "";
       const fromTitle =
         "title" in item && typeof item.title === "string" ? item.title : "";
-      const baseSlug = toSlug(rawSlug) || toSlug(fromTitle) || `poem-${index + 1}`;
-      const safeSlug = makeUniqueSlug(baseSlug, usedSlugs);
-
       const textAlignValue =
         "text_align" in item ? item.text_align : "textAlign" in item ? item.textAlign : null;
       const sectionValue =
         "section" in item && typeof item.section === "string" ? item.section : "poems";
+      const sectionSlugSet =
+        usedSlugsBySection.get(sectionValue) ||
+        (() => {
+          const next = new Set<string>();
+          usedSlugsBySection.set(sectionValue, next);
+          return next;
+        })();
+      const baseSlug = toSlug(rawSlug) || toSlug(fromTitle) || `poem-${index + 1}`;
+      const safeSlug = makeUniqueSlug(baseSlug, sectionSlugSet);
 
       return {
         slug: safeSlug,
@@ -252,9 +337,9 @@ function normalizeStoredPoems(
               : undefined,
         bookImageUrl:
           "book_image_url" in item
-            ? item.book_image_url || undefined
+            ? normalizeOptionalBookImageUrl(item.book_image_url)
             : "bookImageUrl" in item && typeof item.bookImageUrl === "string"
-              ? item.bookImageUrl
+              ? normalizeOptionalBookImageUrl(item.bookImageUrl)
               : undefined,
         libraryPage: normalizeOptionalPositiveInteger(
           "library_page" in item

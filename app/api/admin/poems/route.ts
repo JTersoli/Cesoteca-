@@ -16,11 +16,9 @@ import {
   slugifyPoem,
   upsertStoredPoem,
 } from "@/lib/poems-store";
+import { uploadAsset } from "@/lib/asset-storage";
 import { isContentSection } from "@/lib/sections";
-import {
-  isSupabaseStorageConfigured,
-  uploadAssetToSupabaseStorage,
-} from "@/lib/supabase-storage";
+import { getLibrarySlotKey } from "@/lib/library-placement";
 
 const MAX_UPLOAD_SIZE_BYTES = 8 * 1024 * 1024; // 8MB
 const ALLOWED_UPLOAD_MIME_TYPES = new Set([
@@ -63,6 +61,12 @@ function normalizeOptionalHttpUrl(input: string) {
   } catch {
     return null;
   }
+}
+
+function normalizeOptionalAssetUrl(input: string) {
+  const value = input.trim();
+  if (!value || value === DEFAULT_BOOK_IMAGE_URL) return undefined;
+  return value;
 }
 
 function normalizeOptionalPositiveInteger(input: string) {
@@ -111,6 +115,9 @@ export async function POST(request: NextRequest) {
     const italicInput = String(formData.get("italic") || "").trim().toLowerCase();
     const underlineInput = String(formData.get("underline") || "").trim().toLowerCase();
     const textLayoutInput = String(formData.get("textLayout") || "").trim();
+    const originalSectionInput = String(formData.get("originalSection") || "").trim();
+    const originalSlugInput = String(formData.get("originalSlug") || "").trim();
+    const currentDownloadUrlInput = String(formData.get("currentDownloadUrl") || "").trim();
     const currentBookImageUrlInput = String(formData.get("currentBookImageUrl") || "").trim();
     const file = formData.get("file");
     const bookImageFile = formData.get("bookImageFile");
@@ -158,20 +165,53 @@ export async function POST(request: NextRequest) {
     }
 
     const slug = sectionValue === "about" ? "about" : slugifyPoem(customSlug || title);
+    const originalSection =
+      originalSectionInput && isContentSection(originalSectionInput)
+        ? originalSectionInput
+        : undefined;
+    const originalSlug = originalSlugInput || undefined;
+    const currentDownloadUrl = normalizeOptionalAssetUrl(currentDownloadUrlInput);
+    const currentBookImageUrl = normalizeOptionalAssetUrl(currentBookImageUrlInput);
     let downloadUrl: string | undefined;
     let bookImageUrl: string | undefined;
-    const existing = (await readStoredPoems()).find(
-      (poem) => poem.section === sectionValue && poem.slug === slug
-    );
+    const storedPoems = await readStoredPoems();
+    const existing =
+      (originalSection && originalSlug
+        ? storedPoems.find(
+            (poem) => poem.section === originalSection && poem.slug === originalSlug
+          )
+        : undefined) ||
+      storedPoems.find((poem) => poem.section === sectionValue && poem.slug === slug);
 
-    if (file instanceof File && file.size > 0) {
-      if (!isSupabaseStorageConfigured()) {
+    if (sectionValue !== "about") {
+      const occupiedByOther = storedPoems.find((poem) => {
+        if (poem.section !== sectionValue) return false;
+        if (poem.libraryPage !== libraryPage || poem.librarySlot !== librarySlot) return false;
+
+        const isSameOriginal =
+          originalSection &&
+          originalSlug &&
+          poem.section === originalSection &&
+          poem.slug === originalSlug;
+        const isSameTarget = poem.section === sectionValue && poem.slug === slug;
+
+        return !isSameOriginal && !isSameTarget;
+      });
+
+      if (occupiedByOther) {
         return NextResponse.json(
-          { error: "Supabase Storage is not configured for document uploads." },
-          { status: 500 }
+          {
+            error: `La posición ${getLibrarySlotKey(
+              libraryPage || 1,
+              librarySlot || 1
+            )} ya está ocupada por "${occupiedByOther.title || occupiedByOther.slug}".`,
+          },
+          { status: 409 }
         );
       }
+    }
 
+    if (file instanceof File && file.size > 0) {
       if (file.size > MAX_UPLOAD_SIZE_BYTES) {
         return NextResponse.json(
           { error: "File is too large. Max allowed size is 8MB." },
@@ -203,7 +243,7 @@ export async function POST(request: NextRequest) {
       }
 
       const buffer = Buffer.from(await file.arrayBuffer());
-      const { publicUrl } = await uploadAssetToSupabaseStorage({
+      const { publicUrl } = await uploadAsset({
         buffer,
         contentType: mimeType || undefined,
         fileName: sanitizeFilename(file.name || "file.bin"),
@@ -215,13 +255,6 @@ export async function POST(request: NextRequest) {
     }
 
     if (bookImageFile instanceof File && bookImageFile.size > 0) {
-      if (!isSupabaseStorageConfigured()) {
-        return NextResponse.json(
-          { error: "Supabase Storage is not configured for image uploads." },
-          { status: 500 }
-        );
-      }
-
       if (bookImageFile.size > MAX_UPLOAD_SIZE_BYTES) {
         return NextResponse.json(
           { error: "Image is too large. Max allowed size is 8MB." },
@@ -242,7 +275,7 @@ export async function POST(request: NextRequest) {
       }
 
       const buffer = Buffer.from(await bookImageFile.arrayBuffer());
-      const { publicUrl } = await uploadAssetToSupabaseStorage({
+      const { publicUrl } = await uploadAsset({
         buffer,
         contentType: mimeType || undefined,
         fileName: sanitizeFilename(bookImageFile.name || "book-image.bin"),
@@ -253,32 +286,44 @@ export async function POST(request: NextRequest) {
       bookImageUrl = publicUrl;
     }
 
-    const saved = await upsertStoredPoem({
-      section: sectionValue,
-      slug,
-      title,
-      text,
-      downloadUrl: downloadUrl || existing?.downloadUrl,
-      purchaseUrl: normalizedPurchaseUrl || existing?.purchaseUrl,
-      bookImageUrl:
-        bookImageUrl ||
-        currentBookImageUrlInput ||
-        existing?.bookImageUrl ||
-        DEFAULT_BOOK_IMAGE_URL,
-      libraryPage,
-      librarySlot,
-      displayMode,
-      textAlign,
-      bold,
-      italic,
-      underline,
-      textLayout,
-    });
+    const saved = await upsertStoredPoem(
+      {
+        section: sectionValue,
+        slug,
+        title,
+        text,
+        downloadUrl: downloadUrl || currentDownloadUrl || existing?.downloadUrl,
+        purchaseUrl:
+          normalizedPurchaseUrl !== undefined ? normalizedPurchaseUrl : existing?.purchaseUrl,
+        bookImageUrl: bookImageUrl || currentBookImageUrl || existing?.bookImageUrl || undefined,
+        libraryPage,
+        librarySlot,
+        displayMode,
+        textAlign,
+        bold,
+        italic,
+        underline,
+        textLayout,
+      },
+      {
+        originalIdentity:
+          originalSection && originalSlug
+            ? {
+                section: originalSection,
+                slug: originalSlug,
+              }
+            : undefined,
+      }
+    );
 
     return NextResponse.json({ poem: saved }, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to save poem.";
     console.error("[admin-poems] Save failed:", error);
-    return NextResponse.json({ error: message }, { status: 500 });
+    const status =
+      message.includes("Ya existe una entrada") || message.includes("ya está ocupada")
+        ? 409
+        : 500;
+    return NextResponse.json({ error: message }, { status });
   }
 }

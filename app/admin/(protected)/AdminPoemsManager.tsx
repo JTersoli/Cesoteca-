@@ -33,6 +33,11 @@ type Poem = {
   updatedAt: string;
 };
 
+type EditingIdentity = {
+  section: (typeof SECTION_OPTIONS)[number]["key"];
+  slug: string;
+};
+
 function getDisplayTitle(poem: Pick<Poem, "title" | "slug">) {
   return poem.title.trim() || poem.slug.trim() || "Sin título";
 }
@@ -88,7 +93,8 @@ export default function AdminPoemsManager() {
   const [slug, setSlug] = useState("");
   const [text, setText] = useState("");
   const [purchaseUrl, setPurchaseUrl] = useState("");
-  const [bookImageUrl, setBookImageUrl] = useState(DEFAULT_BOOK_IMAGE_URL);
+  const [downloadUrl, setDownloadUrl] = useState("");
+  const [bookImageUrl, setBookImageUrl] = useState("");
   const [libraryPage, setLibraryPage] = useState(1);
   const [librarySlot, setLibrarySlot] = useState(1);
   const [displayMode, setDisplayMode] = useState<DisplayMode>(DEFAULT_DISPLAY_MODE);
@@ -100,6 +106,7 @@ export default function AdminPoemsManager() {
     DEFAULT_BOOK_TEXT_LAYOUT
   );
   const [fileInputKey, setFileInputKey] = useState(0);
+  const [editingIdentity, setEditingIdentity] = useState<EditingIdentity | null>(null);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -128,6 +135,31 @@ export default function AdminPoemsManager() {
     displayMode === "book"
       ? "Vista con doble pagina e imagen del libro. Se habilitan posicion e imagen."
       : "Vista de hoja unica, centrada y limpia. Se ocultan los controles del libro.";
+  const occupiedSlots = useMemo(
+    () =>
+      poems
+        .filter((poem) => {
+          if (poem.section !== section) return false;
+          if (!poem.libraryPage || !poem.librarySlot) return false;
+          if (
+            editingIdentity &&
+            poem.section === editingIdentity.section &&
+            poem.slug === editingIdentity.slug
+          ) {
+            return false;
+          }
+          return true;
+        })
+        .map((poem) => ({
+          page: poem.libraryPage as number,
+          slot: poem.librarySlot as number,
+          label: getDisplayTitle(poem),
+        })),
+    [editingIdentity, poems, section]
+  );
+  const slotConflict = occupiedSlots.find(
+    (occupied) => occupied.page === libraryPage && occupied.slot === librarySlot
+  );
 
   const loadPoems = useCallback(async () => {
     setLoading(true);
@@ -167,7 +199,8 @@ export default function AdminPoemsManager() {
     setSlug(isAboutSection ? "about" : "");
     setText("");
     setPurchaseUrl("");
-    setBookImageUrl(DEFAULT_BOOK_IMAGE_URL);
+    setDownloadUrl("");
+    setBookImageUrl("");
     setLibraryPage(1);
     setLibrarySlot(1);
     setDisplayMode(DEFAULT_DISPLAY_MODE);
@@ -176,11 +209,16 @@ export default function AdminPoemsManager() {
     setItalic(false);
     setUnderline(false);
     setTextLayout(DEFAULT_BOOK_TEXT_LAYOUT);
+    setEditingIdentity(null);
     setFileInputKey((value) => value + 1);
   }
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (slotConflict) {
+      setError(`La posición elegida ya está ocupada por ${slotConflict.label}.`);
+      return;
+    }
     setSaving(true);
     setError("");
     const form = e.currentTarget;
@@ -211,12 +249,14 @@ export default function AdminPoemsManager() {
   }
 
   function loadPoemIntoForm(poem: Poem) {
+    setEditingIdentity({ section: poem.section, slug: poem.slug });
     setSection(poem.section);
     setTitle(poem.title);
     setSlug(poem.slug);
     setText(poem.text);
     setPurchaseUrl(poem.purchaseUrl || "");
-    setBookImageUrl(poem.bookImageUrl || DEFAULT_BOOK_IMAGE_URL);
+    setDownloadUrl(poem.downloadUrl || "");
+    setBookImageUrl(poem.bookImageUrl || "");
     setLibraryPage(poem.libraryPage || 1);
     setLibrarySlot(poem.librarySlot || 1);
     setDisplayMode(poem.displayMode || DEFAULT_DISPLAY_MODE);
@@ -323,6 +363,13 @@ export default function AdminPoemsManager() {
       </div>
 
       <form onSubmit={onSubmit} style={{ display: "grid", gap: 20 }}>
+        <input
+          type="hidden"
+          name="originalSection"
+          value={editingIdentity?.section || ""}
+        />
+        <input type="hidden" name="originalSlug" value={editingIdentity?.slug || ""} />
+        <input type="hidden" name="currentDownloadUrl" value={downloadUrl} />
         <label style={{ display: "grid", gap: 6 }}>
           <span
             style={{
@@ -544,6 +591,7 @@ export default function AdminPoemsManager() {
           <LibrarySlotPicker
             page={libraryPage}
             slot={librarySlot}
+            occupiedSlots={occupiedSlots}
             onPageChange={setLibraryPage}
             onSlotChange={setLibrarySlot}
           />
@@ -584,6 +632,11 @@ export default function AdminPoemsManager() {
               accept={isAboutSection ? ".pdf,application/pdf" : ".doc,.docx,.pdf"}
               style={fieldStyle}
             />
+            {downloadUrl ? (
+              <span style={{ color: textSecondary, fontSize: 12 }}>
+                Archivo actual: {downloadUrl}
+              </span>
+            ) : null}
           </label>
 
           {supportsImageUpload ? (
@@ -630,19 +683,26 @@ export default function AdminPoemsManager() {
         >
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || Boolean(slotConflict)}
             style={{
               border: `1px solid ${accent}`,
               borderRadius: 12,
               padding: "12px 16px",
               background: accent,
               color: "#fff",
-              cursor: saving ? "default" : "pointer",
+              cursor: saving || slotConflict ? "default" : "pointer",
+              opacity: saving || slotConflict ? 0.72 : 1,
               boxShadow: softShadow,
               transition,
             }}
           >
-            {saving ? "Saving..." : isAboutSection ? "Save profile" : "Save entry"}
+            {saving
+              ? "Saving..."
+              : isAboutSection
+                ? "Save profile"
+                : editingIdentity
+                  ? "Guardar cambios"
+                  : "Save entry"}
           </button>
 
           <button
@@ -666,6 +726,11 @@ export default function AdminPoemsManager() {
       {error ? (
         <p style={{ marginTop: 12, color: "#9F1239" }} role="alert">
           {error}
+        </p>
+      ) : null}
+      {slotConflict && !isAboutSection ? (
+        <p style={{ marginTop: 12, color: "#9F1239" }} role="alert">
+          La posición elegida ya está ocupada por {slotConflict.label}.
         </p>
       ) : null}
 
@@ -748,7 +813,7 @@ export default function AdminPoemsManager() {
                     transition,
                   }}
                 >
-                  Load into editor
+                  Editar
                 </button>
                 {poem.downloadUrl ? (
                   <a href={poem.downloadUrl} target="_blank" rel="noreferrer">

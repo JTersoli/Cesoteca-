@@ -7,6 +7,12 @@ export type PositionedLibraryItem = {
   slot: number;
 };
 
+export type LibrarySlotKey = `${number}:${number}`;
+
+export function getLibrarySlotKey(page: number, slot: number): LibrarySlotKey {
+  return `${page}:${slot}`;
+}
+
 const PAGE_SIZE = LIBRARY_POINTS.length;
 
 function normalizePositiveInteger(value: unknown) {
@@ -33,7 +39,7 @@ export function buildLibraryPlacements(items: SectionItem[]) {
       continue;
     }
 
-    const key = `${page}:${slot}`;
+    const key = getLibrarySlotKey(page, slot);
     if (occupied.has(key)) {
       unassigned.push(item);
       continue;
@@ -47,7 +53,7 @@ export function buildLibraryPlacements(items: SectionItem[]) {
   let slot = 1;
 
   for (const item of unassigned) {
-    while (occupied.has(`${page}:${slot}`)) {
+    while (occupied.has(getLibrarySlotKey(page, slot))) {
       slot += 1;
       if (slot > PAGE_SIZE) {
         page += 1;
@@ -55,7 +61,7 @@ export function buildLibraryPlacements(items: SectionItem[]) {
       }
     }
 
-    occupied.add(`${page}:${slot}`);
+    occupied.add(getLibrarySlotKey(page, slot));
     positioned.push({ item, page, slot });
   }
 
@@ -63,4 +69,28 @@ export function buildLibraryPlacements(items: SectionItem[]) {
     if (a.page !== b.page) return a.page - b.page;
     return a.slot - b.slot;
   });
+}
+
+export function getOccupiedLibrarySlotKeys<
+  T extends { slug: string; libraryPage?: number; librarySlot?: number }
+>(
+  items: T[],
+  options?: {
+    excludeSlug?: string;
+  }
+) {
+  const occupied = new Set<LibrarySlotKey>();
+
+  for (const item of items) {
+    if (options?.excludeSlug && item.slug === options.excludeSlug) {
+      continue;
+    }
+
+    const page = normalizePositiveInteger(item.libraryPage);
+    const slot = normalizePositiveInteger(item.librarySlot);
+    if (!page || !slot || slot > PAGE_SIZE) continue;
+    occupied.add(getLibrarySlotKey(page, slot));
+  }
+
+  return occupied;
 }
