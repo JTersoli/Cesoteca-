@@ -16,6 +16,8 @@ export type StoredPoem = {
   text: string;
   downloadUrl?: string;
   purchaseUrl?: string;
+  readArticleUrl?: string;
+  contactInfo?: string;
   bookImageUrl?: string;
   libraryPage?: number;
   librarySlot?: number;
@@ -37,6 +39,8 @@ type StoredPoemRow = {
   text: string;
   download_url: string | null;
   purchase_url: string | null;
+  read_article_url: string | null;
+  contact_info: string | null;
   book_image_url: string | null;
   library_page: number | null;
   library_slot: number | null;
@@ -456,6 +460,18 @@ function normalizeStoredPoems(
             : "purchaseUrl" in item && typeof item.purchaseUrl === "string"
               ? item.purchaseUrl
               : undefined,
+        readArticleUrl:
+          "read_article_url" in item
+            ? item.read_article_url || undefined
+            : "readArticleUrl" in item && typeof item.readArticleUrl === "string"
+              ? item.readArticleUrl
+              : undefined,
+        contactInfo:
+          "contact_info" in item
+            ? item.contact_info || undefined
+            : "contactInfo" in item && typeof item.contactInfo === "string"
+              ? item.contactInfo
+              : undefined,
         bookImageUrl:
           "book_image_url" in item
             ? normalizeOptionalBookImageUrl(item.book_image_url)
@@ -516,6 +532,8 @@ function toStoredPoemRow(poem: StoredPoem): StoredPoemRow {
     text: poem.text,
     download_url: poem.downloadUrl || null,
     purchase_url: poem.purchaseUrl || null,
+    read_article_url: poem.readArticleUrl || null,
+    contact_info: poem.contactInfo || null,
     book_image_url: poem.bookImageUrl || null,
     library_page: normalizeOptionalPositiveInteger(poem.libraryPage) || null,
     library_slot: normalizeOptionalPositiveInteger(poem.librarySlot) || null,

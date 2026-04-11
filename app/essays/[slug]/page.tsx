@@ -1,4 +1,4 @@
-﻿import PoemReader from "@/app/poems/PoemReader";
+import PoemReader from "@/app/poems/PoemReader";
 import { getPublicItemBySlug } from "@/lib/content-public";
 import { notFound } from "next/navigation";
 
@@ -21,6 +21,7 @@ export default async function EssayPage({
       text={item.text}
       downloadUrl={item.downloadUrl}
       purchaseUrl={item.purchaseUrl}
+      readArticleUrl={item.readArticleUrl}
       bookImageUrl={item.bookImageUrl}
       displayMode={item.displayMode}
       textAlign={item.textAlign}
@@ -33,3 +34,4 @@ export default async function EssayPage({
     />
   );
 }
+

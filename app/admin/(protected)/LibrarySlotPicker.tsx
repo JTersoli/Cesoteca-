@@ -3,15 +3,16 @@
 import { LIBRARY_POINTS } from "@/lib/library-points";
 
 type LibrarySlotPickerProps = {
-  page: number;
-  slot: number;
+  page?: number;
+  slot?: number;
   occupiedSlots?: Array<{
     page: number;
     slot: number;
     label: string;
   }>;
-  onPageChange: (page: number) => void;
-  onSlotChange: (slot: number) => void;
+  onPageChange: (page: number | undefined) => void;
+  onSlotChange: (slot: number | undefined) => void;
+  onClearSelection: () => void;
 };
 
 const TOTAL_SLOTS = LIBRARY_POINTS.length;
@@ -22,7 +23,9 @@ export default function LibrarySlotPicker({
   occupiedSlots = [],
   onPageChange,
   onSlotChange,
+  onClearSelection,
 }: LibrarySlotPickerProps) {
+  const currentPage = page ?? 1;
   const occupiedByKey = new Map(
     occupiedSlots.map((occupied) => [`${occupied.page}:${occupied.slot}`, occupied.label])
   );
@@ -51,16 +54,34 @@ export default function LibrarySlotPicker({
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         <button
           type="button"
-          onClick={() => onPageChange(Math.max(1, page - 1))}
-          disabled={page <= 1}
+          onClick={onClearSelection}
+          style={{
+            border: !page || !slot ? "1px solid #5F5A7A" : "1px solid #E6E3F0",
+            borderRadius: 999,
+            padding: "9px 14px",
+            background: !page || !slot ? "#5F5A7A" : "#F1F0F7",
+            color: !page || !slot ? "#fff" : "#6F6F6F",
+            cursor: "pointer",
+            boxShadow:
+              !page || !slot
+                ? "0 6px 18px rgba(95, 90, 122, 0.14)"
+                : "inset 0 1px 0 rgba(255,255,255,0.7)",
+          }}
+        >
+          Sin ubicacion
+        </button>
+        <button
+          type="button"
+          onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+          disabled={currentPage <= 1}
           style={{
             border: "1px solid #E6E3F0",
             borderRadius: 999,
             padding: "9px 14px",
             background: "#F1F0F7",
             color: "#6F6F6F",
-            cursor: page <= 1 ? "default" : "pointer",
-            opacity: page <= 1 ? 0.5 : 1,
+            cursor: currentPage <= 1 ? "default" : "pointer",
+            opacity: currentPage <= 1 ? 0.5 : 1,
           }}
         >
           Pagina anterior
@@ -78,11 +99,11 @@ export default function LibrarySlotPicker({
             boxShadow: "0 6px 18px rgba(95, 90, 122, 0.14)",
           }}
         >
-          Pagina {page}
+          Pagina {currentPage}
         </div>
         <button
           type="button"
-          onClick={() => onPageChange(page + 1)}
+          onClick={() => onPageChange(currentPage + 1)}
           style={{
             border: "1px solid #E6E3F0",
             borderRadius: 999,
@@ -118,7 +139,7 @@ export default function LibrarySlotPicker({
           {LIBRARY_POINTS.map((points, index) => {
             const currentSlot = index + 1;
             const active = currentSlot === slot;
-            const occupiedLabel = occupiedByKey.get(`${page}:${currentSlot}`);
+            const occupiedLabel = occupiedByKey.get(`${currentPage}:${currentSlot}`);
             const occupied = Boolean(occupiedLabel);
 
             return (
@@ -126,6 +147,9 @@ export default function LibrarySlotPicker({
                 <polygon
                   points={points}
                   onClick={() => {
+                    if (!page) {
+                      onPageChange(currentPage);
+                    }
                     onSlotChange(currentSlot);
                   }}
                   aria-label={
@@ -159,7 +183,7 @@ export default function LibrarySlotPicker({
         </svg>
       </div>
 
-      {occupiedSlots.some((occupied) => occupied.page === page) ? (
+      {occupiedSlots.some((occupied) => occupied.page === currentPage) ? (
         <div
           style={{
             color: "#6F6F6F",
@@ -191,8 +215,11 @@ export default function LibrarySlotPicker({
             type="number"
             min={1}
             step={1}
-            value={page}
-            onChange={(event) => onPageChange(Math.max(1, Number(event.target.value) || 1))}
+            value={page ?? ""}
+            onChange={(event) => {
+              const value = event.target.value.trim();
+              onPageChange(value ? Math.max(1, Number(value) || 1) : undefined);
+            }}
             style={{
               border: "1px solid #E6E3F0",
               borderRadius: 12,
@@ -211,12 +238,18 @@ export default function LibrarySlotPicker({
             min={1}
             max={TOTAL_SLOTS}
             step={1}
-            value={slot}
-            onChange={(event) =>
+            value={slot ?? ""}
+            onChange={(event) => {
+              const value = event.target.value.trim();
+              if (value && !page) {
+                onPageChange(currentPage);
+              }
               onSlotChange(
-                Math.min(TOTAL_SLOTS, Math.max(1, Number(event.target.value) || 1))
-              )
-            }
+                value
+                  ? Math.min(TOTAL_SLOTS, Math.max(1, Number(value) || 1))
+                  : undefined
+              );
+            }}
             style={{
               border: "1px solid #E6E3F0",
               borderRadius: 12,

@@ -7,6 +7,8 @@ export type SectionItem = {
   text: string;
   downloadUrl?: string;
   purchaseUrl?: string;
+  readArticleUrl?: string;
+  contactInfo?: string;
   bookImageUrl?: string;
   libraryPage?: number;
   librarySlot?: number;
@@ -25,6 +27,7 @@ export const ABOUT_ITEM: SectionItem = {
   text:
     "Cesoteca es un archivo personal de lectura y escritura. Reúne poemas, ensayos, comentarios de texto y publicaciones en un formato de biblioteca visual.\n\nEl proyecto prioriza una experiencia de lectura simple: tipografía clara, navegación directa y foco en el contenido.",
   downloadUrl: "/cv.pdf",
+  contactInfo: "Contacto\n\nemail@example.com",
 };
 
 function buildItems(
@@ -69,3 +72,5 @@ export const PUBLICATIONS_NON_ACADEMIC_ITEMS = buildItems(
   "Publicación no académica",
   "Ficha de publicación no académica."
 );
+
+

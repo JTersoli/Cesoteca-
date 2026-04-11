@@ -1,4 +1,9 @@
 .screen {
+  --public-btn-bg: rgba(214, 202, 244, 0.88);
+  --public-btn-bg-hover: rgba(221, 211, 246, 0.96);
+  --public-btn-border: rgba(146, 124, 220, 0.26);
+  --public-btn-text: #44385f;
+  --public-btn-shadow: 0 12px 26px rgba(146, 124, 220, 0.14);
   min-height: 100svh;
   padding: 0;
   background: #fff;
@@ -34,25 +39,36 @@
   justify-self: start;
   display: inline-flex;
   align-items: center;
-  padding: 8px 2px;
+  justify-content: center;
+  min-height: 42px;
+  padding: 10px 18px;
   border-radius: 999px;
-  color: rgba(58, 40, 24, 0.86);
+  border: 1px solid var(--public-btn-border);
+  background: var(--public-btn-bg);
+  color: var(--public-btn-text);
   text-decoration: none;
   font-size: 1rem;
+  box-shadow: var(--public-btn-shadow);
   transition:
     color 140ms ease,
-    transform 140ms ease;
+    transform 140ms ease,
+    background-color 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease;
 }
 
 .backLink:hover {
   transform: translateY(-1px);
-  color: #2c1e12;
+  color: #3d3257;
+  background: var(--public-btn-bg-hover);
+  border-color: rgba(146, 124, 220, 0.34);
+  box-shadow: 0 16px 30px rgba(146, 124, 220, 0.18);
 }
 
 .backLink:focus-visible,
 .actionBtn:focus-visible,
 .navButton:focus-visible {
-  outline: 3px solid rgba(160, 106, 28, 0.58);
+  outline: 3px solid rgba(146, 124, 220, 0.52);
   outline-offset: 3px;
 }
 
@@ -103,9 +119,9 @@
   min-height: 42px;
   padding: 10px 16px;
   border-radius: 999px;
-  border: 1px solid transparent;
-  background: transparent;
-  color: rgba(46, 31, 18, 0.88);
+  border: 1px solid var(--public-btn-border);
+  background: var(--public-btn-bg);
+  color: var(--public-btn-text);
   font-family: var(--font-reading);
   font-size: 0.96rem;
   line-height: 1;
@@ -120,45 +136,20 @@
     box-shadow 140ms ease;
 }
 
-.actionBtnPrimary {
-  background: rgba(234, 228, 221, 0.72);
-  border-color: rgba(121, 103, 83, 0.18);
-  color: #2c1e12;
-  box-shadow: 0 10px 24px rgba(43, 31, 20, 0.06);
-}
-
-.actionBtnSecondary {
-  background: rgba(255, 255, 255, 0.96);
-  border-color: rgba(121, 103, 83, 0.14);
-  color: rgba(46, 31, 18, 0.86);
-}
-
-.actionBtnGhost {
-  background: transparent;
-  border-color: rgba(121, 103, 83, 0.12);
-  color: rgba(46, 31, 18, 0.78);
+.actionBtnPrimary,
+.actionBtnSecondary,
+.actionBtnGhost,
+.navButton {
+  box-shadow: var(--public-btn-shadow);
 }
 
 .actionBtn:hover,
 .navButton:hover:not(:disabled) {
   transform: translateY(-1px);
-  color: #2c1e12;
-}
-
-.actionBtnPrimary:hover {
-  background: rgba(230, 222, 212, 0.86);
-  border-color: rgba(121, 103, 83, 0.24);
-  box-shadow: 0 14px 30px rgba(43, 31, 20, 0.08);
-}
-
-.actionBtnSecondary:hover {
-  background: rgba(249, 246, 241, 0.96);
-  border-color: rgba(121, 103, 83, 0.2);
-}
-
-.actionBtnGhost:hover {
-  background: rgba(249, 246, 241, 0.64);
-  border-color: rgba(121, 103, 83, 0.18);
+  color: #3d3257;
+  background: var(--public-btn-bg-hover);
+  border-color: rgba(146, 124, 220, 0.34);
+  box-shadow: 0 16px 30px rgba(146, 124, 220, 0.18);
 }
 
 .navButton:disabled {
@@ -204,6 +195,7 @@
   inset: 0;
   z-index: 2;
   pointer-events: none;
+  transform: translateY(-1.8%);
 }
 
 .textBox {
@@ -220,7 +212,7 @@
   white-space: break-spaces;
   tab-size: 4;
   font-family: Georgia, "Times New Roman", Times, serif;
-  line-height: 1.66;
+  line-height: 1.58;
   letter-spacing: 0.003em;
   color: #2a1f18;
   overflow-wrap: normal;

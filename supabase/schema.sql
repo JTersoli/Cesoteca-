@@ -5,6 +5,8 @@ create table if not exists public.content_entries (
   text text not null default '',
   download_url text,
   purchase_url text,
+  read_article_url text,
+  contact_info text,
   book_image_url text,
   library_page integer,
   library_slot integer,
@@ -20,6 +22,12 @@ create table if not exists public.content_entries (
 
 create index if not exists content_entries_updated_at_idx
   on public.content_entries (updated_at desc);
+
+alter table public.content_entries
+  add column if not exists read_article_url text;
+
+alter table public.content_entries
+  add column if not exists contact_info text;
 
 create table if not exists public.admin_credentials (
   id text primary key,

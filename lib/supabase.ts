@@ -29,6 +29,8 @@ type Database = {
           text: string;
           download_url: string | null;
           purchase_url: string | null;
+          read_article_url: string | null;
+          contact_info: string | null;
           book_image_url: string | null;
           library_page: number | null;
           library_slot: number | null;
@@ -47,6 +49,8 @@ type Database = {
           text: string;
           download_url?: string | null;
           purchase_url?: string | null;
+          read_article_url?: string | null;
+          contact_info?: string | null;
           book_image_url?: string | null;
           library_page?: number | null;
           library_slot?: number | null;
@@ -65,6 +69,8 @@ type Database = {
           text?: string;
           download_url?: string | null;
           purchase_url?: string | null;
+          read_article_url?: string | null;
+          contact_info?: string | null;
           book_image_url?: string | null;
           library_page?: number | null;
           library_slot?: number | null;

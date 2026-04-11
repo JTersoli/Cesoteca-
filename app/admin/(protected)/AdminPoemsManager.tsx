@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import LibrarySlotPicker from "./LibrarySlotPicker";
 import {
@@ -20,6 +21,8 @@ type Poem = {
   text: string;
   downloadUrl?: string;
   purchaseUrl?: string;
+  readArticleUrl?: string;
+  contactInfo?: string;
   bookImageUrl?: string;
   libraryPage?: number;
   librarySlot?: number;
@@ -94,11 +97,13 @@ export default function AdminPoemsManager() {
   const [slug, setSlug] = useState("");
   const [text, setText] = useState("");
   const [purchaseUrl, setPurchaseUrl] = useState("");
+  const [readArticleUrl, setReadArticleUrl] = useState("");
+  const [contactInfo, setContactInfo] = useState("");
   const [downloadUrl, setDownloadUrl] = useState("");
   const [bookImageUrl, setBookImageUrl] = useState("");
   const [entriesQuery, setEntriesQuery] = useState("");
-  const [libraryPage, setLibraryPage] = useState(1);
-  const [librarySlot, setLibrarySlot] = useState(1);
+  const [libraryPage, setLibraryPage] = useState<number | undefined>(1);
+  const [librarySlot, setLibrarySlot] = useState<number | undefined>(1);
   const [displayMode, setDisplayMode] = useState<DisplayMode>(DEFAULT_DISPLAY_MODE);
   const [textAlign, setTextAlign] = useState<TextAlign>("left");
   const [bold, setBold] = useState(false);
@@ -109,6 +114,7 @@ export default function AdminPoemsManager() {
   );
   const [fileInputKey, setFileInputKey] = useState(0);
   const [editingIdentity, setEditingIdentity] = useState<EditingIdentity | null>(null);
+  const [loadedUpdatedAt, setLoadedUpdatedAt] = useState("");
 
   const serializedTextLayout = useMemo(
     () => JSON.stringify(normalizeBookTextLayout(textLayout)),
@@ -154,7 +160,11 @@ export default function AdminPoemsManager() {
     [editingIdentity, poems, section]
   );
   const slotConflict = occupiedSlots.find(
-    (occupied) => occupied.page === libraryPage && occupied.slot === librarySlot
+    (occupied) =>
+      typeof libraryPage === "number" &&
+      typeof librarySlot === "number" &&
+      occupied.page === libraryPage &&
+      occupied.slot === librarySlot
   );
   const filteredPoems = useMemo(() => {
     const query = entriesQuery.trim().toLowerCase();
@@ -208,6 +218,8 @@ export default function AdminPoemsManager() {
     setSlug(isAboutSection ? "about" : "");
     setText("");
     setPurchaseUrl("");
+    setReadArticleUrl("");
+    setContactInfo("");
     setDownloadUrl("");
     setBookImageUrl("");
     setLibraryPage(1);
@@ -219,6 +231,7 @@ export default function AdminPoemsManager() {
     setUnderline(false);
     setTextLayout(DEFAULT_BOOK_TEXT_LAYOUT);
     setEditingIdentity(null);
+    setLoadedUpdatedAt("");
     setFileInputKey((value) => value + 1);
   }
 
@@ -253,7 +266,7 @@ export default function AdminPoemsManager() {
 
       setNotice(
         data.replacedSlot
-          ? `Se guardó la entrada y "${data.replacedSlot.title || "otra entrada"}" quedó fuera de la biblioteca al liberar la posición ${data.replacedSlot.slotKey}.`
+          ? `Se guardo la entrada y "${data.replacedSlot.title || "otra entrada"}" fue movida fuera de la biblioteca al liberar la posicion ${data.replacedSlot.slotKey}. La entrada sigue existiendo y se puede volver a editar.`
           : editingIdentity
             ? "Los cambios se guardaron correctamente."
             : "La entrada se creó correctamente."
@@ -277,16 +290,19 @@ export default function AdminPoemsManager() {
     setSlug(poem.slug);
     setText(poem.text);
     setPurchaseUrl(poem.purchaseUrl || "");
+    setReadArticleUrl(poem.readArticleUrl || "");
+    setContactInfo(poem.contactInfo || "");
     setDownloadUrl(poem.downloadUrl || "");
     setBookImageUrl(poem.bookImageUrl || "");
-    setLibraryPage(poem.libraryPage || 1);
-    setLibrarySlot(poem.librarySlot || 1);
+    setLibraryPage(poem.libraryPage);
+    setLibrarySlot(poem.librarySlot);
     setDisplayMode(poem.displayMode || DEFAULT_DISPLAY_MODE);
     setTextAlign(poem.textAlign || "left");
     setBold(Boolean(poem.bold));
     setItalic(Boolean(poem.italic));
     setUnderline(Boolean(poem.underline));
     setTextLayout(normalizeBookTextLayout(poem.textLayout));
+    setLoadedUpdatedAt(poem.updatedAt || "");
     setFileInputKey((value) => value + 1);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -309,6 +325,7 @@ export default function AdminPoemsManager() {
         body: JSON.stringify({
           section: poem.section,
           slug: poem.slug,
+          expectedUpdatedAt: poem.updatedAt,
         }),
       });
 
@@ -535,13 +552,14 @@ export default function AdminPoemsManager() {
             </div>
 
             <form onSubmit={onSubmit} style={sectionCardStyle}>
-        <input
-          type="hidden"
-          name="originalSection"
-          value={editingIdentity?.section || ""}
-        />
-        <input type="hidden" name="originalSlug" value={editingIdentity?.slug || ""} />
-        <input type="hidden" name="currentDownloadUrl" value={downloadUrl} />
+              <input
+                type="hidden"
+                name="originalSection"
+                value={editingIdentity?.section || ""}
+              />
+              <input type="hidden" name="originalSlug" value={editingIdentity?.slug || ""} />
+              <input type="hidden" name="currentDownloadUrl" value={downloadUrl} />
+              <input type="hidden" name="expectedUpdatedAt" value={loadedUpdatedAt} />
         <div style={sectionHeadingStyle}>
           <span style={sectionIconStyle}>i</span>
           <div>
@@ -597,14 +615,30 @@ export default function AdminPoemsManager() {
         />
 
         {supportsPurchaseUrl ? (
-          <input
-            name="purchaseUrl"
-            type="url"
-            value={purchaseUrl}
-            onChange={(e) => setPurchaseUrl(e.target.value)}
-            placeholder="https://..."
-            style={softInputSurface}
-          />
+          <div
+            style={{
+              display: "grid",
+              gap: 12,
+              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            }}
+          >
+            <input
+              name="purchaseUrl"
+              type="url"
+              value={purchaseUrl}
+              onChange={(e) => setPurchaseUrl(e.target.value)}
+              placeholder="Link de Comprar"
+              style={softInputSurface}
+            />
+            <input
+              name="readArticleUrl"
+              type="url"
+              value={readArticleUrl}
+              onChange={(e) => setReadArticleUrl(e.target.value)}
+              placeholder="Link de Leer articulo"
+              style={softInputSurface}
+            />
+          </div>
         ) : null}
 
         <textarea
@@ -619,6 +653,17 @@ export default function AdminPoemsManager() {
           rows={8}
           style={{ ...softInputSurface, minHeight: 180, resize: "vertical" }}
         />
+
+        {isAboutSection ? (
+          <textarea
+            name="contactInfo"
+            value={contactInfo}
+            onChange={(e) => setContactInfo(e.target.value)}
+            placeholder={"Informacion de contacto\n\nEmail\nInstagram\nCiudad"}
+            rows={5}
+            style={{ ...softInputSurface, minHeight: 120, resize: "vertical" }}
+          />
+        ) : null}
 
         {supportsLayoutControls ? (
           <section
@@ -668,7 +713,7 @@ export default function AdminPoemsManager() {
                 aria-pressed={displayMode === "page"}
                 style={getPillButtonStyle(displayMode === "page")}
               >
-                Pagina simple / PDF abierto
+                Pagina simple / lectura lineal
               </button>
             </div>
             <div
@@ -766,8 +811,8 @@ export default function AdminPoemsManager() {
             name="currentBookImageUrl"
             value={bookImageUrl}
           />
-          <input type="hidden" name="libraryPage" value={String(libraryPage)} />
-          <input type="hidden" name="librarySlot" value={String(librarySlot)} />
+          <input type="hidden" name="libraryPage" value={libraryPage?.toString() || ""} />
+          <input type="hidden" name="librarySlot" value={librarySlot?.toString() || ""} />
           <input type="hidden" name="bold" value={bold ? "true" : "false"} />
           <input type="hidden" name="italic" value={italic ? "true" : "false"} />
           <input
@@ -798,6 +843,10 @@ export default function AdminPoemsManager() {
             occupiedSlots={occupiedSlots}
             onPageChange={setLibraryPage}
             onSlotChange={setLibrarySlot}
+            onClearSelection={() => {
+              setLibraryPage(undefined);
+              setLibrarySlot(undefined);
+            }}
           />
         ) : null}
 
@@ -839,22 +888,61 @@ export default function AdminPoemsManager() {
           </label>
 
           {supportsImageUpload ? (
-            <label style={{ display: "grid", gap: 8 }}>
-              <span style={{ color: textSecondary, fontSize: 12 }}>{imageInputLabel}</span>
-              <input
-                key={`image-file-${fileInputKey}`}
-                name="bookImageFile"
-                type="file"
-                accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif"
-                style={softInputSurface}
-              />
-              <span style={{ color: textMuted, fontSize: 12 }}>{imageInputHelp}</span>
+            <div
+              style={{
+                display: "grid",
+                gap: 12,
+                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                alignItems: "start",
+              }}
+            >
+              <label style={{ display: "grid", gap: 8 }}>
+                <span style={{ color: textSecondary, fontSize: 12 }}>{imageInputLabel}</span>
+                <input
+                  key={`image-file-${fileInputKey}`}
+                  name="bookImageFile"
+                  type="file"
+                  accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif"
+                  style={softInputSurface}
+                />
+                <span style={{ color: textMuted, fontSize: 12 }}>{imageInputHelp}</span>
+                {bookImageUrl ? (
+                  <span style={{ color: textSecondary, fontSize: 12, wordBreak: "break-all" }}>
+                    Imagen actual: {bookImageUrl}
+                  </span>
+                ) : null}
+              </label>
+
               {bookImageUrl ? (
-                <span style={{ color: textSecondary, fontSize: 12 }}>
-                  Imagen actual: {bookImageUrl}
-                </span>
+                <div
+                  style={{
+                    display: "grid",
+                    gap: 8,
+                    padding: 10,
+                    borderRadius: 18,
+                    border: `1px solid ${divider}`,
+                    background: "#FFFFFF",
+                  }}
+                >
+                  <span style={{ color: textMuted, fontSize: 11, textTransform: "uppercase" }}>
+                    Preview
+                  </span>
+                  <Image
+                    src={bookImageUrl}
+                    alt="Preview de imagen del libro"
+                    width={320}
+                    height={400}
+                    style={{
+                      width: "100%",
+                      aspectRatio: "4 / 5",
+                      objectFit: "cover",
+                      borderRadius: 14,
+                      display: "block",
+                    }}
+                  />
+                </div>
               ) : null}
-            </label>
+            </div>
           ) : null}
         </section>
 
@@ -1093,8 +1181,10 @@ export default function AdminPoemsManager() {
                         </div>
                         <div style={{ color: textPrimary, fontSize: 14, marginTop: 4 }}>
                           {poem.section === "about"
-                            ? "Sin ubicación"
-                            : `Página ${poem.libraryPage || 1}, slot ${poem.librarySlot || 1}`}
+                            ? "Sin ubicacion"
+                            : poem.libraryPage && poem.librarySlot
+                              ? `Pagina ${poem.libraryPage}, slot ${poem.librarySlot}`
+                              : "Sin ubicacion en biblioteca"}
                         </div>
                       </div>
                       <div
@@ -1215,6 +1305,23 @@ export default function AdminPoemsManager() {
                         External link
                       </a>
                     ) : null}
+                    {poem.readArticleUrl ? (
+                      <a
+                        href={poem.readArticleUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                          border: `1px solid ${cardBorder}`,
+                          borderRadius: 12,
+                          padding: "10px 14px",
+                          background: "#FFFFFF",
+                          color: textSecondary,
+                          textDecoration: "none",
+                        }}
+                      >
+                        Leer articulo
+                      </a>
+                    ) : null}
                   </div>
                 </li>
               );
@@ -1227,6 +1334,8 @@ export default function AdminPoemsManager() {
     </main>
   );
 }
+
+
 
 
 

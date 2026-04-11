@@ -7,6 +7,8 @@ export type PublicPoem = {
   text: string;
   downloadUrl?: string;
   purchaseUrl?: string;
+  readArticleUrl?: string;
+  contactInfo?: string;
   bookImageUrl?: string;
   libraryPage?: number;
   librarySlot?: number;

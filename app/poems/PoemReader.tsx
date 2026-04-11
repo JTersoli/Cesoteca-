@@ -32,6 +32,7 @@ type PoemReaderProps = {
   text: string;
   downloadUrl?: string;
   purchaseUrl?: string;
+  readArticleUrl?: string;
   bookImageUrl?: string;
   displayMode?: DisplayMode;
   textAlign?: TextAlign;
@@ -67,10 +68,6 @@ function resolveDownloadName(downloadUrl?: string, downloadName?: string, title?
   return `${fallbackBase}${getDownloadExtension(downloadUrl)}`;
 }
 
-function isPdfUrl(downloadUrl?: string) {
-  return getDownloadExtension(downloadUrl).toLowerCase() === ".pdf";
-}
-
 function getBoxStyle(box: BookTextLayout["left"]) {
   return {
     left: `${box.x}%`,
@@ -95,6 +92,7 @@ export default function PoemReader({
   text,
   downloadUrl,
   purchaseUrl,
+  readArticleUrl,
   bookImageUrl = DEFAULT_BOOK_IMAGE_URL,
   displayMode = DEFAULT_DISPLAY_MODE,
   textAlign = "left",
@@ -173,7 +171,7 @@ export default function PoemReader({
     "--book-ratio": imageRatio,
   } as CSSProperties;
   const textStyle = {
-    fontSize: `${getBookFontSize(stageWidth)}px`,
+    fontSize: `${Math.max(12, getBookFontSize(stageWidth) * 0.92)}px`,
   };
   const textClassName = `${styles.text} ${
     textAlign === "center"
@@ -187,30 +185,27 @@ export default function PoemReader({
   const imageHeight = Math.max(1, Math.round(1000 / imageRatio));
   const isBookMode = displayMode === "book";
   const resolvedDownloadName = resolveDownloadName(downloadUrl, downloadName, title);
-  const canPreviewFile = Boolean(downloadUrl);
-  const canPreviewPdf = isPdfUrl(downloadUrl);
-
-  const actions = downloadUrl || purchaseUrl ? (
+  const actions = downloadUrl || purchaseUrl || readArticleUrl ? (
     <div className={styles.actionGroup}>
-      {canPreviewFile ? (
-        <a
-          className={`${styles.actionBtn} ${styles.actionBtnPrimary}`}
-          href={downloadUrl}
-          target="_blank"
-          rel="noreferrer"
-          aria-label={canPreviewPdf ? "Ver PDF" : "Previsualizar archivo"}
-        >
-          {canPreviewPdf ? "Vista PDF" : "Previsualizar"}
-        </a>
-      ) : null}
       {downloadUrl ? (
         <a
-          className={`${styles.actionBtn} ${styles.actionBtnSecondary}`}
+          className={`${styles.actionBtn} ${styles.actionBtnPrimary}`}
           href={downloadUrl}
           download={resolvedDownloadName}
           aria-label="Descargar archivo"
         >
           Descargar
+        </a>
+      ) : null}
+      {readArticleUrl ? (
+        <a
+          className={`${styles.actionBtn} ${styles.actionBtnSecondary}`}
+          href={readArticleUrl}
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Leer articulo externo"
+        >
+          Leer articulo
         </a>
       ) : null}
       {purchaseUrl ? (

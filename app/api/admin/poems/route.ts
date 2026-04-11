@@ -160,6 +160,8 @@ export async function POST(request: NextRequest) {
     const customSlug = String(formData.get("slug") || "").trim();
     const sectionValue = String(formData.get("section") || "").trim();
     const purchaseUrlInput = String(formData.get("purchaseUrl") || "").trim();
+    const readArticleUrlInput = String(formData.get("readArticleUrl") || "").trim();
+    const contactInfoInput = String(formData.get("contactInfo") || "").trim();
     const libraryPageInput = String(formData.get("libraryPage") || "").trim();
     const librarySlotInput = String(formData.get("librarySlot") || "").trim();
     const displayModeInput = String(formData.get("displayMode") || "").trim().toLowerCase();
@@ -172,6 +174,10 @@ export async function POST(request: NextRequest) {
     const originalSlugInput = String(formData.get("originalSlug") || "").trim();
     const currentDownloadUrlInput = String(formData.get("currentDownloadUrl") || "").trim();
     const currentBookImageUrlInput = String(formData.get("currentBookImageUrl") || "").trim();
+    const expectedUpdatedAtInput = String(formData.get("expectedUpdatedAt") || "").trim();
+    const hasPurchaseUrl = formData.has("purchaseUrl");
+    const hasReadArticleUrl = formData.has("readArticleUrl");
+    const hasContactInfo = formData.has("contactInfo");
     const file = formData.get("file");
     const bookImageFile = formData.get("bookImageFile");
 
@@ -179,6 +185,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid section." }, { status: 400 });
     }
     const normalizedPurchaseUrl = normalizeOptionalHttpUrl(purchaseUrlInput);
+    const normalizedReadArticleUrl = normalizeOptionalHttpUrl(readArticleUrlInput);
     const libraryPage = normalizeOptionalPositiveInteger(libraryPageInput);
     const librarySlot = normalizeOptionalPositiveInteger(librarySlotInput);
     const displayMode = normalizeDisplayMode(displayModeInput);
@@ -210,6 +217,12 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    if (normalizedReadArticleUrl === null) {
+      return NextResponse.json(
+        { error: "Read article URL must be a valid http(s) URL." },
+        { status: 400 }
+      );
+    }
     if (libraryPage === null || librarySlot === null) {
       return NextResponse.json(
         { error: "Library page and slot must be positive integers." },
@@ -236,8 +249,24 @@ export async function POST(request: NextRequest) {
         : undefined) ||
       storedPoems.find((poem) => poem.section === sectionValue && poem.slug === slug);
 
+    if (
+      existing &&
+      originalSection &&
+      originalSlug &&
+      expectedUpdatedAtInput &&
+      existing.updatedAt !== expectedUpdatedAtInput
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "La entrada fue modificada en otra sesion. Recarga el admin antes de volver a guardar para evitar sobrescribir cambios.",
+        },
+        { status: 409 }
+      );
+    }
+
     const occupiedByOther =
-      sectionValue !== "about"
+      sectionValue !== "about" && libraryPage && librarySlot
         ? storedPoems.find((poem) => {
             if (poem.section !== sectionValue) return false;
             if (poem.libraryPage !== libraryPage || poem.librarySlot !== librarySlot) return false;
@@ -338,8 +367,12 @@ export async function POST(request: NextRequest) {
         title,
         text,
         downloadUrl: downloadUrl || currentDownloadUrl || existing?.downloadUrl,
-        purchaseUrl:
-          normalizedPurchaseUrl !== undefined ? normalizedPurchaseUrl : existing?.purchaseUrl,
+        purchaseUrl: hasPurchaseUrl
+          ? normalizedPurchaseUrl || undefined
+          : existing?.purchaseUrl,
+        readArticleUrl:
+          hasReadArticleUrl ? normalizedReadArticleUrl || undefined : existing?.readArticleUrl,
+        contactInfo: hasContactInfo ? contactInfoInput || undefined : existing?.contactInfo,
         bookImageUrl: bookImageUrl || currentBookImageUrl || existing?.bookImageUrl || undefined,
         libraryPage,
         librarySlot,
@@ -435,13 +468,29 @@ export async function DELETE(request: NextRequest) {
     }
 
     const body = (await request.json().catch(() => null)) as
-      | { section?: string; slug?: string }
+      | { section?: string; slug?: string; expectedUpdatedAt?: string }
       | null;
     const sectionValue = String(body?.section || "").trim();
     const slug = String(body?.slug || "").trim();
+    const expectedUpdatedAt = String(body?.expectedUpdatedAt || "").trim();
 
     if (!isContentSection(sectionValue) || !slug) {
       return NextResponse.json({ error: "Invalid content identity." }, { status: 400 });
+    }
+
+    const storedPoems = await readStoredPoems();
+    const existing = storedPoems.find(
+      (item) => item.section === sectionValue && item.slug === slug
+    );
+
+    if (expectedUpdatedAt && existing && existing.updatedAt !== expectedUpdatedAt) {
+      return NextResponse.json(
+        {
+          error:
+            "La entrada cambio desde que abriste el admin. Recarga antes de eliminar para evitar borrar una version desactualizada.",
+        },
+        { status: 409 }
+      );
     }
 
     const deleted = await deleteStoredPoem({ section: sectionValue, slug });

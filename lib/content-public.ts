@@ -17,6 +17,8 @@ export type PublicItem = {
   text: string;
   downloadUrl?: string;
   purchaseUrl?: string;
+  readArticleUrl?: string;
+  contactInfo?: string;
   bookImageUrl?: string;
   libraryPage?: number;
   librarySlot?: number;
@@ -50,6 +52,8 @@ export async function getAboutContent() {
       text: aboutItem.text,
       downloadUrl: aboutItem.downloadUrl,
       purchaseUrl: aboutItem.purchaseUrl,
+      readArticleUrl: aboutItem.readArticleUrl,
+      contactInfo: aboutItem.contactInfo,
       bookImageUrl: aboutItem.bookImageUrl,
       displayMode: aboutItem.displayMode,
       textAlign: aboutItem.textAlign,
@@ -74,6 +78,8 @@ export async function getPublicItems(section: ContentSection) {
       text: item.text,
       downloadUrl: item.downloadUrl,
       purchaseUrl: item.purchaseUrl,
+      readArticleUrl: item.readArticleUrl,
+      contactInfo: item.contactInfo,
       bookImageUrl: item.bookImageUrl,
       libraryPage: item.libraryPage,
       librarySlot: item.librarySlot,
