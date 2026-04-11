@@ -96,6 +96,7 @@ export default function AdminPoemsManager() {
   const [purchaseUrl, setPurchaseUrl] = useState("");
   const [downloadUrl, setDownloadUrl] = useState("");
   const [bookImageUrl, setBookImageUrl] = useState("");
+  const [entriesQuery, setEntriesQuery] = useState("");
   const [libraryPage, setLibraryPage] = useState(1);
   const [librarySlot, setLibrarySlot] = useState(1);
   const [displayMode, setDisplayMode] = useState<DisplayMode>(DEFAULT_DISPLAY_MODE);
@@ -155,6 +156,18 @@ export default function AdminPoemsManager() {
   const slotConflict = occupiedSlots.find(
     (occupied) => occupied.page === libraryPage && occupied.slot === librarySlot
   );
+  const filteredPoems = useMemo(() => {
+    const query = entriesQuery.trim().toLowerCase();
+    if (!query) return poems;
+    return poems.filter((poem) => {
+      const sectionLabel =
+        SECTION_OPTIONS.find((option) => option.key === poem.section)?.label || poem.section;
+      return [poem.title, poem.slug, poem.section, sectionLabel]
+        .join(" ")
+        .toLowerCase()
+        .includes(query);
+    });
+  }, [entriesQuery, poems]);
 
   const loadPoems = useCallback(async () => {
     setLoading(true);
@@ -334,20 +347,6 @@ export default function AdminPoemsManager() {
     gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
   } as const;
 
-  const sidebarItemStyle = (active: boolean) =>
-    ({
-      display: "flex",
-      alignItems: "center",
-      gap: 12,
-      padding: "14px 16px",
-      borderRadius: 18,
-      border: `1px solid ${active ? accentSoft : "transparent"}`,
-      background: active ? "#FFFFFF" : "transparent",
-      color: active ? accent : textSecondary,
-      boxShadow: active ? "0 10px 24px rgba(95, 90, 122, 0.08)" : "none",
-      fontWeight: active ? 700 : 500,
-    }) as const;
-
   const sectionCardStyle = {
     display: "grid",
     gap: 20,
@@ -440,22 +439,11 @@ export default function AdminPoemsManager() {
             boxShadow: softShadow,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 28, flexWrap: "wrap" }}>
-            <div style={{ color: accent, fontWeight: 800, fontSize: 22 }}>AdminPoemsManager</div>
-            <nav style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-              {["Dashboard", "Editor", "Library", "Assets"].map((item, index) => (
-                <span
-                  key={item}
-                  style={{
-                    ...getPillButtonStyle(index === 0),
-                    cursor: "default",
-                    padding: "10px 16px",
-                  }}
-                >
-                  {item}
-                </span>
-              ))}
-            </nav>
+          <div style={{ display: "grid", gap: 6 }}>
+            <div style={{ color: accent, fontWeight: 800, fontSize: 22 }}>Gestion de Libros</div>
+            <p style={{ margin: 0, color: textSecondary, fontSize: 14 }}>
+              Panel editorial para administrar biblioteca, archivos e imagenes.
+            </p>
           </div>
 
           <button
@@ -507,25 +495,6 @@ export default function AdminPoemsManager() {
               </p>
             </div>
 
-            <div style={{ display: "grid", gap: 10 }}>
-              <div style={sidebarItemStyle(true)}>
-                <span style={sectionIconStyle}>O</span>
-                <span>Overview</span>
-              </div>
-              <div style={sidebarItemStyle(false)}>
-                <span style={{ ...sectionIconStyle, background: secondarySoft }}>E</span>
-                <span>Editor</span>
-              </div>
-              <div style={sidebarItemStyle(false)}>
-                <span style={{ ...sectionIconStyle, background: secondarySoft }}>L</span>
-                <span>Library</span>
-              </div>
-              <div style={sidebarItemStyle(false)}>
-                <span style={{ ...sectionIconStyle, background: secondarySoft }}>A</span>
-                <span>Assets</span>
-              </div>
-            </div>
-
             <button
               type="button"
               onClick={resetForm}
@@ -546,10 +515,6 @@ export default function AdminPoemsManager() {
               {editingIdentity ? "Create New Entry" : "Limpiar formulario"}
             </button>
 
-            <div style={{ marginTop: "auto", display: "grid", gap: 10, color: textSecondary }}>
-              <div style={{ fontSize: 14 }}>Support</div>
-              <div style={{ fontSize: 14 }}>Account</div>
-            </div>
           </aside>
 
           <section style={{ display: "grid", gap: 20 }}>
@@ -562,10 +527,10 @@ export default function AdminPoemsManager() {
                   letterSpacing: "-0.04em",
                 }}
               >
-                Panel de Gestion de Poemas
+                Panel de Gestion de Libros
               </h1>
               <p style={{ margin: 0, color: textSecondary, fontSize: 18, lineHeight: 1.5 }}>
-                Administra el contenido editorial de la biblioteca con el flujo actual ya estabilizado.
+                Administra libros, archivos y ubicaciones de biblioteca con el flujo actual ya estabilizado.
               </p>
             </div>
 
@@ -582,7 +547,7 @@ export default function AdminPoemsManager() {
           <div>
             <h2 style={{ margin: 0, fontSize: 18 }}>Basic info</h2>
             <p style={{ margin: "4px 0 0", color: textSecondary, fontSize: 14 }}>
-              Titulo, slug, seccion y contenido principal de la entrada.
+              Titulo, slug, seccion y contenido principal del libro.
             </p>
           </div>
         </div>
@@ -922,10 +887,10 @@ export default function AdminPoemsManager() {
             {saving
               ? "Saving..."
               : isAboutSection
-                ? "Save profile"
+                ? "Guardar perfil"
                 : editingIdentity
                   ? "Guardar cambios"
-                  : "Save entry"}
+                  : "Guardar libro"}
           </button>
 
           <button
@@ -1002,13 +967,22 @@ export default function AdminPoemsManager() {
           }}
         >
           <h2 style={{ fontSize: 20, margin: 0, color: textPrimary, fontWeight: 700 }}>
-            Existing Entries
+            Libros existentes
           </h2>
           <p style={{ margin: 0, color: textSecondary, fontSize: 14, lineHeight: 1.6 }}>
-            Edicion rapida del catalogo de la seccion activa.
+            Busca rapido por titulo, slug o seccion para volver a editar.
           </p>
         </div>
-        <span style={pillMetaStyle}>{poems.length} total</span>
+        <input
+          type="search"
+          value={entriesQuery}
+          onChange={(e) => setEntriesQuery(e.target.value)}
+          placeholder="Buscar libro, slug o seccion"
+          style={softInputSurface}
+        />
+        <span style={pillMetaStyle}>
+          {entriesQuery.trim() ? `${filteredPoems.length} resultados` : `${poems.length} total`}
+        </span>
         {loading ? <p style={{ color: textMuted, margin: 0 }}>Loading...</p> : null}
         {!loading && poems.length === 0 ? (
           <div
@@ -1024,9 +998,23 @@ export default function AdminPoemsManager() {
             No entries yet.
           </div>
         ) : null}
+        {!loading && poems.length > 0 && filteredPoems.length === 0 ? (
+          <div
+            style={{
+              padding: 22,
+              borderRadius: 24,
+              border: `1px solid ${cardBorder}`,
+              background: cardBackground,
+              color: textMuted,
+              boxShadow: softShadow,
+            }}
+          >
+            No encontramos libros con esa busqueda.
+          </div>
+        ) : null}
         {!loading ? (
           <ul style={{ padding: 0, margin: 0, listStyle: "none", ...listGridStyle }}>
-            {poems.map((poem) => {
+            {filteredPoems.map((poem) => {
               const routePath =
                 poem.section === "about"
                   ? getSectionBasePath(poem.section)
