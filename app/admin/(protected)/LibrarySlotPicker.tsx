@@ -126,9 +126,7 @@ export default function LibrarySlotPicker({
                 <polygon
                   points={points}
                   onClick={() => {
-                    if (!occupied || active) {
-                      onSlotChange(currentSlot);
-                    }
+                    onSlotChange(currentSlot);
                   }}
                   aria-label={
                     occupiedLabel
@@ -148,7 +146,7 @@ export default function LibrarySlotPicker({
                         ? "rgba(159, 18, 57, 0.45)"
                         : "rgba(95, 90, 122, 0.14)",
                     strokeWidth: active ? 3 : 1.5,
-                    cursor: occupied && !active ? "not-allowed" : "pointer",
+                    cursor: "pointer",
                     transition: "all 180ms ease",
                   }}
                 />

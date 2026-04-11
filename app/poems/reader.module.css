@@ -14,12 +14,20 @@
 
 .readerTopBar {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
   width: min(100%, 1680px);
   margin: 0 auto;
   padding: 0 clamp(8px, 2vw, 18px);
+}
+
+.readerBottomBar {
+  width: min(100%, 1680px);
+  margin: 0 auto;
+  padding: 0 clamp(8px, 2vw, 18px) 18px;
+  display: flex;
+  justify-content: flex-start;
 }
 
 .backLink {
@@ -379,7 +387,7 @@
   }
 
   .readerTopBar {
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) auto;
     gap: 8px;
     padding: 0 12px;
   }

@@ -26,6 +26,7 @@ export type PublicItem = {
   italic?: boolean;
   underline?: boolean;
   textLayout?: BookTextLayout;
+  updatedAt?: string;
 };
 
 const FALLBACK_BY_SECTION: Record<ContentSection, PublicItem[]> = {
@@ -56,6 +57,7 @@ export async function getAboutContent() {
       italic: aboutItem.italic,
       underline: aboutItem.underline,
       textLayout: aboutItem.textLayout,
+      updatedAt: aboutItem.updatedAt,
     } satisfies PublicItem;
   }
 
@@ -81,6 +83,7 @@ export async function getPublicItems(section: ContentSection) {
       italic: item.italic,
       underline: item.underline,
       textLayout: item.textLayout,
+      updatedAt: item.updatedAt,
     })) as PublicItem[];
   }
 

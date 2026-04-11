@@ -27,12 +27,6 @@ export default function SectionLibraryPage({
     <main style={{ padding: 0 }}>
       <div style={{ width: "100%", display: "flex", justifyContent: "center" }}>
         <div style={{ width: "100%", maxWidth: 2000 }}>
-          <div className={styles.libraryTopBar}>
-            <Link href="/" className={styles.libraryBackLink}>
-              Volver
-            </Link>
-          </div>
-
           <div className={styles.libraryStage}>
             <svg
               className={styles.librarySvg}
@@ -65,6 +59,12 @@ export default function SectionLibraryPage({
               </Link>
             </div>
           ) : null}
+
+          <div className={styles.libraryTopBar}>
+            <Link href="/" className={styles.libraryBackLink}>
+              Volver
+            </Link>
+          </div>
         </div>
       </div>
     </main>

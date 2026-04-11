@@ -12,13 +12,16 @@ import {
   normalizeDisplayMode,
 } from "@/lib/book-reader";
 import {
+  clearStoredPoemLibraryPlacement,
+  deleteStoredPoem,
   readStoredPoems,
   slugifyPoem,
   upsertStoredPoem,
 } from "@/lib/poems-store";
-import { uploadAsset } from "@/lib/asset-storage";
+import { deleteAssetByPublicUrl, replaceAsset, uploadAsset } from "@/lib/asset-storage";
 import { isContentSection } from "@/lib/sections";
 import { getLibrarySlotKey } from "@/lib/library-placement";
+import { revalidatePath } from "next/cache";
 
 const MAX_UPLOAD_SIZE_BYTES = 8 * 1024 * 1024; // 8MB
 const ALLOWED_UPLOAD_MIME_TYPES = new Set([
@@ -89,6 +92,56 @@ export async function GET(request: NextRequest) {
       ? poems.filter((poem) => poem.section === sectionParam)
       : poems;
   return NextResponse.json({ poems: filtered });
+}
+
+function getSectionListPath(section: string) {
+  switch (section) {
+    case "about":
+      return "/about";
+    case "poems":
+      return "/poems";
+    case "writings":
+      return "/writings";
+    case "essays":
+      return "/essays";
+    case "text-comments":
+      return "/text-comments";
+    case "publications-academic":
+      return "/publications/academic";
+    case "publications-non-academic":
+      return "/publications/non-academic";
+    default:
+      return "/poems";
+  }
+}
+
+function getEntryPath(section: string, slug: string) {
+  const listPath = getSectionListPath(section);
+  return section === "about" ? listPath : `${listPath}/${slug}`;
+}
+
+function getRelatedPaths(section: string, slug: string) {
+  const paths = [getSectionListPath(section), getEntryPath(section, slug)];
+
+  if (section === "publications-academic" || section === "publications-non-academic") {
+    paths.push("/publications");
+  }
+
+  return paths;
+}
+
+function revalidateContentPaths(entries: Array<{ section: string; slug: string }>) {
+  const visited = new Set<string>();
+
+  for (const entry of entries) {
+    for (const path of getRelatedPaths(entry.section, entry.slug)) {
+      if (visited.has(path)) continue;
+      visited.add(path);
+      revalidatePath(path);
+    }
+  }
+
+  revalidatePath("/");
 }
 
 export async function POST(request: NextRequest) {
@@ -183,33 +236,22 @@ export async function POST(request: NextRequest) {
         : undefined) ||
       storedPoems.find((poem) => poem.section === sectionValue && poem.slug === slug);
 
-    if (sectionValue !== "about") {
-      const occupiedByOther = storedPoems.find((poem) => {
-        if (poem.section !== sectionValue) return false;
-        if (poem.libraryPage !== libraryPage || poem.librarySlot !== librarySlot) return false;
+    const occupiedByOther =
+      sectionValue !== "about"
+        ? storedPoems.find((poem) => {
+            if (poem.section !== sectionValue) return false;
+            if (poem.libraryPage !== libraryPage || poem.librarySlot !== librarySlot) return false;
 
-        const isSameOriginal =
-          originalSection &&
-          originalSlug &&
-          poem.section === originalSection &&
-          poem.slug === originalSlug;
-        const isSameTarget = poem.section === sectionValue && poem.slug === slug;
+            const isSameOriginal =
+              originalSection &&
+              originalSlug &&
+              poem.section === originalSection &&
+              poem.slug === originalSlug;
+            const isSameTarget = poem.section === sectionValue && poem.slug === slug;
 
-        return !isSameOriginal && !isSameTarget;
-      });
-
-      if (occupiedByOther) {
-        return NextResponse.json(
-          {
-            error: `La posición ${getLibrarySlotKey(
-              libraryPage || 1,
-              librarySlot || 1
-            )} ya está ocupada por "${occupiedByOther.title || occupiedByOther.slug}".`,
-          },
-          { status: 409 }
-        );
-      }
-    }
+            return !isSameOriginal && !isSameTarget;
+          })
+        : undefined;
 
     if (file instanceof File && file.size > 0) {
       if (file.size > MAX_UPLOAD_SIZE_BYTES) {
@@ -286,6 +328,9 @@ export async function POST(request: NextRequest) {
       bookImageUrl = publicUrl;
     }
 
+    const previousDownloadUrl = existing?.downloadUrl;
+    const previousBookImageUrl = existing?.bookImageUrl;
+
     const saved = await upsertStoredPoem(
       {
         section: sectionValue,
@@ -316,14 +361,102 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    return NextResponse.json({ poem: saved }, { status: 201 });
+    let displacedOccupant:
+      | {
+          section: string;
+          slug: string;
+          title: string;
+        }
+      | undefined;
+
+    if (occupiedByOther) {
+      const movedOccupant = await clearStoredPoemLibraryPlacement({
+        section: occupiedByOther.section,
+        slug: occupiedByOther.slug,
+      });
+      displacedOccupant = movedOccupant
+        ? {
+            section: movedOccupant.section,
+            slug: movedOccupant.slug,
+            title: movedOccupant.title,
+          }
+        : {
+            section: occupiedByOther.section,
+            slug: occupiedByOther.slug,
+            title: occupiedByOther.title,
+          };
+    }
+
+    await replaceAsset(previousDownloadUrl, downloadUrl);
+    await replaceAsset(previousBookImageUrl, bookImageUrl);
+
+    revalidateContentPaths(
+      [
+        { section: sectionValue, slug },
+        existing ? { section: existing.section, slug: existing.slug } : null,
+        originalSection && originalSlug ? { section: originalSection, slug: originalSlug } : null,
+        displacedOccupant
+          ? { section: displacedOccupant.section, slug: displacedOccupant.slug }
+          : null,
+      ].filter(Boolean) as Array<{ section: string; slug: string }>
+    );
+
+    return NextResponse.json(
+      {
+        poem: saved,
+        replacedSlot:
+          occupiedByOther && sectionValue !== "about"
+            ? {
+                section: displacedOccupant?.section || occupiedByOther.section,
+                slug: displacedOccupant?.slug || occupiedByOther.slug,
+                title: displacedOccupant?.title || occupiedByOther.title,
+                slotKey: getLibrarySlotKey(libraryPage || 1, librarySlot || 1),
+              }
+            : null,
+      },
+      { status: 201 }
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to save poem.";
     console.error("[admin-poems] Save failed:", error);
-    const status =
-      message.includes("Ya existe una entrada") || message.includes("ya está ocupada")
-        ? 409
-        : 500;
+    const status = message.includes("Ya existe una entrada") ? 409 : 500;
     return NextResponse.json({ error: message }, { status });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    if (!isSameOriginRequest(request)) {
+      return NextResponse.json({ error: "Forbidden origin." }, { status: 403 });
+    }
+
+    if (!(await isAuthorized(request))) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = (await request.json().catch(() => null)) as
+      | { section?: string; slug?: string }
+      | null;
+    const sectionValue = String(body?.section || "").trim();
+    const slug = String(body?.slug || "").trim();
+
+    if (!isContentSection(sectionValue) || !slug) {
+      return NextResponse.json({ error: "Invalid content identity." }, { status: 400 });
+    }
+
+    const deleted = await deleteStoredPoem({ section: sectionValue, slug });
+    if (!deleted) {
+      return NextResponse.json({ error: "Entry not found." }, { status: 404 });
+    }
+
+    await deleteAssetByPublicUrl(deleted.downloadUrl);
+    await deleteAssetByPublicUrl(deleted.bookImageUrl);
+    revalidateContentPaths([{ section: sectionValue, slug }]);
+
+    return NextResponse.json({ deleted }, { status: 200 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to delete poem.";
+    console.error("[admin-poems] Delete failed:", error);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -19,6 +19,12 @@ function sanitizeSegment(value: string) {
   return value.replace(/[^a-zA-Z0-9._-]/g, "_");
 }
 
+function getSupabaseStorageBaseUrl() {
+  const supabaseUrl = process.env.SUPABASE_URL?.trim().replace(/\/+$/, "");
+  if (!supabaseUrl) return "";
+  return `${supabaseUrl}/storage/v1/object/public`;
+}
+
 export function getSupabaseStorageBucket() {
   return process.env.SUPABASE_STORAGE_BUCKET?.trim() || DEFAULT_STORAGE_BUCKET;
 }
@@ -38,6 +44,21 @@ export function getSupabaseStoragePublicUrl(objectPath: string) {
     .getPublicUrl(objectPath);
 
   return data.publicUrl;
+}
+
+export function getSupabaseStoragePublicUrlPrefix() {
+  const baseUrl = getSupabaseStorageBaseUrl();
+  const bucket = getSupabaseStorageBucket();
+  return baseUrl ? `${baseUrl}/${bucket}/` : "";
+}
+
+export function getSupabaseStoragePublicUrlPrefixWithoutBucket() {
+  const baseUrl = getSupabaseStorageBaseUrl();
+  return baseUrl ? `${baseUrl}/` : "";
+}
+
+export function getSupabaseStorageRemoveClient() {
+  return getSupabaseAdminClient();
 }
 
 export async function uploadAssetToSupabaseStorage({

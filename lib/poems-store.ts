@@ -293,6 +293,127 @@ export async function upsertStoredPoem(
   return saved as StoredPoem;
 }
 
+export async function deleteStoredPoem(identity: StoredPoemIdentity) {
+  if (isSupabaseConfigured()) {
+    const client = getSupabaseAdminClient();
+    if (!client) throw new Error("[poems-store] Supabase client unavailable.");
+
+    const { data: existing, error: selectError } = await client
+      .from("content_entries")
+      .select("*")
+      .eq("section", identity.section)
+      .eq("slug", identity.slug)
+      .maybeSingle();
+
+    if (selectError) {
+      throw new Error(`[poems-store] Failed to load content for deletion: ${selectError.message}`);
+    }
+
+    if (!existing) return undefined;
+
+    const normalized = normalizeStoredPoems([existing as StoredPoemRow])[0];
+    const { error } = await client
+      .from("content_entries")
+      .delete()
+      .eq("section", identity.section)
+      .eq("slug", identity.slug);
+
+    if (error) {
+      throw new Error(`[poems-store] Failed to delete content: ${error.message}`);
+    }
+
+    return normalized;
+  }
+
+  let removed: StoredPoem | undefined;
+  await withWriteLock(async () => {
+    const poems = await readStoredPoems();
+    const index = poems.findIndex(
+      (poem) => poem.section === identity.section && poem.slug === identity.slug
+    );
+    if (index < 0) return;
+
+    removed = poems.splice(index, 1)[0];
+    const payload = JSON.stringify(poems, null, 2);
+    await mkdir(DATA_DIR, { recursive: true });
+    await writeFile(POEMS_TEMP_PATH, payload, "utf8");
+    await rename(POEMS_TEMP_PATH, POEMS_PATH);
+  });
+
+  return removed;
+}
+
+export async function clearStoredPoemLibraryPlacement(identity: StoredPoemIdentity) {
+  if (isSupabaseConfigured()) {
+    const client = getSupabaseAdminClient();
+    if (!client) throw new Error("[poems-store] Supabase client unavailable.");
+
+    const { data: existing, error: selectError } = await client
+      .from("content_entries")
+      .select("*")
+      .eq("section", identity.section)
+      .eq("slug", identity.slug)
+      .maybeSingle();
+
+    if (selectError) {
+      throw new Error(
+        `[poems-store] Failed to load content for placement update: ${selectError.message}`
+      );
+    }
+
+    if (!existing) return undefined;
+
+    const { error } = await client
+      .from("content_entries")
+      .update({
+        library_page: null,
+        library_slot: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("section", identity.section)
+      .eq("slug", identity.slug);
+
+    if (error) {
+      throw new Error(
+        `[poems-store] Failed to clear library placement: ${error.message}`
+      );
+    }
+
+    return normalizeStoredPoems([
+      {
+        ...(existing as StoredPoemRow),
+        library_page: null,
+        library_slot: null,
+        updated_at: new Date().toISOString(),
+      },
+    ])[0];
+  }
+
+  let updated: StoredPoem | undefined;
+  await withWriteLock(async () => {
+    const poems = await readStoredPoems();
+    const index = poems.findIndex(
+      (poem) => poem.section === identity.section && poem.slug === identity.slug
+    );
+    if (index < 0) return;
+
+    poems[index] = {
+      ...poems[index],
+      libraryPage: undefined,
+      librarySlot: undefined,
+      updatedAt: new Date().toISOString(),
+    };
+    updated = poems[index];
+
+    const payload = JSON.stringify(poems, null, 2);
+    await mkdir(DATA_DIR, { recursive: true });
+    await writeFile(POEMS_TEMP_PATH, payload, "utf8");
+    await rename(POEMS_TEMP_PATH, POEMS_PATH);
+  });
+
+  return updated;
+}
+
 function normalizeStoredPoems(
   parsed: Array<StoredPoem | Omit<StoredPoem, "section"> | StoredPoemRow>
 ) {

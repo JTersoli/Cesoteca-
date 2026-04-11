@@ -16,6 +16,7 @@ export type SectionItem = {
   italic?: boolean;
   underline?: boolean;
   textLayout?: BookTextLayout;
+  updatedAt?: string;
 };
 
 export const ABOUT_ITEM: SectionItem = {

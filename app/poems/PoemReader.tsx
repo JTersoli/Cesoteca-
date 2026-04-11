@@ -231,10 +231,6 @@ export default function PoemReader({
     <main className={styles.screen}>
       <div className={styles.readerShell}>
         <div className={styles.readerTopBar}>
-          <Link href={backHref} className={styles.backLink}>
-            {backLabel}
-          </Link>
-
           <div className={styles.topMeta}>
             {title ? <h1 className={styles.readerTitle}>{title}</h1> : null}
           </div>
@@ -368,6 +364,12 @@ export default function PoemReader({
             </div>
           </section>
         )}
+
+        <div className={styles.readerBottomBar}>
+          <Link href={backHref} className={styles.backLink}>
+            {backLabel}
+          </Link>
+        </div>
       </div>
     </main>
   );

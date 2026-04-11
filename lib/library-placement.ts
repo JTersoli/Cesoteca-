@@ -28,20 +28,24 @@ export function getLibraryPageSize() {
 export function buildLibraryPlacements(items: SectionItem[]) {
   const occupied = new Set<string>();
   const positioned: PositionedLibraryItem[] = [];
-  const unassigned: SectionItem[] = [];
+  const fallbackItems: SectionItem[] = [];
 
   for (const item of items) {
     const page = normalizePositiveInteger(item.libraryPage);
     const slot = normalizePositiveInteger(item.librarySlot);
 
     if (!page || !slot || slot > PAGE_SIZE) {
-      unassigned.push(item);
+      if (!item.updatedAt) {
+        fallbackItems.push(item);
+      }
       continue;
     }
 
     const key = getLibrarySlotKey(page, slot);
     if (occupied.has(key)) {
-      unassigned.push(item);
+      if (!item.updatedAt) {
+        fallbackItems.push(item);
+      }
       continue;
     }
 
@@ -52,7 +56,7 @@ export function buildLibraryPlacements(items: SectionItem[]) {
   let page = 1;
   let slot = 1;
 
-  for (const item of unassigned) {
+  for (const item of fallbackItems) {
     while (occupied.has(getLibrarySlotKey(page, slot))) {
       slot += 1;
       if (slot > PAGE_SIZE) {

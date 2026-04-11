@@ -29,6 +29,7 @@ Opcional para persistencia en Supabase:
 - `SUPABASE_URL=<project-url>`
 - `SUPABASE_SERVICE_ROLE_KEY=<service-role-key>`
 - `SUPABASE_STORAGE_BUCKET=cesoteca-assets`
+- `LOCAL_ASSET_FALLBACK=true|false` solo para desarrollo local; por defecto queda deshabilitado en producción
 
 Compatibilidad temporal (no recomendado):
 
@@ -81,4 +82,5 @@ Para producción con múltiples instancias o serverless:
 
 - usar `public.content_entries` + `public.admin_credentials` en Supabase
 - usar Supabase Storage para uploads admin
+- no depender de `public/uploads` en producción; ese fallback queda solo para desarrollo local si se habilita
 - evitar depender de `data/*.json` como fuente principal

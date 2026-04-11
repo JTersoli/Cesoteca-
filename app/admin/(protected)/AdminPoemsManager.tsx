@@ -4,7 +4,6 @@ import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import LibrarySlotPicker from "./LibrarySlotPicker";
 import {
   DEFAULT_DISPLAY_MODE,
-  DEFAULT_BOOK_IMAGE_URL,
   DEFAULT_BOOK_TEXT_LAYOUT,
   getDisplayModeLabel,
   normalizeBookTextLayout,
@@ -88,7 +87,9 @@ export default function AdminPoemsManager() {
   >("poems");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deletingKey, setDeletingKey] = useState("");
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [text, setText] = useState("");
@@ -107,12 +108,6 @@ export default function AdminPoemsManager() {
   );
   const [fileInputKey, setFileInputKey] = useState(0);
   const [editingIdentity, setEditingIdentity] = useState<EditingIdentity | null>(null);
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordSaving, setPasswordSaving] = useState(false);
-  const [passwordMessage, setPasswordMessage] = useState("");
-  const [passwordError, setPasswordError] = useState("");
 
   const serializedTextLayout = useMemo(
     () => JSON.stringify(normalizeBookTextLayout(textLayout)),
@@ -167,6 +162,7 @@ export default function AdminPoemsManager() {
     try {
       const response = await fetch(`/api/admin/poems?section=${section}`, {
         method: "GET",
+        cache: "no-store",
       });
       if (!response.ok) {
         throw new Error("Failed to load poems.");
@@ -215,12 +211,10 @@ export default function AdminPoemsManager() {
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (slotConflict) {
-      setError(`La posición elegida ya está ocupada por ${slotConflict.label}.`);
-      return;
-    }
+    if (saving || deletingKey) return;
     setSaving(true);
     setError("");
+    setNotice("");
     const form = e.currentTarget;
     const formData = new FormData(form);
     formData.set("section", section);
@@ -239,6 +233,18 @@ export default function AdminPoemsManager() {
         throw new Error(data?.error || "Failed to save poem.");
       }
 
+      const data = (await response.json()) as {
+        poem: Poem;
+        replacedSlot?: { title?: string; slotKey: string } | null;
+      };
+
+      setNotice(
+        data.replacedSlot
+          ? `Se guardó la entrada y "${data.replacedSlot.title || "otra entrada"}" quedó fuera de la biblioteca al liberar la posición ${data.replacedSlot.slotKey}.`
+          : editingIdentity
+            ? "Los cambios se guardaron correctamente."
+            : "La entrada se creó correctamente."
+      );
       resetForm();
       await loadPoems();
     } catch (e) {
@@ -249,6 +255,9 @@ export default function AdminPoemsManager() {
   }
 
   function loadPoemIntoForm(poem: Poem) {
+    if (saving || deletingKey) return;
+    setError("");
+    setNotice("");
     setEditingIdentity({ section: poem.section, slug: poem.slug });
     setSection(poem.section);
     setTitle(poem.title);
@@ -269,25 +278,24 @@ export default function AdminPoemsManager() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  async function onLogout() {
-    await fetch("/api/admin/logout", { method: "POST" });
-    window.location.href = "/admin/login";
-  }
+  async function onDeletePoem(poem: Poem) {
+    if (saving || deletingKey) return;
+    const label = getDisplayTitle(poem);
+    const confirmed = window.confirm(`¿Eliminar "${label}"? Esta acción no se puede deshacer.`);
+    if (!confirmed) return;
 
-  async function onPasswordSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setPasswordSaving(true);
-    setPasswordError("");
-    setPasswordMessage("");
+    const key = `${poem.section}:${poem.slug}`;
+    setDeletingKey(key);
+    setError("");
+    setNotice("");
 
     try {
-      const response = await fetch("/api/admin/password", {
-        method: "POST",
+      const response = await fetch("/api/admin/poems", {
+        method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          currentPassword,
-          newPassword,
-          confirmPassword,
+          section: poem.section,
+          slug: poem.slug,
         }),
       });
 
@@ -295,74 +303,273 @@ export default function AdminPoemsManager() {
         const data = (await response.json().catch(() => null)) as
           | { error?: string }
           | null;
-        throw new Error(data?.error || "Failed to update password.");
+        throw new Error(data?.error || "Failed to delete poem.");
       }
 
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-      setPasswordMessage("Password updated successfully.");
+      if (
+        editingIdentity &&
+        editingIdentity.section === poem.section &&
+        editingIdentity.slug === poem.slug
+      ) {
+        resetForm();
+      }
+
+      setNotice(`"${label}" se eliminó correctamente.`);
+      await loadPoems();
     } catch (e) {
-      setPasswordError(
-        e instanceof Error ? e.message : "Failed to update password."
-      );
+      setError(e instanceof Error ? e.message : "Failed to delete poem.");
     } finally {
-      setPasswordSaving(false);
+      setDeletingKey("");
     }
   }
+
+  async function onLogout() {
+    await fetch("/api/admin/logout", { method: "POST" });
+    window.location.href = "/admin/login";
+  }
+
+  const listGridStyle = {
+    display: "grid",
+    gap: 16,
+    gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+  } as const;
+
+  const sidebarItemStyle = (active: boolean) =>
+    ({
+      display: "flex",
+      alignItems: "center",
+      gap: 12,
+      padding: "14px 16px",
+      borderRadius: 18,
+      border: `1px solid ${active ? accentSoft : "transparent"}`,
+      background: active ? "#FFFFFF" : "transparent",
+      color: active ? accent : textSecondary,
+      boxShadow: active ? "0 10px 24px rgba(95, 90, 122, 0.08)" : "none",
+      fontWeight: active ? 700 : 500,
+    }) as const;
+
+  const sectionCardStyle = {
+    display: "grid",
+    gap: 20,
+    padding: 28,
+    borderRadius: 30,
+    border: `1px solid ${cardBorder}`,
+    background: cardBackground,
+    boxShadow: "0 24px 60px rgba(95, 90, 122, 0.08)",
+  } as const;
+
+  const sectionHeadingStyle = {
+    display: "flex",
+    alignItems: "center",
+    gap: 14,
+  } as const;
+
+  const sectionIconStyle = {
+    width: 42,
+    height: 42,
+    borderRadius: 999,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    background: accentSoft,
+    color: accent,
+    fontWeight: 700,
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.85)",
+  } as const;
+
+  const softInputSurface = {
+    ...fieldStyle,
+    borderRadius: 22,
+    background: "#F5F4FA",
+    border: `1px solid ${divider}`,
+    padding: "16px 18px",
+  } as const;
+
+  const pillMetaStyle = {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 8,
+    padding: "7px 12px",
+    borderRadius: 999,
+    background: secondarySoft,
+    color: accent,
+    fontSize: 12,
+    fontWeight: 700,
+    letterSpacing: "0.02em",
+  } as const;
+
+  const neutralActionStyle = {
+    border: `1px solid ${cardBorder}`,
+    borderRadius: 14,
+    padding: "10px 14px",
+    background: "#FFFFFF",
+    color: textSecondary,
+    textDecoration: "none",
+    boxShadow: "0 6px 16px rgba(95, 90, 122, 0.04)",
+    transition,
+  } as const;
 
   return (
     <main
       style={{
-        maxWidth: 1020,
-        margin: "32px auto",
-        padding: 24,
         background: pageBackground,
         color: textPrimary,
-        borderRadius: 28,
+        minHeight: "100vh",
       }}
     >
       <div
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 28,
-          paddingBottom: 18,
-          borderBottom: `1px solid ${divider}`,
+          maxWidth: 1380,
+          margin: "0 auto",
+          padding: "24px 20px 36px",
+          display: "grid",
+          gap: 20,
         }}
       >
-        <h1
+        <header
           style={{
-            fontSize: 36,
-            fontWeight: 700,
-            letterSpacing: "-0.035em",
-            lineHeight: 1.05,
-            color: textPrimary,
-            margin: 0,
-          }}
-        >
-          Admin Panel
-        </h1>
-        <button
-          type="button"
-          onClick={onLogout}
-          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 16,
+            flexWrap: "wrap",
+            padding: "18px 24px",
+            borderRadius: 28,
             border: `1px solid ${cardBorder}`,
-            borderRadius: 12,
-            padding: "10px 14px",
-            background: "rgba(255,255,255,0.9)",
-            color: textSecondary,
-            cursor: "pointer",
+            background: "rgba(255,255,255,0.92)",
             boxShadow: softShadow,
-            transition,
           }}
         >
-          Logout
-        </button>
-      </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 28, flexWrap: "wrap" }}>
+            <div style={{ color: accent, fontWeight: 800, fontSize: 22 }}>AdminPoemsManager</div>
+            <nav style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              {["Dashboard", "Editor", "Library", "Assets"].map((item, index) => (
+                <span
+                  key={item}
+                  style={{
+                    ...getPillButtonStyle(index === 0),
+                    cursor: "default",
+                    padding: "10px 16px",
+                  }}
+                >
+                  {item}
+                </span>
+              ))}
+            </nav>
+          </div>
 
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: 20 }}>
+          <button
+            type="button"
+            onClick={onLogout}
+            disabled={saving || Boolean(deletingKey)}
+            style={{
+              border: `1px solid ${accent}`,
+              borderRadius: 999,
+              padding: "12px 20px",
+              background: accent,
+              color: "#fff",
+              cursor: saving || deletingKey ? "default" : "pointer",
+              opacity: saving || deletingKey ? 0.72 : 1,
+              boxShadow: "0 12px 28px rgba(95, 90, 122, 0.18)",
+              transition,
+            }}
+          >
+            Logout
+          </button>
+        </header>
+
+        <div
+          style={{
+            display: "grid",
+            gap: 20,
+            gridTemplateColumns: "minmax(220px, 260px) minmax(0, 1.45fr) minmax(320px, 0.9fr)",
+            alignItems: "start",
+          }}
+        >
+          <aside
+            style={{
+              display: "grid",
+              gap: 22,
+              padding: "28px 20px",
+              borderRadius: 32,
+              border: `1px solid ${cardBorder}`,
+              background:
+                "linear-gradient(180deg, rgba(255,255,255,0.88) 0%, rgba(241,240,247,0.95) 100%)",
+              boxShadow: softShadow,
+              position: "sticky",
+              top: 24,
+            }}
+          >
+            <div style={{ display: "grid", gap: 6 }}>
+              <div style={{ color: accent, fontWeight: 800, fontSize: 18 }}>Boutique CMS</div>
+              <p style={{ margin: 0, color: textSecondary, lineHeight: 1.6, fontSize: 14 }}>
+                Workspace editorial para administrar libros, archivos y posiciones de biblioteca.
+              </p>
+            </div>
+
+            <div style={{ display: "grid", gap: 10 }}>
+              <div style={sidebarItemStyle(true)}>
+                <span style={sectionIconStyle}>O</span>
+                <span>Overview</span>
+              </div>
+              <div style={sidebarItemStyle(false)}>
+                <span style={{ ...sectionIconStyle, background: secondarySoft }}>E</span>
+                <span>Editor</span>
+              </div>
+              <div style={sidebarItemStyle(false)}>
+                <span style={{ ...sectionIconStyle, background: secondarySoft }}>L</span>
+                <span>Library</span>
+              </div>
+              <div style={sidebarItemStyle(false)}>
+                <span style={{ ...sectionIconStyle, background: secondarySoft }}>A</span>
+                <span>Assets</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={resetForm}
+              disabled={saving || Boolean(deletingKey)}
+              style={{
+                border: `1px solid ${accent}`,
+                borderRadius: 999,
+                padding: "16px 18px",
+                background: accent,
+                color: "#fff",
+                fontWeight: 700,
+                cursor: saving || deletingKey ? "default" : "pointer",
+                opacity: saving || deletingKey ? 0.72 : 1,
+                boxShadow: "0 14px 30px rgba(95, 90, 122, 0.18)",
+                transition,
+              }}
+            >
+              {editingIdentity ? "Create New Entry" : "Limpiar formulario"}
+            </button>
+
+            <div style={{ marginTop: "auto", display: "grid", gap: 10, color: textSecondary }}>
+              <div style={{ fontSize: 14 }}>Support</div>
+              <div style={{ fontSize: 14 }}>Account</div>
+            </div>
+          </aside>
+
+          <section style={{ display: "grid", gap: 20 }}>
+            <div style={{ display: "grid", gap: 8, padding: "12px 6px" }}>
+              <h1
+                style={{
+                  fontSize: "clamp(2rem, 4vw, 3rem)",
+                  margin: 0,
+                  lineHeight: 1.02,
+                  letterSpacing: "-0.04em",
+                }}
+              >
+                Panel de Gestion de Poemas
+              </h1>
+              <p style={{ margin: 0, color: textSecondary, fontSize: 18, lineHeight: 1.5 }}>
+                Administra el contenido editorial de la biblioteca con el flujo actual ya estabilizado.
+              </p>
+            </div>
+
+            <form onSubmit={onSubmit} style={sectionCardStyle}>
         <input
           type="hidden"
           name="originalSection"
@@ -370,7 +577,16 @@ export default function AdminPoemsManager() {
         />
         <input type="hidden" name="originalSlug" value={editingIdentity?.slug || ""} />
         <input type="hidden" name="currentDownloadUrl" value={downloadUrl} />
-        <label style={{ display: "grid", gap: 6 }}>
+        <div style={sectionHeadingStyle}>
+          <span style={sectionIconStyle}>i</span>
+          <div>
+            <h2 style={{ margin: 0, fontSize: 18 }}>Basic info</h2>
+            <p style={{ margin: "4px 0 0", color: textSecondary, fontSize: 14 }}>
+              Titulo, slug, seccion y contenido principal de la entrada.
+            </p>
+          </div>
+        </div>
+        <label style={{ display: "grid", gap: 8 }}>
           <span
             style={{
               fontSize: 12,
@@ -380,7 +596,7 @@ export default function AdminPoemsManager() {
               fontWeight: 600,
             }}
           >
-            Section
+            Seccion
           </span>
           <select
             name="section"
@@ -388,7 +604,7 @@ export default function AdminPoemsManager() {
             onChange={(e) =>
               setSection(e.target.value as (typeof SECTION_OPTIONS)[number]["key"])
             }
-            style={fieldStyle}
+            style={softInputSurface}
           >
             {SECTION_OPTIONS.map((option) => (
               <option key={option.key} value={option.key}>
@@ -402,26 +618,41 @@ export default function AdminPoemsManager() {
           name="title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder={isAboutSection ? "Título de la página" : "Title (optional)"}
-          style={fieldStyle}
+          placeholder={isAboutSection ? "Ej: Sobre mi" : "Ej: Las flores del mal"}
+          style={softInputSurface}
         />
 
         <input
           name="slug"
           value={slug}
           onChange={(e) => setSlug(e.target.value)}
-          placeholder={isAboutSection ? "about" : "Slug (optional)"}
+          placeholder={isAboutSection ? "about" : "slug-amigable"}
           readOnly={isAboutSection}
-          style={fieldStyle}
+          style={softInputSurface}
         />
+
+        {supportsPurchaseUrl ? (
+          <input
+            name="purchaseUrl"
+            type="url"
+            value={purchaseUrl}
+            onChange={(e) => setPurchaseUrl(e.target.value)}
+            placeholder="https://..."
+            style={softInputSurface}
+          />
+        ) : null}
 
         <textarea
           name="text"
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder={isAboutSection ? "Texto de presentación / biografía" : "Poem text (optional)"}
+          placeholder={
+            isAboutSection
+              ? "Texto de presentacion / biografia"
+              : "Breve introduccion o texto completo"
+          }
           rows={8}
-          style={fieldStyle}
+          style={{ ...softInputSurface, minHeight: 180, resize: "vertical" }}
         />
 
         {supportsLayoutControls ? (
@@ -430,13 +661,21 @@ export default function AdminPoemsManager() {
               display: "grid",
               gap: 18,
               padding: 24,
-              borderRadius: 16,
-              border: `1px solid ${cardBorder}`,
-              background: cardBackground,
-              boxShadow: softShadow,
+              borderRadius: 24,
+              border: `1px solid ${divider}`,
+              background: "#FCFBFE",
               transition,
             }}
           >
+          <div style={sectionHeadingStyle}>
+            <span style={sectionIconStyle}>T</span>
+            <div>
+              <h2 style={{ margin: 0, fontSize: 18 }}>Visual layout</h2>
+              <p style={{ margin: "4px 0 0", color: textSecondary, fontSize: 14 }}>
+                Configuracion de lectura y formato del contenido.
+              </p>
+            </div>
+          </div>
           <div style={{ display: "grid", gap: 8 }}>
             <span
               style={{
@@ -602,25 +841,19 @@ export default function AdminPoemsManager() {
             display: "grid",
             gap: 14,
             padding: 24,
-            borderRadius: 16,
-            border: `1px solid ${cardBorder}`,
-            background: cardBackground,
-            boxShadow: softShadow,
+            borderRadius: 24,
+            border: `1px solid ${divider}`,
+            background: "#FCFBFE",
           }}
         >
-          <div style={{ display: "grid", gap: 4 }}>
-            <span
-              style={{
-                fontSize: 12,
-                fontWeight: 700,
-                letterSpacing: "0.04em",
-                textTransform: "uppercase",
-                color: textSecondary,
-              }}
-            >
-              Assets
-            </span>
-            <span style={{ color: textMuted, fontSize: 12 }}>{documentInputHelp}</span>
+          <div style={sectionHeadingStyle}>
+            <span style={sectionIconStyle}>A</span>
+            <div>
+              <h2 style={{ margin: 0, fontSize: 18 }}>Assets</h2>
+              <p style={{ margin: "4px 0 0", color: textSecondary, fontSize: 14 }}>
+                Subidas de archivo principal e imagen asociada.
+              </p>
+            </div>
           </div>
 
           <label style={{ display: "grid", gap: 8 }}>
@@ -630,8 +863,9 @@ export default function AdminPoemsManager() {
               name="file"
               type="file"
               accept={isAboutSection ? ".pdf,application/pdf" : ".doc,.docx,.pdf"}
-              style={fieldStyle}
+              style={softInputSurface}
             />
+            <span style={{ color: textMuted, fontSize: 12 }}>{documentInputHelp}</span>
             {downloadUrl ? (
               <span style={{ color: textSecondary, fontSize: 12 }}>
                 Archivo actual: {downloadUrl}
@@ -647,7 +881,7 @@ export default function AdminPoemsManager() {
                 name="bookImageFile"
                 type="file"
                 accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif"
-                style={fieldStyle}
+                style={softInputSurface}
               />
               <span style={{ color: textMuted, fontSize: 12 }}>{imageInputHelp}</span>
               {bookImageUrl ? (
@@ -658,17 +892,6 @@ export default function AdminPoemsManager() {
             </label>
           ) : null}
         </section>
-
-        {supportsPurchaseUrl ? (
-          <input
-            name="purchaseUrl"
-            type="url"
-            value={purchaseUrl}
-            onChange={(e) => setPurchaseUrl(e.target.value)}
-            placeholder="Amazon purchase URL (optional)"
-            style={fieldStyle}
-          />
-        ) : null}
 
         <div
           style={{
@@ -683,15 +906,15 @@ export default function AdminPoemsManager() {
         >
           <button
             type="submit"
-            disabled={saving || Boolean(slotConflict)}
+            disabled={saving || Boolean(deletingKey)}
             style={{
               border: `1px solid ${accent}`,
               borderRadius: 12,
               padding: "12px 16px",
               background: accent,
               color: "#fff",
-              cursor: saving || slotConflict ? "default" : "pointer",
-              opacity: saving || slotConflict ? 0.72 : 1,
+              cursor: saving || deletingKey ? "default" : "pointer",
+              opacity: saving || deletingKey ? 0.72 : 1,
               boxShadow: softShadow,
               transition,
             }}
@@ -708,128 +931,315 @@ export default function AdminPoemsManager() {
           <button
             type="button"
             onClick={resetForm}
+            disabled={saving || Boolean(deletingKey)}
             style={{
-              border: `1px solid ${cardBorder}`,
-              borderRadius: 12,
-              padding: "12px 16px",
+              ...neutralActionStyle,
               background: "transparent",
-              color: textSecondary,
-              cursor: "pointer",
-              transition,
+              cursor: saving || deletingKey ? "default" : "pointer",
+              opacity: saving || deletingKey ? 0.72 : 1,
             }}
           >
-            Clear form
+            Limpiar campos
           </button>
         </div>
       </form>
 
-      {error ? (
-        <p style={{ marginTop: 12, color: "#9F1239" }} role="alert">
-          {error}
-        </p>
-      ) : null}
-      {slotConflict && !isAboutSection ? (
-        <p style={{ marginTop: 12, color: "#9F1239" }} role="alert">
-          La posición elegida ya está ocupada por {slotConflict.label}.
-        </p>
-      ) : null}
+      <div style={{ display: "grid", gap: 10 }}>
+        {error ? (
+          <p
+            style={{
+              margin: 0,
+              color: "#9F1239",
+              padding: "14px 16px",
+              borderRadius: 16,
+              background: "rgba(159, 18, 57, 0.08)",
+              border: "1px solid rgba(159, 18, 57, 0.12)",
+            }}
+            role="alert"
+          >
+            {error}
+          </p>
+        ) : null}
+        {notice ? (
+          <p
+            style={{
+              margin: 0,
+              color: "#28543B",
+              padding: "14px 16px",
+              borderRadius: 16,
+              background: "rgba(40, 84, 59, 0.08)",
+              border: "1px solid rgba(40, 84, 59, 0.12)",
+            }}
+            role="status"
+          >
+            {notice}
+          </p>
+        ) : null}
+        {slotConflict && !isAboutSection ? (
+          <p
+            style={{
+              margin: 0,
+              color: "#8A5A00",
+              padding: "14px 16px",
+              borderRadius: 16,
+              background: "rgba(138, 90, 0, 0.08)",
+              border: "1px solid rgba(138, 90, 0, 0.12)",
+            }}
+            role="status"
+          >
+            This position is occupied. Saving will move the current entry out of the library slot.
+          </p>
+        ) : null}
+      </div>
+          </section>
 
-      <section style={{ marginTop: 36 }}>
-        <h2
+      <aside style={{ display: "grid", gap: 18 }}>
+        <div
           style={{
-            fontSize: 24,
-            marginBottom: 14,
-            color: textPrimary,
-            fontWeight: 700,
-            letterSpacing: "-0.02em",
+            display: "grid",
+            gap: 10,
+            padding: "8px 6px",
           }}
         >
-          Existing entries
-        </h2>
-        {loading ? <p style={{ color: textMuted }}>Loading...</p> : null}
-        {!loading && poems.length === 0 ? <p style={{ color: textMuted }}>No entries yet.</p> : null}
-        <ul style={{ padding: 0, margin: 0, listStyle: "none" }}>
-          {poems.map((poem) => (
-            <li
-              key={poem.slug}
-              style={{
-                padding: "16px 0",
-                borderBottom: `1px solid ${divider}`,
-              }}
-            >
-              <div style={{ fontWeight: 600, color: textPrimary }}>{getDisplayTitle(poem)}</div>
-              <div style={{ color: textSecondary, fontSize: 13 }}>
-                {poem.section === "about"
+          <h2 style={{ fontSize: 20, margin: 0, color: textPrimary, fontWeight: 700 }}>
+            Existing Entries
+          </h2>
+          <p style={{ margin: 0, color: textSecondary, fontSize: 14, lineHeight: 1.6 }}>
+            Edicion rapida del catalogo de la seccion activa.
+          </p>
+        </div>
+        <span style={pillMetaStyle}>{poems.length} total</span>
+        {loading ? <p style={{ color: textMuted, margin: 0 }}>Loading...</p> : null}
+        {!loading && poems.length === 0 ? (
+          <div
+            style={{
+              padding: 22,
+              borderRadius: 24,
+              border: `1px solid ${cardBorder}`,
+              background: cardBackground,
+              color: textMuted,
+              boxShadow: softShadow,
+            }}
+          >
+            No entries yet.
+          </div>
+        ) : null}
+        {!loading ? (
+          <ul style={{ padding: 0, margin: 0, listStyle: "none", ...listGridStyle }}>
+            {poems.map((poem) => {
+              const routePath =
+                poem.section === "about"
                   ? getSectionBasePath(poem.section)
-                  : `${getSectionBasePath(poem.section)}/${poem.slug}`}
-              </div>
-              <div style={{ color: textSecondary, fontSize: 12 }}>
-                Updated: {new Date(poem.updatedAt).toLocaleString()}
-              </div>
-              <div style={{ color: textSecondary, fontSize: 12 }}>
-                Visual: {getDisplayModeLabel(poem.displayMode || DEFAULT_DISPLAY_MODE)}
-              </div>
-              {poem.section !== "about" ? (
-                <div style={{ color: textSecondary, fontSize: 12 }}>
-                  Biblioteca: pagina {poem.libraryPage || 1}, posicion {poem.librarySlot || 1}
-                </div>
-              ) : null}
-              <div style={{ color: textSecondary, fontSize: 12 }}>
-                Format:{" "}
-                {poem.textAlign === "center"
-                  ? "Centered"
-                  : poem.textAlign === "justify"
-                    ? "Justified"
-                    : "As written"}
-                {poem.bold ? " + Bold" : ""}
-                {poem.italic ? " + Italic" : ""}
-                {poem.underline ? " + Underline" : ""}
-              </div>
-              {(poem.displayMode || DEFAULT_DISPLAY_MODE) === "book" ? (
-                <>
-                  <div style={{ color: "#666", fontSize: 12 }}>
-                    Layout: L({normalizeBookTextLayout(poem.textLayout).left.x.toFixed(1)}
-                    %, {normalizeBookTextLayout(poem.textLayout).left.y.toFixed(1)}%) R(
-                    {normalizeBookTextLayout(poem.textLayout).right.x.toFixed(1)}%,{" "}
-                    {normalizeBookTextLayout(poem.textLayout).right.y.toFixed(1)}%)
-                  </div>
-                  <div style={{ color: textSecondary, fontSize: 12 }}>
-                    Image: {poem.bookImageUrl || DEFAULT_BOOK_IMAGE_URL}
-                  </div>
-                </>
-              ) : null}
-              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 8 }}>
-                <button
-                  type="button"
-                  onClick={() => loadPoemIntoForm(poem)}
+                  : `${getSectionBasePath(poem.section)}/${poem.slug}`;
+              const sectionLabel =
+                SECTION_OPTIONS.find((option) => option.key === poem.section)?.label ||
+                poem.section;
+              const itemKey = `${poem.section}:${poem.slug}`;
+              const isDeleting = deletingKey === itemKey;
+              const isEditing =
+                editingIdentity?.section === poem.section && editingIdentity?.slug === poem.slug;
+
+              return (
+                <li
+                  key={itemKey}
                   style={{
-                    border: `1px solid ${cardBorder}`,
-                    borderRadius: 12,
-                    padding: "8px 12px",
-                    background: accentSoft,
-                    color: "#4C4374",
-                    cursor: "pointer",
-                    boxShadow: "0 6px 16px rgba(123, 104, 238, 0.08)",
-                    transition,
+                    display: "grid",
+                    gap: 16,
+                    padding: 20,
+                    borderRadius: 20,
+                    border: `1px solid ${isEditing ? accentSoft : cardBorder}`,
+                    background: cardBackground,
+                    boxShadow: isEditing
+                      ? "0 12px 32px rgba(95, 90, 122, 0.12)"
+                      : softShadow,
                   }}
                 >
-                  Editar
-                </button>
-                {poem.downloadUrl ? (
-                  <a href={poem.downloadUrl} target="_blank" rel="noreferrer">
-                    Download file
-                  </a>
-                ) : null}
-                {poem.purchaseUrl ? (
-                  <a href={poem.purchaseUrl} target="_blank" rel="noreferrer">
-                    Amazon
-                  </a>
-                ) : null}
-              </div>
-            </li>
-          ))}
-        </ul>
-      </section>
+                  <div style={{ display: "grid", gap: 10 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        gap: 10,
+                        alignItems: "flex-start",
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <div style={{ display: "grid", gap: 6 }}>
+                        <div style={{ fontWeight: 700, color: textPrimary, fontSize: 18 }}>
+                          {getDisplayTitle(poem)}
+                        </div>
+                        <div style={{ color: textSecondary, fontSize: 13 }}>{routePath}</div>
+                      </div>
+                      <div
+                        style={{
+                          alignSelf: "start",
+                          padding: "6px 10px",
+                          borderRadius: 999,
+                          background: secondarySoft,
+                          color: "#4C4374",
+                          fontSize: 12,
+                          fontWeight: 600,
+                        }}
+                      >
+                        {sectionLabel}
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        display: "grid",
+                        gap: 10,
+                        gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+                      }}
+                    >
+                      <div
+                        style={{
+                          padding: 12,
+                          borderRadius: 14,
+                          background: "#FAFAFD",
+                          border: `1px solid ${divider}`,
+                        }}
+                      >
+                        <div style={{ color: textMuted, fontSize: 11, textTransform: "uppercase" }}>
+                          Biblioteca
+                        </div>
+                        <div style={{ color: textPrimary, fontSize: 14, marginTop: 4 }}>
+                          {poem.section === "about"
+                            ? "Sin ubicación"
+                            : `Página ${poem.libraryPage || 1}, slot ${poem.librarySlot || 1}`}
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          padding: 12,
+                          borderRadius: 14,
+                          background: "#FAFAFD",
+                          border: `1px solid ${divider}`,
+                        }}
+                      >
+                        <div style={{ color: textMuted, fontSize: 11, textTransform: "uppercase" }}>
+                          Estado visual
+                        </div>
+                        <div style={{ color: textPrimary, fontSize: 14, marginTop: 4 }}>
+                          {getDisplayModeLabel(poem.displayMode || DEFAULT_DISPLAY_MODE)}
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          padding: 12,
+                          borderRadius: 14,
+                          background: "#FAFAFD",
+                          border: `1px solid ${divider}`,
+                        }}
+                      >
+                        <div style={{ color: textMuted, fontSize: 11, textTransform: "uppercase" }}>
+                          Updated
+                        </div>
+                        <div style={{ color: textPrimary, fontSize: 14, marginTop: 4 }}>
+                          {new Date(poem.updatedAt).toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                    <button
+                      type="button"
+                      onClick={() => loadPoemIntoForm(poem)}
+                      disabled={saving || isDeleting || Boolean(deletingKey)}
+                      style={{
+                        border: `1px solid ${cardBorder}`,
+                        borderRadius: 12,
+                        padding: "10px 14px",
+                        background: accentSoft,
+                        color: "#4C4374",
+                        cursor: saving || isDeleting || deletingKey ? "default" : "pointer",
+                        opacity: saving || isDeleting || deletingKey ? 0.72 : 1,
+                        boxShadow: "0 6px 16px rgba(123, 104, 238, 0.08)",
+                        transition,
+                      }}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onDeletePoem(poem)}
+                      disabled={saving || isDeleting || Boolean(deletingKey)}
+                      style={{
+                        border: "1px solid rgba(159, 18, 57, 0.18)",
+                        borderRadius: 12,
+                        padding: "10px 14px",
+                        background: "rgba(159, 18, 57, 0.08)",
+                        color: "#9F1239",
+                        cursor: saving || isDeleting || deletingKey ? "default" : "pointer",
+                        opacity: saving || isDeleting || deletingKey ? 0.7 : 1,
+                        transition,
+                      }}
+                    >
+                      {isDeleting ? "Deleting..." : "Delete"}
+                    </button>
+                    <a
+                      href={routePath}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{
+                        border: `1px solid ${cardBorder}`,
+                        borderRadius: 12,
+                        padding: "10px 14px",
+                        background: "#FFFFFF",
+                        color: textSecondary,
+                        textDecoration: "none",
+                      }}
+                    >
+                      Open entry
+                    </a>
+                    {poem.downloadUrl ? (
+                      <a
+                        href={poem.downloadUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                          border: `1px solid ${cardBorder}`,
+                          borderRadius: 12,
+                          padding: "10px 14px",
+                          background: "#FFFFFF",
+                          color: textSecondary,
+                          textDecoration: "none",
+                        }}
+                      >
+                        Open file
+                      </a>
+                    ) : null}
+                    {poem.purchaseUrl ? (
+                      <a
+                        href={poem.purchaseUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                          border: `1px solid ${cardBorder}`,
+                          borderRadius: 12,
+                          padding: "10px 14px",
+                          background: "#FFFFFF",
+                          color: textSecondary,
+                          textDecoration: "none",
+                        }}
+                      >
+                        External link
+                      </a>
+                    ) : null}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        ) : null}
+      </aside>
+        </div>
+      </div>
     </main>
   );
 }
+
+
+
+
