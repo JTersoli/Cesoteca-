@@ -273,11 +273,19 @@
 }
 
 .desktopFooter {
-  width: min(calc(100vw - 24px), calc((100dvh - 8px) * var(--book-ratio, 1.3987241)));
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  gap: 6px;
+  width: fit-content;
+  max-width: min(calc(100vw - 24px), calc((100dvh - 8px) * var(--book-ratio, 1.3987241)));
+  margin: 2px auto 0;
+  padding: 8px 12px;
+  display: inline-grid;
+  grid-template-columns: auto auto auto;
+  gap: 10px;
   align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(146, 124, 220, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 10px 22px rgba(146, 124, 220, 0.08);
 }
 
 .documentViewport {
@@ -311,23 +319,27 @@
   flex-wrap: wrap;
 }
 
-.desktopFooter .navButton:last-child {
-  justify-self: end;
-}
-
 .pageIndicator {
   justify-self: center;
-  min-width: 96px;
-  padding: 2px 8px;
+  min-width: 74px;
+  padding: 0 2px;
   border-radius: 999px;
   background: transparent;
   border: 0;
   text-align: center;
   font-family: var(--font-reading);
-  font-size: 0.76rem;
-  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: rgba(46, 31, 18, 0.72);
+}
+
+.desktopFooter .navButton {
+  min-height: 34px;
+  min-width: 0;
+  padding: 8px 14px;
+  font-size: 0.88rem;
+  box-shadow: none;
 }
 
 .mobileReader {

@@ -118,11 +118,13 @@ export default function PoemReader({
 
   const left = pages[pageIndex] ?? "";
   const right = pages[pageIndex + 1] ?? "";
+  const totalPages = pages.length;
   const leftPageNumber = pageIndex + 1;
   const rightPageNumber = right ? pageIndex + 2 : null;
   const spreadLabel = rightPageNumber
-    ? `${leftPageNumber}-${rightPageNumber} / ${pages.length}`
-    : `${leftPageNumber} / ${pages.length}`;
+    ? `${leftPageNumber}-${rightPageNumber} / ${totalPages}`
+    : `${leftPageNumber} / ${totalPages}`;
+  const hasPagination = totalPages > 1;
 
   const canPrev = pageIndex > 0;
   const canNext = pageIndex + 2 < pages.length;
@@ -305,29 +307,31 @@ export default function PoemReader({
                   />
                 </div>
 
-                <div className={styles.desktopFooter}>
-                  <button
-                    type="button"
-                    className={styles.navButton}
-                    onClick={goPrev}
-                    disabled={!canPrev}
-                  >
-                    Anterior
-                  </button>
+                {hasPagination ? (
+                  <div className={styles.desktopFooter}>
+                    <button
+                      type="button"
+                      className={styles.navButton}
+                      onClick={goPrev}
+                      disabled={!canPrev}
+                    >
+                      Anterior
+                    </button>
 
-                  <div className={styles.pageIndicator} aria-live="polite">
-                    {spreadLabel}
+                    <div className={styles.pageIndicator} aria-live="polite">
+                      {spreadLabel}
+                    </div>
+
+                    <button
+                      type="button"
+                      className={styles.navButton}
+                      onClick={goNext}
+                      disabled={!canNext}
+                    >
+                      Siguiente
+                    </button>
                   </div>
-
-                  <button
-                    type="button"
-                    className={styles.navButton}
-                    onClick={goNext}
-                    disabled={!canNext}
-                  >
-                    Siguiente
-                  </button>
-                </div>
+                ) : null}
               </div>
             </section>
 

@@ -74,14 +74,7 @@ export default async function AboutPage() {
             <a href={curriculumHref} className={styles.cvButton}>
               Curriculum
             </a>
-          ) : (
-            <div className={styles.cvEmpty}>
-              <p className={styles.cvEmptyText}>
-                La pagina ya esta lista para mostrar el curriculum. Solo falta subir el PDF desde
-                el admin.
-              </p>
-            </div>
-          )}
+          ) : null}
         </section>
       </div>
     </main>
