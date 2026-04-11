@@ -117,29 +117,19 @@
 
 .fixedPortrait {
   position: fixed;
-  right: clamp(-12px, 1vw, 12px);
-  bottom: clamp(6px, 2vw, 26px);
+  inset: 0;
   z-index: 0;
   pointer-events: none;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
   background: transparent;
   border: 0;
   box-shadow: none;
-}
-
-.fixedPortraitImage {
-  width: clamp(360px, 32vw, 520px);
-  max-width: 100%;
-  height: auto;
-  object-fit: contain;
+  background-image: var(--about-watermark-image);
+  background-repeat: repeat;
+  background-size: clamp(90px, 9vw, 132px) auto;
+  background-position: right bottom;
+  background-color: rgba(79, 64, 108, 0.12);
+  background-blend-mode: multiply;
   opacity: 0.16;
-  background: transparent;
-  border: 0;
-  box-shadow: none;
-  filter: saturate(0.92) contrast(0.96);
-  mix-blend-mode: multiply;
 }
 
 @media (max-width: 900px) {
@@ -148,12 +138,8 @@
   }
 
   .fixedPortrait {
-    right: -10px;
-    bottom: 14px;
-  }
-
-  .fixedPortraitImage {
-    width: clamp(240px, 30vw, 320px);
+    background-size: clamp(74px, 12vw, 108px) auto;
+    background-color: rgba(79, 64, 108, 0.1);
     opacity: 0.13;
   }
 }
@@ -164,14 +150,9 @@
   }
 
   .fixedPortrait {
-    right: -18px;
-    bottom: 18px;
-  }
-
-  .fixedPortraitImage {
-    width: clamp(180px, 46vw, 240px);
-    opacity: 0.1;
-    mix-blend-mode: normal;
+    background-size: clamp(62px, 16vw, 88px) auto;
+    background-color: rgba(79, 64, 108, 0.08);
+    opacity: 0.11;
   }
 
   .contactCard,

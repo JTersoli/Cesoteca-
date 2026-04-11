@@ -1,7 +1,7 @@
 import { existsSync } from "fs";
-import Image from "next/image";
 import Link from "next/link";
 import path from "path";
+import type { CSSProperties } from "react";
 import { getAboutContent } from "@/lib/content-public";
 import styles from "./page.module.css";
 
@@ -27,15 +27,15 @@ export default async function AboutPage() {
 
   return (
     <main className={styles.page}>
-      <div className={styles.fixedPortrait} aria-hidden="true">
-        <Image
-          src={anchoredPortraitUrl}
-          alt=""
-          width={440}
-          height={640}
-          className={styles.fixedPortraitImage}
-        />
-      </div>
+      <div
+        className={styles.fixedPortrait}
+        aria-hidden="true"
+        style={
+          {
+            "--about-watermark-image": `url("${anchoredPortraitUrl}")`,
+          } as CSSProperties
+        }
+      />
 
       <div className={styles.content}>
         <Link href="/" className={styles.backLink}>
