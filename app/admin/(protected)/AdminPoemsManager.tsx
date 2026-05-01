@@ -13,6 +13,7 @@ import {
   type TextAlign,
 } from "@/lib/book-reader";
 import { SECTION_OPTIONS, getSectionBasePath } from "@/lib/sections";
+import styles from "./AdminPoemsManager.module.css";
 
 type Poem = {
   section: (typeof SECTION_OPTIONS)[number]["key"];
@@ -44,50 +45,15 @@ function getDisplayTitle(poem: Pick<Poem, "title" | "slug">) {
   return poem.title.trim() || poem.slug.trim() || "Sin título";
 }
 
-function getPillButtonStyle(active: boolean) {
-  return {
-    border: active ? "1px solid #5F5A7A" : "1px solid #E6E3F0",
-    borderRadius: 999,
-    padding: "9px 14px",
-    background: active ? "#5F5A7A" : "#F1F0F7",
-    color: active ? "#fff" : "#6F6F6F",
-    cursor: "pointer",
-    boxShadow: active
-      ? "0 6px 18px rgba(95, 90, 122, 0.14)"
-      : "inset 0 1px 0 rgba(255,255,255,0.7)",
-    transition:
-      "background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease, transform 180ms ease",
-  } as const;
+function pillStyle(active: boolean): string {
+  return active
+    ? `${styles.pill} ${styles.pillActive}`
+    : `${styles.pill} ${styles.pillInactive}`;
 }
 
 export default function AdminPoemsManager() {
-  const pageBackground = "linear-gradient(to bottom, #F7F6FB, #FFFFFF)";
-  const cardBackground = "#FFFFFF";
-  const cardBorder = "#ECEAF4";
-  const fieldBorder = "#E6E3F0";
-  const accent = "#5F5A7A";
-  const accentSoft = "#E8E6F3";
-  const secondarySoft = "#F1F0F7";
-  const textPrimary = "#111111";
-  const textSecondary = "#6F6F6F";
-  const textMuted = "#9CA3AF";
-  const softShadow = "0 4px 20px rgba(95, 90, 122, 0.06)";
-  const divider = "#F0EDF5";
-  const transition = "all 180ms ease";
-  const fieldStyle = {
-    border: `1px solid ${fieldBorder}`,
-    borderRadius: 12,
-    padding: 12,
-    background: "#FAFAFD",
-    color: textPrimary,
-    boxShadow:
-      "inset 0 1px 0 rgba(255,255,255,0.9), 0 0 0 0 rgba(95, 90, 122, 0.08)",
-    transition,
-  } as const;
   const [poems, setPoems] = useState<Poem[]>([]);
-  const [section, setSection] = useState<
-    (typeof SECTION_OPTIONS)[number]["key"]
-  >("poems");
+  const [section, setSection] = useState<(typeof SECTION_OPTIONS)[number]["key"]>("poems");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deletingKey, setDeletingKey] = useState("");
@@ -109,9 +75,7 @@ export default function AdminPoemsManager() {
   const [bold, setBold] = useState(false);
   const [italic, setItalic] = useState(false);
   const [underline, setUnderline] = useState(false);
-  const [textLayout, setTextLayout] = useState<BookTextLayout>(
-    DEFAULT_BOOK_TEXT_LAYOUT
-  );
+  const [textLayout, setTextLayout] = useState<BookTextLayout>(DEFAULT_BOOK_TEXT_LAYOUT);
   const [fileInputKey, setFileInputKey] = useState(0);
   const [editingIdentity, setEditingIdentity] = useState<EditingIdentity | null>(null);
   const [loadedUpdatedAt, setLoadedUpdatedAt] = useState("");
@@ -137,6 +101,7 @@ export default function AdminPoemsManager() {
     displayMode === "book"
       ? "Vista con doble pagina e imagen del libro. Se habilitan posicion e imagen."
       : "Vista de hoja unica, centrada y limpia. Se ocultan los controles del libro.";
+
   const occupiedSlots = useMemo(
     () =>
       poems
@@ -159,6 +124,7 @@ export default function AdminPoemsManager() {
         })),
     [editingIdentity, poems, section]
   );
+
   const slotConflict = occupiedSlots.find(
     (occupied) =>
       typeof libraryPage === "number" &&
@@ -166,6 +132,7 @@ export default function AdminPoemsManager() {
       occupied.page === libraryPage &&
       occupied.slot === librarySlot
   );
+
   const filteredPoems = useMemo(() => {
     const query = entriesQuery.trim().toLowerCase();
     if (!query) return poems;
@@ -187,9 +154,7 @@ export default function AdminPoemsManager() {
         method: "GET",
         cache: "no-store",
       });
-      if (!response.ok) {
-        throw new Error("Failed to load poems.");
-      }
+      if (!response.ok) throw new Error("Failed to load poems.");
       const data = (await response.json()) as { poems: Poem[] };
       setPoems(data.poems || []);
     } catch (e) {
@@ -206,9 +171,7 @@ export default function AdminPoemsManager() {
   useEffect(() => {
     if (section === "about") {
       setSlug("about");
-      if (!title.trim()) {
-        setTitle("Sobre mí");
-      }
+      if (!title.trim()) setTitle("Sobre mí");
       setDisplayMode("page");
     }
   }, [section, title]);
@@ -253,9 +216,7 @@ export default function AdminPoemsManager() {
       });
 
       if (!response.ok) {
-        const data = (await response.json().catch(() => null)) as
-          | { error?: string }
-          | null;
+        const data = (await response.json().catch(() => null)) as { error?: string } | null;
         throw new Error(data?.error || "Failed to save poem.");
       }
 
@@ -330,9 +291,7 @@ export default function AdminPoemsManager() {
       });
 
       if (!response.ok) {
-        const data = (await response.json().catch(() => null)) as
-          | { error?: string }
-          | null;
+        const data = (await response.json().catch(() => null)) as { error?: string } | null;
         throw new Error(data?.error || "Failed to delete poem.");
       }
 
@@ -358,985 +317,494 @@ export default function AdminPoemsManager() {
     window.location.href = "/admin/login";
   }
 
-  const listGridStyle = {
-    display: "grid",
-    gap: 16,
-    gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-  } as const;
-
-  const sectionCardStyle = {
-    display: "grid",
-    gap: 20,
-    padding: 28,
-    borderRadius: 30,
-    border: `1px solid ${cardBorder}`,
-    background: cardBackground,
-    boxShadow: "0 24px 60px rgba(95, 90, 122, 0.08)",
-  } as const;
-
-  const sectionHeadingStyle = {
-    display: "flex",
-    alignItems: "center",
-    gap: 14,
-  } as const;
-
-  const sectionIconStyle = {
-    width: 42,
-    height: 42,
-    borderRadius: 999,
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    background: accentSoft,
-    color: accent,
-    fontWeight: 700,
-    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.85)",
-  } as const;
-
-  const softInputSurface = {
-    ...fieldStyle,
-    borderRadius: 22,
-    background: "#F5F4FA",
-    border: `1px solid ${divider}`,
-    padding: "16px 18px",
-  } as const;
-
-  const pillMetaStyle = {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 8,
-    padding: "7px 12px",
-    borderRadius: 999,
-    background: secondarySoft,
-    color: accent,
-    fontSize: 12,
-    fontWeight: 700,
-    letterSpacing: "0.02em",
-  } as const;
-
-  const neutralActionStyle = {
-    border: `1px solid ${cardBorder}`,
-    borderRadius: 14,
-    padding: "10px 14px",
-    background: "#FFFFFF",
-    color: textSecondary,
-    textDecoration: "none",
-    boxShadow: "0 6px 16px rgba(95, 90, 122, 0.04)",
-    transition,
-  } as const;
+  const busy = saving || Boolean(deletingKey);
 
   return (
-    <main
-      style={{
-        background: pageBackground,
-        color: textPrimary,
-        minHeight: "100vh",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: 1380,
-          margin: "0 auto",
-          padding: "24px 20px 36px",
-          display: "grid",
-          gap: 20,
-        }}
-      >
-        <header
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 16,
-            flexWrap: "wrap",
-            padding: "18px 24px",
-            borderRadius: 28,
-            border: `1px solid ${cardBorder}`,
-            background: "rgba(255,255,255,0.92)",
-            boxShadow: softShadow,
-          }}
-        >
-          <div style={{ display: "grid", gap: 6 }}>
-            <div style={{ color: accent, fontWeight: 800, fontSize: 22 }}>Gestion de Libros</div>
-            <p style={{ margin: 0, color: textSecondary, fontSize: 14 }}>
+    <main className={styles.root}>
+      <div className={styles.inner}>
+
+        <header className={styles.header}>
+          <div className={styles.headerMeta}>
+            <div className={styles.headerTitle}>Gestion de Libros</div>
+            <p className={styles.headerSubtitle}>
               Panel editorial para administrar biblioteca, archivos e imagenes.
             </p>
           </div>
-
           <button
             type="button"
             onClick={onLogout}
-            disabled={saving || Boolean(deletingKey)}
-            style={{
-              border: `1px solid ${accent}`,
-              borderRadius: 999,
-              padding: "12px 20px",
-              background: accent,
-              color: "#fff",
-              cursor: saving || deletingKey ? "default" : "pointer",
-              opacity: saving || deletingKey ? 0.72 : 1,
-              boxShadow: "0 12px 28px rgba(95, 90, 122, 0.18)",
-              transition,
-            }}
+            disabled={busy}
+            className={styles.btnPrimary}
           >
             Logout
           </button>
         </header>
 
-        <div
-          style={{
-            display: "grid",
-            gap: 20,
-            gridTemplateColumns: "minmax(220px, 260px) minmax(0, 1.45fr) minmax(320px, 0.9fr)",
-            alignItems: "start",
-          }}
-        >
-          <aside
-            style={{
-              display: "grid",
-              gap: 22,
-              padding: "28px 20px",
-              borderRadius: 32,
-              border: `1px solid ${cardBorder}`,
-              background:
-                "linear-gradient(180deg, rgba(255,255,255,0.88) 0%, rgba(241,240,247,0.95) 100%)",
-              boxShadow: softShadow,
-              position: "sticky",
-              top: 24,
-            }}
-          >
-            <div style={{ display: "grid", gap: 6 }}>
-              <div style={{ color: accent, fontWeight: 800, fontSize: 18 }}>Boutique CMS</div>
-              <p style={{ margin: 0, color: textSecondary, lineHeight: 1.6, fontSize: 14 }}>
+        <div className={styles.columns}>
+
+          {/* Sidebar */}
+          <aside className={styles.sidebar}>
+            <div>
+              <div className={styles.sidebarTitle}>Boutique CMS</div>
+              <p className={styles.sidebarDesc}>
                 Workspace editorial para administrar libros, archivos y posiciones de biblioteca.
               </p>
             </div>
-
             <button
               type="button"
               onClick={resetForm}
-              disabled={saving || Boolean(deletingKey)}
-              style={{
-                border: `1px solid ${accent}`,
-                borderRadius: 999,
-                padding: "16px 18px",
-                background: accent,
-                color: "#fff",
-                fontWeight: 700,
-                cursor: saving || deletingKey ? "default" : "pointer",
-                opacity: saving || deletingKey ? 0.72 : 1,
-                boxShadow: "0 14px 30px rgba(95, 90, 122, 0.18)",
-                transition,
-              }}
+              disabled={busy}
+              className={styles.btnPrimaryLarge}
             >
-              {editingIdentity ? "Create New Entry" : "Limpiar formulario"}
+              {editingIdentity ? "Crear nueva entrada" : "Limpiar formulario"}
             </button>
-
           </aside>
 
-          <section style={{ display: "grid", gap: 20 }}>
-            <div style={{ display: "grid", gap: 8, padding: "12px 6px" }}>
-              <h1
-                style={{
-                  fontSize: "clamp(2rem, 4vw, 3rem)",
-                  margin: 0,
-                  lineHeight: 1.02,
-                  letterSpacing: "-0.04em",
-                }}
-              >
-                Panel de Gestion de Libros
-              </h1>
-              <p style={{ margin: 0, color: textSecondary, fontSize: 18, lineHeight: 1.5 }}>
+          {/* Form column */}
+          <section className={styles.formColumn}>
+            <div className={styles.formHeading}>
+              <h1 className={styles.formTitle}>Panel de Gestion de Libros</h1>
+              <p className={styles.formSubtitle}>
                 Administra libros, archivos y ubicaciones de biblioteca con el flujo actual ya estabilizado.
               </p>
             </div>
 
-            <form onSubmit={onSubmit} style={sectionCardStyle}>
-              <input
-                type="hidden"
-                name="originalSection"
-                value={editingIdentity?.section || ""}
-              />
+            <form onSubmit={onSubmit} className={styles.card}>
+              <input type="hidden" name="originalSection" value={editingIdentity?.section || ""} />
               <input type="hidden" name="originalSlug" value={editingIdentity?.slug || ""} />
               <input type="hidden" name="currentDownloadUrl" value={downloadUrl} />
               <input type="hidden" name="expectedUpdatedAt" value={loadedUpdatedAt} />
-        <div style={sectionHeadingStyle}>
-          <span style={sectionIconStyle}>i</span>
-          <div>
-            <h2 style={{ margin: 0, fontSize: 18 }}>Basic info</h2>
-            <p style={{ margin: "4px 0 0", color: textSecondary, fontSize: 14 }}>
-              Titulo, slug, seccion y contenido principal del libro.
-            </p>
-          </div>
-        </div>
-        <label style={{ display: "grid", gap: 8 }}>
-          <span
-            style={{
-              fontSize: 12,
-              textTransform: "uppercase",
-              letterSpacing: "0.04em",
-              color: textSecondary,
-              fontWeight: 600,
-            }}
-          >
-            Seccion
-          </span>
-          <select
-            name="section"
-            value={section}
-            onChange={(e) =>
-              setSection(e.target.value as (typeof SECTION_OPTIONS)[number]["key"])
-            }
-            style={softInputSurface}
-          >
-            {SECTION_OPTIONS.map((option) => (
-              <option key={option.key} value={option.key}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
 
-        <input
-          name="title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder={isAboutSection ? "Ej: Sobre mi" : "Ej: Las flores del mal"}
-          style={softInputSurface}
-        />
+              <div className={styles.sectionHeading}>
+                <span className={styles.sectionIcon}>i</span>
+                <div className={styles.sectionHeadingText}>
+                  <h2 className={styles.sectionHeadingTitle}>Basic info</h2>
+                  <p className={styles.sectionHeadingDesc}>
+                    Titulo, slug, seccion y contenido principal del libro.
+                  </p>
+                </div>
+              </div>
 
-        <input
-          name="slug"
-          value={slug}
-          onChange={(e) => setSlug(e.target.value)}
-          placeholder={isAboutSection ? "about" : "slug-amigable"}
-          readOnly={isAboutSection}
-          style={softInputSurface}
-        />
-
-        {supportsPurchaseUrl ? (
-          <div
-            style={{
-              display: "grid",
-              gap: 12,
-              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-            }}
-          >
-            <input
-              name="purchaseUrl"
-              type="url"
-              value={purchaseUrl}
-              onChange={(e) => setPurchaseUrl(e.target.value)}
-              placeholder="Link de Comprar"
-              style={softInputSurface}
-            />
-            <input
-              name="readArticleUrl"
-              type="url"
-              value={readArticleUrl}
-              onChange={(e) => setReadArticleUrl(e.target.value)}
-              placeholder="Link de Leer articulo"
-              style={softInputSurface}
-            />
-          </div>
-        ) : null}
-
-        <textarea
-          name="text"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder={
-            isAboutSection
-              ? "Texto de presentacion / biografia"
-              : "Breve introduccion o texto completo"
-          }
-          rows={8}
-          style={{ ...softInputSurface, minHeight: 180, resize: "vertical" }}
-        />
-
-        {isAboutSection ? (
-          <textarea
-            name="contactInfo"
-            value={contactInfo}
-            onChange={(e) => setContactInfo(e.target.value)}
-            placeholder={"Informacion de contacto\n\nEmail\nInstagram\nCiudad"}
-            rows={5}
-            style={{ ...softInputSurface, minHeight: 120, resize: "vertical" }}
-          />
-        ) : null}
-
-        {supportsLayoutControls ? (
-          <section
-            style={{
-              display: "grid",
-              gap: 18,
-              padding: 24,
-              borderRadius: 24,
-              border: `1px solid ${divider}`,
-              background: "#FCFBFE",
-              transition,
-            }}
-          >
-          <div style={sectionHeadingStyle}>
-            <span style={sectionIconStyle}>T</span>
-            <div>
-              <h2 style={{ margin: 0, fontSize: 18 }}>Visual layout</h2>
-              <p style={{ margin: "4px 0 0", color: textSecondary, fontSize: 14 }}>
-                Configuracion de lectura y formato del contenido.
-              </p>
-            </div>
-          </div>
-          <div style={{ display: "grid", gap: 8 }}>
-            <span
-              style={{
-                fontSize: 12,
-                fontWeight: 700,
-                letterSpacing: "0.04em",
-                textTransform: "uppercase",
-                color: textSecondary,
-              }}
-            >
-              Visual layout
-            </span>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <button
-                type="button"
-                onClick={() => setDisplayMode("book")}
-                aria-pressed={displayMode === "book"}
-                style={getPillButtonStyle(displayMode === "book")}
-              >
-                Libro abierto
-              </button>
-              <button
-                type="button"
-                onClick={() => setDisplayMode("page")}
-                aria-pressed={displayMode === "page"}
-                style={getPillButtonStyle(displayMode === "page")}
-              >
-                Pagina simple / lectura lineal
-              </button>
-            </div>
-            <div
-              style={{
-                fontSize: 13,
-                lineHeight: 1.5,
-                padding: "12px 14px",
-                borderRadius: 12,
-                background: secondarySoft,
-                border: `1px solid ${cardBorder}`,
-                color: textSecondary,
-              }}
-            >
-              {layoutHint}
-            </div>
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gap: 8,
-              paddingTop: 2,
-              borderTop: `1px solid ${divider}`,
-            }}
-          >
-            <span
-              style={{
-                fontSize: 12,
-                fontWeight: 700,
-                letterSpacing: "0.04em",
-                textTransform: "uppercase",
-                color: textSecondary,
-              }}
-            >
-              Text format
-            </span>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <button
-                type="button"
-                onClick={() => setTextAlign("left")}
-                aria-pressed={textAlign === "left"}
-                style={getPillButtonStyle(textAlign === "left")}
-              >
-                As written
-              </button>
-              <button
-                type="button"
-                onClick={() => setTextAlign("justify")}
-                aria-pressed={textAlign === "justify"}
-                style={getPillButtonStyle(textAlign === "justify")}
-              >
-                Justified
-              </button>
-              <button
-                type="button"
-                onClick={() => setTextAlign("center")}
-                aria-pressed={textAlign === "center"}
-                style={getPillButtonStyle(textAlign === "center")}
-              >
-                Centered
-              </button>
-              <button
-                type="button"
-                onClick={() => setBold((value) => !value)}
-                aria-pressed={bold}
-                style={{ ...getPillButtonStyle(bold), fontWeight: 700 }}
-              >
-                Bold
-              </button>
-              <button
-                type="button"
-                onClick={() => setItalic((value) => !value)}
-                aria-pressed={italic}
-                style={{ ...getPillButtonStyle(italic), fontStyle: "italic" }}
-              >
-                Italic
-              </button>
-              <button
-                type="button"
-                onClick={() => setUnderline((value) => !value)}
-                aria-pressed={underline}
-                style={{ ...getPillButtonStyle(underline), textDecoration: "underline" }}
-              >
-                Underline
-              </button>
-            </div>
-            <div style={{ color: textMuted, fontSize: 12 }}>
-              Estos estilos se aplican tanto al modo libro como al modo pagina.
-            </div>
-          </div>
-          <input type="hidden" name="displayMode" value={displayMode} />
-          <input type="hidden" name="textAlign" value={textAlign} />
-          <input
-            type="hidden"
-            name="currentBookImageUrl"
-            value={bookImageUrl}
-          />
-          <input type="hidden" name="libraryPage" value={libraryPage?.toString() || ""} />
-          <input type="hidden" name="librarySlot" value={librarySlot?.toString() || ""} />
-          <input type="hidden" name="bold" value={bold ? "true" : "false"} />
-          <input type="hidden" name="italic" value={italic ? "true" : "false"} />
-          <input
-            type="hidden"
-            name="underline"
-            value={underline ? "true" : "false"}
-          />
-            <input type="hidden" name="textLayout" value={serializedTextLayout} />
-          </section>
-        ) : (
-          <>
-            <input type="hidden" name="displayMode" value="page" />
-            <input type="hidden" name="textAlign" value={textAlign} />
-            <input type="hidden" name="currentBookImageUrl" value={bookImageUrl} />
-            <input type="hidden" name="libraryPage" value="1" />
-            <input type="hidden" name="librarySlot" value="1" />
-            <input type="hidden" name="bold" value={bold ? "true" : "false"} />
-            <input type="hidden" name="italic" value={italic ? "true" : "false"} />
-            <input type="hidden" name="underline" value={underline ? "true" : "false"} />
-            <input type="hidden" name="textLayout" value={serializedTextLayout} />
-          </>
-        )}
-
-        {supportsLibraryPlacement ? (
-          <LibrarySlotPicker
-            page={libraryPage}
-            slot={librarySlot}
-            occupiedSlots={occupiedSlots}
-            onPageChange={setLibraryPage}
-            onSlotChange={setLibrarySlot}
-            onClearSelection={() => {
-              setLibraryPage(undefined);
-              setLibrarySlot(undefined);
-            }}
-          />
-        ) : null}
-
-        <section
-          style={{
-            display: "grid",
-            gap: 14,
-            padding: 24,
-            borderRadius: 24,
-            border: `1px solid ${divider}`,
-            background: "#FCFBFE",
-          }}
-        >
-          <div style={sectionHeadingStyle}>
-            <span style={sectionIconStyle}>A</span>
-            <div>
-              <h2 style={{ margin: 0, fontSize: 18 }}>Assets</h2>
-              <p style={{ margin: "4px 0 0", color: textSecondary, fontSize: 14 }}>
-                Subidas de archivo principal e imagen asociada.
-              </p>
-            </div>
-          </div>
-
-          <label style={{ display: "grid", gap: 8 }}>
-            <span style={{ color: textSecondary, fontSize: 12 }}>{documentInputLabel}</span>
-            <input
-              key={`doc-file-${fileInputKey}`}
-              name="file"
-              type="file"
-              accept={isAboutSection ? ".pdf,application/pdf" : ".doc,.docx,.pdf"}
-              style={softInputSurface}
-            />
-            <span style={{ color: textMuted, fontSize: 12 }}>{documentInputHelp}</span>
-            {downloadUrl ? (
-              <span style={{ color: textSecondary, fontSize: 12 }}>
-                Archivo actual: {downloadUrl}
-              </span>
-            ) : null}
-          </label>
-
-          {supportsImageUpload ? (
-            <div
-              style={{
-                display: "grid",
-                gap: 12,
-                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                alignItems: "start",
-              }}
-            >
-              <label style={{ display: "grid", gap: 8 }}>
-                <span style={{ color: textSecondary, fontSize: 12 }}>{imageInputLabel}</span>
-                <input
-                  key={`image-file-${fileInputKey}`}
-                  name="bookImageFile"
-                  type="file"
-                  accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif"
-                  style={softInputSurface}
-                />
-                <span style={{ color: textMuted, fontSize: 12 }}>{imageInputHelp}</span>
-                {bookImageUrl ? (
-                  <span style={{ color: textSecondary, fontSize: 12, wordBreak: "break-all" }}>
-                    Imagen actual: {bookImageUrl}
-                  </span>
-                ) : null}
+              <label className={styles.fieldLabel}>
+                <span className={styles.fieldLabelText}>Seccion</span>
+                <select
+                  name="section"
+                  value={section}
+                  onChange={(e) =>
+                    setSection(e.target.value as (typeof SECTION_OPTIONS)[number]["key"])
+                  }
+                  className={styles.field}
+                >
+                  {SECTION_OPTIONS.map((option) => (
+                    <option key={option.key} value={option.key}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
               </label>
 
-              {bookImageUrl ? (
-                <div
-                  style={{
-                    display: "grid",
-                    gap: 8,
-                    padding: 10,
-                    borderRadius: 18,
-                    border: `1px solid ${divider}`,
-                    background: "#FFFFFF",
-                  }}
-                >
-                  <span style={{ color: textMuted, fontSize: 11, textTransform: "uppercase" }}>
-                    Preview
-                  </span>
-                  <Image
-                    src={bookImageUrl}
-                    alt="Preview de imagen del libro"
-                    width={320}
-                    height={400}
-                    style={{
-                      width: "100%",
-                      aspectRatio: "4 / 5",
-                      objectFit: "cover",
-                      borderRadius: 14,
-                      display: "block",
-                    }}
+              <input
+                name="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder={isAboutSection ? "Ej: Sobre mi" : "Ej: Las flores del mal"}
+                className={styles.field}
+              />
+
+              <input
+                name="slug"
+                value={slug}
+                onChange={(e) => setSlug(e.target.value)}
+                placeholder={isAboutSection ? "about" : "slug-amigable"}
+                readOnly={isAboutSection}
+                className={styles.field}
+              />
+
+              {supportsPurchaseUrl ? (
+                <div className={styles.fieldGrid2}>
+                  <input
+                    name="purchaseUrl"
+                    type="url"
+                    value={purchaseUrl}
+                    onChange={(e) => setPurchaseUrl(e.target.value)}
+                    placeholder="Link de Comprar"
+                    className={styles.field}
+                  />
+                  <input
+                    name="readArticleUrl"
+                    type="url"
+                    value={readArticleUrl}
+                    onChange={(e) => setReadArticleUrl(e.target.value)}
+                    placeholder="Link de Leer articulo"
+                    className={styles.field}
                   />
                 </div>
               ) : null}
+
+              <textarea
+                name="text"
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder={
+                  isAboutSection
+                    ? "Texto de presentacion / biografia"
+                    : "Breve introduccion o texto completo"
+                }
+                rows={8}
+                className={`${styles.field} ${styles.textarea}`}
+              />
+
+              {isAboutSection ? (
+                <textarea
+                  name="contactInfo"
+                  value={contactInfo}
+                  onChange={(e) => setContactInfo(e.target.value)}
+                  placeholder={"Informacion de contacto\n\nEmail\nInstagram\nCiudad"}
+                  rows={5}
+                  className={`${styles.field} ${styles.textareaSmall}`}
+                />
+              ) : null}
+
+              {supportsLayoutControls ? (
+                <div className={styles.subCard}>
+                  <div className={styles.sectionHeading}>
+                    <span className={styles.sectionIcon}>T</span>
+                    <div className={styles.sectionHeadingText}>
+                      <h2 className={styles.sectionHeadingTitle}>Visual layout</h2>
+                      <p className={styles.sectionHeadingDesc}>
+                        Configuracion de lectura y formato del contenido.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className={styles.toggleLabel}>Visual layout</div>
+                    <div className={styles.toggleGroup}>
+                      <button
+                        type="button"
+                        onClick={() => setDisplayMode("book")}
+                        aria-pressed={displayMode === "book"}
+                        className={pillStyle(displayMode === "book")}
+                      >
+                        Libro abierto
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDisplayMode("page")}
+                        aria-pressed={displayMode === "page"}
+                        className={pillStyle(displayMode === "page")}
+                      >
+                        Pagina simple / lectura lineal
+                      </button>
+                    </div>
+                    <div className={styles.layoutHintBox}>{layoutHint}</div>
+                  </div>
+
+                  <div className={styles.divider}>
+                    <div className={styles.toggleLabel}>Text format</div>
+                    <div className={styles.toggleGroup}>
+                      <button type="button" onClick={() => setTextAlign("left")} aria-pressed={textAlign === "left"} className={pillStyle(textAlign === "left")}>As written</button>
+                      <button type="button" onClick={() => setTextAlign("justify")} aria-pressed={textAlign === "justify"} className={pillStyle(textAlign === "justify")}>Justified</button>
+                      <button type="button" onClick={() => setTextAlign("center")} aria-pressed={textAlign === "center"} className={pillStyle(textAlign === "center")}>Centered</button>
+                      <button type="button" onClick={() => setBold((v) => !v)} aria-pressed={bold} className={`${pillStyle(bold)} ${styles.boldText}`}>Bold</button>
+                      <button type="button" onClick={() => setItalic((v) => !v)} aria-pressed={italic} className={`${pillStyle(italic)} ${styles.italicText}`}>Italic</button>
+                      <button type="button" onClick={() => setUnderline((v) => !v)} aria-pressed={underline} className={`${pillStyle(underline)} ${styles.underlineText}`}>Underline</button>
+                    </div>
+                    <div className={styles.toggleHint}>
+                      Estos estilos se aplican tanto al modo libro como al modo pagina.
+                    </div>
+                  </div>
+
+                  <input type="hidden" name="displayMode" value={displayMode} />
+                  <input type="hidden" name="textAlign" value={textAlign} />
+                  <input type="hidden" name="currentBookImageUrl" value={bookImageUrl} />
+                  <input type="hidden" name="libraryPage" value={libraryPage?.toString() || ""} />
+                  <input type="hidden" name="librarySlot" value={librarySlot?.toString() || ""} />
+                  <input type="hidden" name="bold" value={bold ? "true" : "false"} />
+                  <input type="hidden" name="italic" value={italic ? "true" : "false"} />
+                  <input type="hidden" name="underline" value={underline ? "true" : "false"} />
+                  <input type="hidden" name="textLayout" value={serializedTextLayout} />
+                </div>
+              ) : (
+                <>
+                  <input type="hidden" name="displayMode" value="page" />
+                  <input type="hidden" name="textAlign" value={textAlign} />
+                  <input type="hidden" name="currentBookImageUrl" value={bookImageUrl} />
+                  <input type="hidden" name="libraryPage" value="1" />
+                  <input type="hidden" name="librarySlot" value="1" />
+                  <input type="hidden" name="bold" value={bold ? "true" : "false"} />
+                  <input type="hidden" name="italic" value={italic ? "true" : "false"} />
+                  <input type="hidden" name="underline" value={underline ? "true" : "false"} />
+                  <input type="hidden" name="textLayout" value={serializedTextLayout} />
+                </>
+              )}
+
+              {supportsLibraryPlacement ? (
+                <LibrarySlotPicker
+                  page={libraryPage}
+                  slot={librarySlot}
+                  occupiedSlots={occupiedSlots}
+                  onPageChange={setLibraryPage}
+                  onSlotChange={setLibrarySlot}
+                  onClearSelection={() => {
+                    setLibraryPage(undefined);
+                    setLibrarySlot(undefined);
+                  }}
+                />
+              ) : null}
+
+              <div className={styles.subCard}>
+                <div className={styles.sectionHeading}>
+                  <span className={styles.sectionIcon}>A</span>
+                  <div className={styles.sectionHeadingText}>
+                    <h2 className={styles.sectionHeadingTitle}>Assets</h2>
+                    <p className={styles.sectionHeadingDesc}>
+                      Subidas de archivo principal e imagen asociada.
+                    </p>
+                  </div>
+                </div>
+
+                <label className={styles.fieldLabel}>
+                  <span className={styles.fieldHint}>{documentInputLabel}</span>
+                  <input
+                    key={`doc-file-${fileInputKey}`}
+                    name="file"
+                    type="file"
+                    accept={isAboutSection ? ".pdf,application/pdf" : ".doc,.docx,.pdf"}
+                    className={styles.field}
+                  />
+                  <span className={styles.fieldHint}>{documentInputHelp}</span>
+                  {downloadUrl ? (
+                    <span className={styles.fieldCurrent}>Archivo actual: {downloadUrl}</span>
+                  ) : null}
+                </label>
+
+                {supportsImageUpload ? (
+                  <div className={styles.imageGrid}>
+                    <label className={styles.fieldLabel}>
+                      <span className={styles.fieldHint}>{imageInputLabel}</span>
+                      <input
+                        key={`image-file-${fileInputKey}`}
+                        name="bookImageFile"
+                        type="file"
+                        accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif"
+                        className={styles.field}
+                      />
+                      <span className={styles.fieldHint}>{imageInputHelp}</span>
+                      {bookImageUrl ? (
+                        <span className={styles.fieldCurrent}>Imagen actual: {bookImageUrl}</span>
+                      ) : null}
+                    </label>
+
+                    {bookImageUrl ? (
+                      <div className={styles.imagePreview}>
+                        <span className={styles.imagePreviewLabel}>Preview</span>
+                        <Image
+                          src={bookImageUrl}
+                          alt="Preview de imagen del libro"
+                          width={320}
+                          height={400}
+                          className={styles.imagePreviewImg}
+                        />
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+
+              <div className={styles.formFooter}>
+                <button
+                  type="submit"
+                  disabled={busy}
+                  className={styles.btnSubmit}
+                >
+                  {saving
+                    ? "Saving..."
+                    : isAboutSection
+                      ? "Guardar perfil"
+                      : editingIdentity
+                        ? "Guardar cambios"
+                        : "Guardar libro"}
+                </button>
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  disabled={busy}
+                  className={styles.btnGhost}
+                >
+                  Limpiar campos
+                </button>
+              </div>
+            </form>
+
+            <div className={styles.alerts}>
+              {error ? (
+                <p className={styles.alertError} role="alert">{error}</p>
+              ) : null}
+              {notice ? (
+                <p className={styles.alertSuccess} role="status">{notice}</p>
+              ) : null}
+              {slotConflict && !isAboutSection ? (
+                <p className={styles.alertWarning} role="status">
+                  This position is occupied. Saving will move the current entry out of the library slot.
+                </p>
+              ) : null}
             </div>
-          ) : null}
-        </section>
-
-        <div
-          style={{
-            display: "flex",
-            gap: 10,
-            flexWrap: "wrap",
-            justifyContent: "space-between",
-            alignItems: "center",
-            paddingTop: 8,
-            borderTop: `1px solid ${divider}`,
-          }}
-        >
-          <button
-            type="submit"
-            disabled={saving || Boolean(deletingKey)}
-            style={{
-              border: `1px solid ${accent}`,
-              borderRadius: 12,
-              padding: "12px 16px",
-              background: accent,
-              color: "#fff",
-              cursor: saving || deletingKey ? "default" : "pointer",
-              opacity: saving || deletingKey ? 0.72 : 1,
-              boxShadow: softShadow,
-              transition,
-            }}
-          >
-            {saving
-              ? "Saving..."
-              : isAboutSection
-                ? "Guardar perfil"
-                : editingIdentity
-                  ? "Guardar cambios"
-                  : "Guardar libro"}
-          </button>
-
-          <button
-            type="button"
-            onClick={resetForm}
-            disabled={saving || Boolean(deletingKey)}
-            style={{
-              ...neutralActionStyle,
-              background: "transparent",
-              cursor: saving || deletingKey ? "default" : "pointer",
-              opacity: saving || deletingKey ? 0.72 : 1,
-            }}
-          >
-            Limpiar campos
-          </button>
-        </div>
-      </form>
-
-      <div style={{ display: "grid", gap: 10 }}>
-        {error ? (
-          <p
-            style={{
-              margin: 0,
-              color: "#9F1239",
-              padding: "14px 16px",
-              borderRadius: 16,
-              background: "rgba(159, 18, 57, 0.08)",
-              border: "1px solid rgba(159, 18, 57, 0.12)",
-            }}
-            role="alert"
-          >
-            {error}
-          </p>
-        ) : null}
-        {notice ? (
-          <p
-            style={{
-              margin: 0,
-              color: "#28543B",
-              padding: "14px 16px",
-              borderRadius: 16,
-              background: "rgba(40, 84, 59, 0.08)",
-              border: "1px solid rgba(40, 84, 59, 0.12)",
-            }}
-            role="status"
-          >
-            {notice}
-          </p>
-        ) : null}
-        {slotConflict && !isAboutSection ? (
-          <p
-            style={{
-              margin: 0,
-              color: "#8A5A00",
-              padding: "14px 16px",
-              borderRadius: 16,
-              background: "rgba(138, 90, 0, 0.08)",
-              border: "1px solid rgba(138, 90, 0, 0.12)",
-            }}
-            role="status"
-          >
-            This position is occupied. Saving will move the current entry out of the library slot.
-          </p>
-        ) : null}
-      </div>
           </section>
 
-      <aside style={{ display: "grid", gap: 18 }}>
-        <div
-          style={{
-            display: "grid",
-            gap: 10,
-            padding: "8px 6px",
-          }}
-        >
-          <h2 style={{ fontSize: 20, margin: 0, color: textPrimary, fontWeight: 700 }}>
-            Libros existentes
-          </h2>
-          <p style={{ margin: 0, color: textSecondary, fontSize: 14, lineHeight: 1.6 }}>
-            Busca rapido por titulo, slug o seccion para volver a editar.
-          </p>
-        </div>
-        <input
-          type="search"
-          value={entriesQuery}
-          onChange={(e) => setEntriesQuery(e.target.value)}
-          placeholder="Buscar libro, slug o seccion"
-          style={softInputSurface}
-        />
-        <span style={pillMetaStyle}>
-          {entriesQuery.trim() ? `${filteredPoems.length} resultados` : `${poems.length} total`}
-        </span>
-        {loading ? <p style={{ color: textMuted, margin: 0 }}>Loading...</p> : null}
-        {!loading && poems.length === 0 ? (
-          <div
-            style={{
-              padding: 22,
-              borderRadius: 24,
-              border: `1px solid ${cardBorder}`,
-              background: cardBackground,
-              color: textMuted,
-              boxShadow: softShadow,
-            }}
-          >
-            No entries yet.
-          </div>
-        ) : null}
-        {!loading && poems.length > 0 && filteredPoems.length === 0 ? (
-          <div
-            style={{
-              padding: 22,
-              borderRadius: 24,
-              border: `1px solid ${cardBorder}`,
-              background: cardBackground,
-              color: textMuted,
-              boxShadow: softShadow,
-            }}
-          >
-            No encontramos libros con esa busqueda.
-          </div>
-        ) : null}
-        {!loading ? (
-          <ul style={{ padding: 0, margin: 0, listStyle: "none", ...listGridStyle }}>
-            {filteredPoems.map((poem) => {
-              const routePath =
-                poem.section === "about"
-                  ? getSectionBasePath(poem.section)
-                  : `${getSectionBasePath(poem.section)}/${poem.slug}`;
-              const sectionLabel =
-                SECTION_OPTIONS.find((option) => option.key === poem.section)?.label ||
-                poem.section;
-              const itemKey = `${poem.section}:${poem.slug}`;
-              const isDeleting = deletingKey === itemKey;
-              const isEditing =
-                editingIdentity?.section === poem.section && editingIdentity?.slug === poem.slug;
+          {/* Entries list */}
+          <aside className={styles.listAside}>
+            <div className={styles.listHeader}>
+              <h2 className={styles.listTitle}>Libros existentes</h2>
+              <p className={styles.listDesc}>
+                Busca rapido por titulo, slug o seccion para volver a editar.
+              </p>
+            </div>
 
-              return (
-                <li
-                  key={itemKey}
-                  style={{
-                    display: "grid",
-                    gap: 16,
-                    padding: 20,
-                    borderRadius: 20,
-                    border: `1px solid ${isEditing ? accentSoft : cardBorder}`,
-                    background: cardBackground,
-                    boxShadow: isEditing
-                      ? "0 12px 32px rgba(95, 90, 122, 0.12)"
-                      : softShadow,
-                  }}
-                >
-                  <div style={{ display: "grid", gap: 10 }}>
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        gap: 10,
-                        alignItems: "flex-start",
-                        flexWrap: "wrap",
-                      }}
-                    >
-                      <div style={{ display: "grid", gap: 6 }}>
-                        <div style={{ fontWeight: 700, color: textPrimary, fontSize: 18 }}>
-                          {getDisplayTitle(poem)}
-                        </div>
-                        <div style={{ color: textSecondary, fontSize: 13 }}>{routePath}</div>
-                      </div>
-                      <div
-                        style={{
-                          alignSelf: "start",
-                          padding: "6px 10px",
-                          borderRadius: 999,
-                          background: secondarySoft,
-                          color: "#4C4374",
-                          fontSize: 12,
-                          fontWeight: 600,
-                        }}
-                      >
-                        {sectionLabel}
-                      </div>
-                    </div>
+            <input
+              type="search"
+              value={entriesQuery}
+              onChange={(e) => setEntriesQuery(e.target.value)}
+              placeholder="Buscar libro, slug o seccion"
+              className={styles.field}
+            />
 
-                    <div
-                      style={{
-                        display: "grid",
-                        gap: 10,
-                        gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
-                      }}
-                    >
-                      <div
-                        style={{
-                          padding: 12,
-                          borderRadius: 14,
-                          background: "#FAFAFD",
-                          border: `1px solid ${divider}`,
-                        }}
-                      >
-                        <div style={{ color: textMuted, fontSize: 11, textTransform: "uppercase" }}>
-                          Biblioteca
-                        </div>
-                        <div style={{ color: textPrimary, fontSize: 14, marginTop: 4 }}>
-                          {poem.section === "about"
-                            ? "Sin ubicacion"
-                            : poem.libraryPage && poem.librarySlot
-                              ? `Pagina ${poem.libraryPage}, slot ${poem.librarySlot}`
-                              : "Sin ubicacion en biblioteca"}
-                        </div>
-                      </div>
-                      <div
-                        style={{
-                          padding: 12,
-                          borderRadius: 14,
-                          background: "#FAFAFD",
-                          border: `1px solid ${divider}`,
-                        }}
-                      >
-                        <div style={{ color: textMuted, fontSize: 11, textTransform: "uppercase" }}>
-                          Estado visual
-                        </div>
-                        <div style={{ color: textPrimary, fontSize: 14, marginTop: 4 }}>
-                          {getDisplayModeLabel(poem.displayMode || DEFAULT_DISPLAY_MODE)}
-                        </div>
-                      </div>
-                      <div
-                        style={{
-                          padding: 12,
-                          borderRadius: 14,
-                          background: "#FAFAFD",
-                          border: `1px solid ${divider}`,
-                        }}
-                      >
-                        <div style={{ color: textMuted, fontSize: 11, textTransform: "uppercase" }}>
-                          Updated
-                        </div>
-                        <div style={{ color: textPrimary, fontSize: 14, marginTop: 4 }}>
-                          {new Date(poem.updatedAt).toLocaleString()}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+            <span className={styles.pillMeta}>
+              {entriesQuery.trim() ? `${filteredPoems.length} resultados` : `${poems.length} total`}
+            </span>
 
-                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                    <button
-                      type="button"
-                      onClick={() => loadPoemIntoForm(poem)}
-                      disabled={saving || isDeleting || Boolean(deletingKey)}
-                      style={{
-                        border: `1px solid ${cardBorder}`,
-                        borderRadius: 12,
-                        padding: "10px 14px",
-                        background: accentSoft,
-                        color: "#4C4374",
-                        cursor: saving || isDeleting || deletingKey ? "default" : "pointer",
-                        opacity: saving || isDeleting || deletingKey ? 0.72 : 1,
-                        boxShadow: "0 6px 16px rgba(123, 104, 238, 0.08)",
-                        transition,
-                      }}
+            {loading ? <p className={styles.loadingText}>Loading...</p> : null}
+
+            {!loading && poems.length === 0 ? (
+              <div className={styles.emptyState}>No entries yet.</div>
+            ) : null}
+
+            {!loading && poems.length > 0 && filteredPoems.length === 0 ? (
+              <div className={styles.emptyState}>
+                No encontramos libros con esa busqueda.
+              </div>
+            ) : null}
+
+            {!loading ? (
+              <ul className={styles.listGrid}>
+                {filteredPoems.map((poem) => {
+                  const routePath =
+                    poem.section === "about"
+                      ? getSectionBasePath(poem.section)
+                      : `${getSectionBasePath(poem.section)}/${poem.slug}`;
+                  const sectionLabel =
+                    SECTION_OPTIONS.find((option) => option.key === poem.section)?.label ||
+                    poem.section;
+                  const itemKey = `${poem.section}:${poem.slug}`;
+                  const isDeleting = deletingKey === itemKey;
+                  const isEditing =
+                    editingIdentity?.section === poem.section &&
+                    editingIdentity?.slug === poem.slug;
+
+                  return (
+                    <li
+                      key={itemKey}
+                      className={`${styles.entryCard} ${isEditing ? styles.entryCardEditing : ""}`}
                     >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onDeletePoem(poem)}
-                      disabled={saving || isDeleting || Boolean(deletingKey)}
-                      style={{
-                        border: "1px solid rgba(159, 18, 57, 0.18)",
-                        borderRadius: 12,
-                        padding: "10px 14px",
-                        background: "rgba(159, 18, 57, 0.08)",
-                        color: "#9F1239",
-                        cursor: saving || isDeleting || deletingKey ? "default" : "pointer",
-                        opacity: saving || isDeleting || deletingKey ? 0.7 : 1,
-                        transition,
-                      }}
-                    >
-                      {isDeleting ? "Deleting..." : "Delete"}
-                    </button>
-                    <a
-                      href={routePath}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{
-                        border: `1px solid ${cardBorder}`,
-                        borderRadius: 12,
-                        padding: "10px 14px",
-                        background: "#FFFFFF",
-                        color: textSecondary,
-                        textDecoration: "none",
-                      }}
-                    >
-                      Open entry
-                    </a>
-                    {poem.downloadUrl ? (
-                      <a
-                        href={poem.downloadUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={{
-                          border: `1px solid ${cardBorder}`,
-                          borderRadius: 12,
-                          padding: "10px 14px",
-                          background: "#FFFFFF",
-                          color: textSecondary,
-                          textDecoration: "none",
-                        }}
-                      >
-                        Open file
-                      </a>
-                    ) : null}
-                    {poem.purchaseUrl ? (
-                      <a
-                        href={poem.purchaseUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={{
-                          border: `1px solid ${cardBorder}`,
-                          borderRadius: 12,
-                          padding: "10px 14px",
-                          background: "#FFFFFF",
-                          color: textSecondary,
-                          textDecoration: "none",
-                        }}
-                      >
-                        External link
-                      </a>
-                    ) : null}
-                    {poem.readArticleUrl ? (
-                      <a
-                        href={poem.readArticleUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={{
-                          border: `1px solid ${cardBorder}`,
-                          borderRadius: 12,
-                          padding: "10px 14px",
-                          background: "#FFFFFF",
-                          color: textSecondary,
-                          textDecoration: "none",
-                        }}
-                      >
-                        Leer articulo
-                      </a>
-                    ) : null}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        ) : null}
-      </aside>
+                      <div className={styles.entryMeta}>
+                        <div className={styles.entryHeader}>
+                          <div className={styles.entryTitleGroup}>
+                            <div className={styles.entryTitle}>{getDisplayTitle(poem)}</div>
+                            <div className={styles.entryPath}>{routePath}</div>
+                          </div>
+                          <div className={styles.entryBadge}>{sectionLabel}</div>
+                        </div>
+
+                        <div className={styles.entryStats}>
+                          <div className={styles.entryStat}>
+                            <div className={styles.entryStatLabel}>Biblioteca</div>
+                            <div className={styles.entryStatValue}>
+                              {poem.section === "about"
+                                ? "Sin ubicacion"
+                                : poem.libraryPage && poem.librarySlot
+                                  ? `Pagina ${poem.libraryPage}, slot ${poem.librarySlot}`
+                                  : "Sin ubicacion en biblioteca"}
+                            </div>
+                          </div>
+                          <div className={styles.entryStat}>
+                            <div className={styles.entryStatLabel}>Estado visual</div>
+                            <div className={styles.entryStatValue}>
+                              {getDisplayModeLabel(poem.displayMode || DEFAULT_DISPLAY_MODE)}
+                            </div>
+                          </div>
+                          <div className={styles.entryStat}>
+                            <div className={styles.entryStatLabel}>Updated</div>
+                            <div className={styles.entryStatValue}>
+                              {new Date(poem.updatedAt).toLocaleString()}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className={styles.entryActions}>
+                        <button
+                          type="button"
+                          onClick={() => loadPoemIntoForm(poem)}
+                          disabled={busy || isDeleting}
+                          className={styles.btnEdit}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onDeletePoem(poem)}
+                          disabled={busy || isDeleting}
+                          className={styles.btnDelete}
+                        >
+                          {isDeleting ? "Deleting..." : "Delete"}
+                        </button>
+                        <a
+                          href={routePath}
+                          target="_blank"
+                          rel="noreferrer"
+                          className={styles.btnLink}
+                        >
+                          Open entry
+                        </a>
+                        {poem.downloadUrl ? (
+                          <a
+                            href={poem.downloadUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className={styles.btnLink}
+                          >
+                            Open file
+                          </a>
+                        ) : null}
+                        {poem.purchaseUrl ? (
+                          <a
+                            href={poem.purchaseUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className={styles.btnLink}
+                          >
+                            External link
+                          </a>
+                        ) : null}
+                        {poem.readArticleUrl ? (
+                          <a
+                            href={poem.readArticleUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className={styles.btnLink}
+                          >
+                            Leer articulo
+                          </a>
+                        ) : null}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : null}
+          </aside>
         </div>
       </div>
     </main>
   );
 }
-
-
-
-
-
-

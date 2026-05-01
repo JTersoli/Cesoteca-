@@ -1,20 +1,25 @@
-import { existsSync } from "fs";
+import { access } from "fs/promises";
 import Link from "next/link";
 import path from "path";
 import type { CSSProperties } from "react";
 import { getAboutContent } from "@/lib/content-public";
+import { CV_CONTENT_DOWNLOAD_HREF, CV_PUBLIC_PATH } from "@/lib/cv-path";
 import styles from "./page.module.css";
 
-const CV_PUBLIC_PATH = "/cv.pdf";
 const ABOUT_FIXED_IMAGE_FALLBACK = "/cecilia-about-fixed.png";
 
 export const revalidate = 60;
 
 export default async function AboutPage() {
   const content = await getAboutContent();
-  const hasLegacyCv = existsSync(path.join(process.cwd(), "public", "cv.pdf"));
-  const cvUrl = content.downloadUrl || (hasLegacyCv ? CV_PUBLIC_PATH : undefined);
-  const curriculumHref = "/api/content-download?section=about&slug=about";
+  const hasLegacyCv = await access(path.join(process.cwd(), "public", "cv.pdf")).then(() => true).catch(() => false);
+  const cvUrl =
+    content.downloadUrl && content.downloadUrl !== CV_PUBLIC_PATH
+      ? content.downloadUrl
+      : hasLegacyCv
+        ? CV_PUBLIC_PATH
+        : undefined;
+  const curriculumHref = CV_CONTENT_DOWNLOAD_HREF;
   const paragraphs = content.text
     .split(/\n{2,}/)
     .map((paragraph) => paragraph.trim())

@@ -1,16 +1,27 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { SECTION_OPTIONS } from "@/lib/sections";
+
+const READER_BASE_PATHS = SECTION_OPTIONS.filter((s) => s.key !== "about").map(
+  (s) => s.basePath
+);
+
+function isReaderPath(pathname: string) {
+  return READER_BASE_PATHS.some((base) => {
+    if (!pathname.startsWith(base + "/")) return false;
+    const rest = pathname.slice(base.length + 1);
+    return rest.length > 0 && !rest.includes("/");
+  });
+}
 
 export default function SiteFrame({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const pathname = usePathname();
   const isHomePage = pathname === "/";
-  const isPoemsLibrary = pathname === "/poems";
-  const isReaderPage =
-    /^\/(poems|writings|essays|text-comments)\/[^/]+$/.test(pathname) ||
-    /^\/publications\/(academic|non-academic)\/[^/]+$/.test(pathname);
+  const isPoemsLibrary = SECTION_OPTIONS.some((s) => s.basePath === pathname && s.key !== "about");
+  const isReaderPage = isReaderPath(pathname);
 
   if (isHomePage) {
     return (

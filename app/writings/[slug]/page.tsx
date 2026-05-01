@@ -1,8 +1,28 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import PoemReader from "@/app/poems/PoemReader";
 import { getPublicItemBySlug } from "@/lib/content-public";
-import { notFound } from "next/navigation";
 
 export const revalidate = 60;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const item = await getPublicItemBySlug("writings", slug);
+  if (!item) return { title: "Escrito no encontrado" };
+  return {
+    title: item.title,
+    description: item.text
+      .split(/\r?\n/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .join(" ")
+      .slice(0, 160),
+  };
+}
 
 export default async function WritingPage({
   params,

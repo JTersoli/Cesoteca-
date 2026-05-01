@@ -1,5 +1,6 @@
 import { LIBRARY_POINTS } from "@/lib/library-points";
 import type { BookTextLayout, DisplayMode, TextAlign } from "@/lib/book-reader";
+import { CV_PUBLIC_PATH } from "@/lib/cv-path";
 
 export type SectionItem = {
   slug: string;
@@ -26,7 +27,7 @@ export const ABOUT_ITEM: SectionItem = {
   title: "Sobre mí",
   text:
     "Cesoteca es un archivo personal de lectura y escritura. Reúne poemas, ensayos, comentarios de texto y publicaciones en un formato de biblioteca visual.\n\nEl proyecto prioriza una experiencia de lectura simple: tipografía clara, navegación directa y foco en el contenido.",
-  downloadUrl: "/cv.pdf",
+  downloadUrl: CV_PUBLIC_PATH,
   contactInfo: "Contacto\n\nemail@example.com",
 };
 

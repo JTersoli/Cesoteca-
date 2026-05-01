@@ -1,16 +1,28 @@
-﻿import Link from "next/link";
+import Link from "next/link";
+import styles from "./publications.module.css";
+
+const sections = [
+  { label: "Publicaciones académicas", href: "/publications/academic" },
+  { label: "Publicaciones no académicas", href: "/publications/non-academic" },
+];
 
 export default function PublicationsPage() {
   return (
-    <main style={{ padding: 24, maxWidth: 760, margin: "0 auto" }}>
-      <h1>Publicaciones</h1>
-      <p>Selección de publicaciones académicas y no académicas.</p>
-      <p>
-        <Link href="/publications/academic">Académicas</Link>
-      </p>
-      <p>
-        <Link href="/publications/non-academic">No académicas</Link>
-      </p>
+    <main className={styles.page}>
+      <Link href="/" className={styles.backLink}>
+        Volver
+      </Link>
+
+      <h1 className={styles.title}>Publicaciones</h1>
+      <p className={styles.subtitle}>Selección de publicaciones académicas y no académicas.</p>
+
+      <nav className={styles.nav} aria-label="Secciones de publicaciones">
+        {sections.map((section) => (
+          <Link key={section.href} href={section.href} className={styles.sectionLink}>
+            <span className={styles.sectionLabel}>{section.label}</span>
+          </Link>
+        ))}
+      </nav>
     </main>
   );
 }

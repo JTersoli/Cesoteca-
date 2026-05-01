@@ -1,0 +1,668 @@
+/* ── Layout ─────────────────────────────────────────── */
+.root {
+  background: linear-gradient(to bottom, #F7F6FB, #FFFFFF);
+  color: #111111;
+  min-height: 100vh;
+}
+
+.inner {
+  max-width: 1380px;
+  margin: 0 auto;
+  padding: 24px 20px 36px;
+  display: grid;
+  gap: 20px;
+}
+
+.columns {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: minmax(220px, 260px) minmax(0, 1.45fr) minmax(320px, 0.9fr);
+  align-items: start;
+}
+
+/* ── Header ─────────────────────────────────────────── */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 18px 24px;
+  border-radius: 28px;
+  border: 1px solid #ECEAF4;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 4px 20px rgba(95, 90, 122, 0.06);
+}
+
+.headerMeta {
+  display: grid;
+  gap: 6px;
+}
+
+.headerTitle {
+  color: #5F5A7A;
+  font-weight: 800;
+  font-size: 22px;
+}
+
+.headerSubtitle {
+  margin: 0;
+  color: #6F6F6F;
+  font-size: 14px;
+}
+
+/* ── Sidebar ─────────────────────────────────────────── */
+.sidebar {
+  display: grid;
+  gap: 22px;
+  padding: 28px 20px;
+  border-radius: 32px;
+  border: 1px solid #ECEAF4;
+  background: linear-gradient(180deg, rgba(255,255,255,0.88) 0%, rgba(241,240,247,0.95) 100%);
+  box-shadow: 0 4px 20px rgba(95, 90, 122, 0.06);
+  position: sticky;
+  top: 24px;
+}
+
+.sidebarTitle {
+  color: #5F5A7A;
+  font-weight: 800;
+  font-size: 18px;
+}
+
+.sidebarDesc {
+  margin: 0;
+  color: #6F6F6F;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+/* ── Main form column ─────────────────────────────────── */
+.formColumn {
+  display: grid;
+  gap: 20px;
+}
+
+.formHeading {
+  display: grid;
+  gap: 8px;
+  padding: 12px 6px;
+}
+
+.formTitle {
+  font-size: clamp(2rem, 4vw, 3rem);
+  margin: 0;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+}
+
+.formSubtitle {
+  margin: 0;
+  color: #6F6F6F;
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+/* ── Cards ───────────────────────────────────────────── */
+.card {
+  display: grid;
+  gap: 20px;
+  padding: 28px;
+  border-radius: 30px;
+  border: 1px solid #ECEAF4;
+  background: #FFFFFF;
+  box-shadow: 0 24px 60px rgba(95, 90, 122, 0.08);
+}
+
+.subCard {
+  display: grid;
+  gap: 14px;
+  padding: 24px;
+  border-radius: 24px;
+  border: 1px solid #F0EDF5;
+  background: #FCFBFE;
+  transition: all 180ms ease;
+}
+
+/* ── Section headings inside form ─────────────────────── */
+.sectionHeading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.sectionIcon {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #E8E6F3;
+  color: #5F5A7A;
+  font-weight: 700;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  flex-shrink: 0;
+}
+
+.sectionHeadingText {
+  display: grid;
+  gap: 4px;
+}
+
+.sectionHeadingTitle {
+  margin: 0;
+  font-size: 18px;
+}
+
+.sectionHeadingDesc {
+  margin: 0;
+  color: #6F6F6F;
+  font-size: 14px;
+}
+
+/* ── Fields ──────────────────────────────────────────── */
+.field {
+  border: 1px solid #E6E3F0;
+  border-radius: 22px;
+  padding: 16px 18px;
+  background: #F5F4FA;
+  color: #111111;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 0 0 0 rgba(95, 90, 122, 0.08);
+  transition: all 180ms ease;
+  width: 100%;
+  box-sizing: border-box;
+  font-size: inherit;
+  font-family: inherit;
+}
+
+.field:focus {
+  outline: 3px solid rgba(95, 90, 122, 0.3);
+  outline-offset: 2px;
+}
+
+.textarea {
+  min-height: 180px;
+  resize: vertical;
+}
+
+.textareaSmall {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.fieldLabel {
+  display: grid;
+  gap: 8px;
+}
+
+.fieldLabelText {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6F6F6F;
+  font-weight: 600;
+}
+
+.fieldHint {
+  color: #9CA3AF;
+  font-size: 12px;
+}
+
+.fieldCurrent {
+  color: #6F6F6F;
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.fieldGrid2 {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+/* ── Toggle label ────────────────────────────────────── */
+.toggleLabel {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6F6F6F;
+}
+
+.toggleGroup {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.toggleHint {
+  color: #9CA3AF;
+  font-size: 12px;
+}
+
+.layoutHintBox {
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #F1F0F7;
+  border: 1px solid #ECEAF4;
+  color: #6F6F6F;
+}
+
+.divider {
+  display: grid;
+  gap: 8px;
+  padding-top: 2px;
+  border-top: 1px solid #F0EDF5;
+}
+
+/* ── Image preview ───────────────────────────────────── */
+.imagePreview {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 18px;
+  border: 1px solid #F0EDF5;
+  background: #FFFFFF;
+}
+
+.imagePreviewLabel {
+  color: #9CA3AF;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.imagePreviewImg {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  border-radius: 14px;
+  display: block;
+}
+
+.imageGrid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  align-items: start;
+}
+
+/* ── Form footer ─────────────────────────────────────── */
+.formFooter {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px solid #F0EDF5;
+}
+
+/* ── Alerts ──────────────────────────────────────────── */
+.alerts {
+  display: grid;
+  gap: 10px;
+}
+
+.alertError {
+  margin: 0;
+  color: #9F1239;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(159, 18, 57, 0.08);
+  border: 1px solid rgba(159, 18, 57, 0.12);
+}
+
+.alertSuccess {
+  margin: 0;
+  color: #28543B;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(40, 84, 59, 0.08);
+  border: 1px solid rgba(40, 84, 59, 0.12);
+}
+
+.alertWarning {
+  margin: 0;
+  color: #8A5A00;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(138, 90, 0, 0.08);
+  border: 1px solid rgba(138, 90, 0, 0.12);
+}
+
+/* ── Entries list ─────────────────────────────────────── */
+.listAside {
+  display: grid;
+  gap: 18px;
+}
+
+.listHeader {
+  display: grid;
+  gap: 10px;
+  padding: 8px 6px;
+}
+
+.listTitle {
+  font-size: 20px;
+  margin: 0;
+  color: #111111;
+  font-weight: 700;
+}
+
+.listDesc {
+  margin: 0;
+  color: #6F6F6F;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.listGrid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.pillMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: #F1F0F7;
+  color: #5F5A7A;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.emptyState {
+  padding: 22px;
+  border-radius: 24px;
+  border: 1px solid #ECEAF4;
+  background: #FFFFFF;
+  color: #9CA3AF;
+  box-shadow: 0 4px 20px rgba(95, 90, 122, 0.06);
+}
+
+.loadingText {
+  color: #9CA3AF;
+  margin: 0;
+}
+
+/* ── Entry card ──────────────────────────────────────── */
+.entryCard {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  border-radius: 20px;
+  border: 1px solid #ECEAF4;
+  background: #FFFFFF;
+  box-shadow: 0 4px 20px rgba(95, 90, 122, 0.06);
+}
+
+.entryCardEditing {
+  border-color: #E8E6F3;
+  box-shadow: 0 12px 32px rgba(95, 90, 122, 0.12);
+}
+
+.entryMeta {
+  display: grid;
+  gap: 10px;
+}
+
+.entryHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.entryTitleGroup {
+  display: grid;
+  gap: 6px;
+}
+
+.entryTitle {
+  font-weight: 700;
+  color: #111111;
+  font-size: 18px;
+}
+
+.entryPath {
+  color: #6F6F6F;
+  font-size: 13px;
+}
+
+.entryBadge {
+  align-self: start;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #F1F0F7;
+  color: #4C4374;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.entryStats {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.entryStat {
+  padding: 12px;
+  border-radius: 14px;
+  background: #FAFAFD;
+  border: 1px solid #F0EDF5;
+}
+
+.entryStatLabel {
+  color: #9CA3AF;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.entryStatValue {
+  color: #111111;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.entryActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ── Pill toggles ────────────────────────────────────── */
+.pill {
+  border-radius: 999px;
+  padding: 9px 14px;
+  cursor: pointer;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+  font-size: inherit;
+  font-family: inherit;
+}
+
+.pillActive {
+  border: 1px solid #5F5A7A;
+  background: #5F5A7A;
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(95, 90, 122, 0.14);
+}
+
+.pillInactive {
+  border: 1px solid #E6E3F0;
+  background: #F1F0F7;
+  color: #6F6F6F;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.boldText { font-weight: 700; }
+.italicText { font-style: italic; }
+.underlineText { text-decoration: underline; }
+
+/* ── Buttons ─────────────────────────────────────────── */
+.btnPrimary {
+  border-radius: 999px;
+  padding: 12px 20px;
+  background: #5F5A7A;
+  color: #fff;
+  border: 1px solid #5F5A7A;
+  cursor: pointer;
+  box-shadow: 0 12px 28px rgba(95, 90, 122, 0.18);
+  transition: all 180ms ease;
+  font-size: inherit;
+  font-family: inherit;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background: #4e4966;
+  border-color: #4e4966;
+}
+
+.btnPrimary:disabled {
+  opacity: 0.72;
+  cursor: default;
+}
+
+.btnPrimaryLarge {
+  border-radius: 999px;
+  padding: 16px 18px;
+  background: #5F5A7A;
+  color: #fff;
+  border: 1px solid #5F5A7A;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 14px 30px rgba(95, 90, 122, 0.18);
+  transition: all 180ms ease;
+  font-size: inherit;
+  font-family: inherit;
+  width: 100%;
+}
+
+.btnPrimaryLarge:hover:not(:disabled) {
+  background: #4e4966;
+}
+
+.btnPrimaryLarge:disabled {
+  opacity: 0.72;
+  cursor: default;
+}
+
+.btnSubmit {
+  border: 1px solid #5F5A7A;
+  border-radius: 12px;
+  padding: 12px 16px;
+  background: #5F5A7A;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(95, 90, 122, 0.06);
+  transition: all 180ms ease;
+  font-size: inherit;
+  font-family: inherit;
+}
+
+.btnSubmit:hover:not(:disabled) {
+  background: #4e4966;
+}
+
+.btnSubmit:disabled {
+  opacity: 0.72;
+  cursor: default;
+}
+
+.btnGhost {
+  border: 1px solid #ECEAF4;
+  border-radius: 14px;
+  padding: 10px 14px;
+  background: transparent;
+  color: #6F6F6F;
+  text-decoration: none;
+  box-shadow: 0 6px 16px rgba(95, 90, 122, 0.04);
+  cursor: pointer;
+  transition: all 180ms ease;
+  font-size: inherit;
+  font-family: inherit;
+}
+
+.btnGhost:hover:not(:disabled) {
+  background: #F1F0F7;
+}
+
+.btnGhost:disabled {
+  opacity: 0.72;
+  cursor: default;
+}
+
+.btnEdit {
+  border: 1px solid #ECEAF4;
+  border-radius: 12px;
+  padding: 10px 14px;
+  background: #E8E6F3;
+  color: #4C4374;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(123, 104, 238, 0.08);
+  transition: all 180ms ease;
+  font-size: inherit;
+  font-family: inherit;
+}
+
+.btnEdit:hover:not(:disabled) {
+  background: #dbd8ee;
+}
+
+.btnEdit:disabled {
+  opacity: 0.72;
+  cursor: default;
+}
+
+.btnDelete {
+  border: 1px solid rgba(159, 18, 57, 0.18);
+  border-radius: 12px;
+  padding: 10px 14px;
+  background: rgba(159, 18, 57, 0.08);
+  color: #9F1239;
+  cursor: pointer;
+  transition: all 180ms ease;
+  font-size: inherit;
+  font-family: inherit;
+}
+
+.btnDelete:hover:not(:disabled) {
+  background: rgba(159, 18, 57, 0.14);
+}
+
+.btnDelete:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.btnLink {
+  border: 1px solid #ECEAF4;
+  border-radius: 12px;
+  padding: 10px 14px;
+  background: #FFFFFF;
+  color: #6F6F6F;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  transition: all 180ms ease;
+}
+
+.btnLink:hover {
+  background: #F7F6FB;
+}
