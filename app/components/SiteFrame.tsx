@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SECTION_OPTIONS } from "@/lib/sections";
 
@@ -20,17 +21,35 @@ export default function SiteFrame({
 }: Readonly<{ children: React.ReactNode }>) {
   const pathname = usePathname();
   const isHomePage = pathname === "/";
+  const isAboutPage = pathname === "/about";
   const isPoemsLibrary = SECTION_OPTIONS.some((s) => s.basePath === pathname && s.key !== "about");
   const isReaderPage = isReaderPath(pathname);
 
   if (isHomePage) {
     return (
-      <div className="mx-auto max-w-6xl px-6 py-6">
-        <header className="mb-2">
-          <h1 className="text-center font-hand font-bold text-[64px] sm:text-[76px] md:text-[96px] lg:text-[112px] leading-none">
+      <div className="mx-auto max-w-[1320px] px-6 py-5">
+        <header className="mb-1">
+          <h1 className="text-center font-hand font-bold text-[52px] sm:text-[64px] md:text-[78px] lg:text-[88px] leading-none">
             Cesoteca
           </h1>
         </header>
+
+        {children}
+      </div>
+    );
+  }
+
+  if (isAboutPage) {
+    return (
+      <div className="min-h-screen bg-white text-[#1a1a1a]">
+        <nav className="border-b-[0.5px] border-[#e5e5e5] px-8 py-5">
+          <Link
+            href="/"
+            className="font-hand text-[34px] font-bold leading-none tracking-normal text-[#1a1a1a] no-underline"
+          >
+            Cesoteca
+          </Link>
+        </nav>
 
         {children}
       </div>

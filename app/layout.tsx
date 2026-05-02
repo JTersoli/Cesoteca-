@@ -22,7 +22,7 @@ const fontUI = Inter({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://cesoteca.vercel.app"),
+  metadataBase: new URL("https://lacesoteca.com"),
   title: {
     default: "Cesoteca",
     template: "%s | Cesoteca",

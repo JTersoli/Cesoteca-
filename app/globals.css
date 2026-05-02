@@ -15,48 +15,10 @@
   font-family: var(--font-ui);
 }
 
-/* Estilos para páginas de lectura (poemas/escritos) */
-.reading {
-  font-family: var(--font-reading);
-  font-size: 18px;
-  line-height: 1.8;
-  color: #111;
-}
-
-@media (min-width: 768px) {
-  .reading {
-    font-size: 19px;
-  }
-}
-
-.reading h1,
-.reading h2,
-.reading h3 {
-  font-family: var(--font-reading);
-  line-height: 1.2;
-  margin: 0 0 14px;
-}
-
-.reading p {
-  margin: 0 0 14px;
-}
-
-.reading a {
-  text-decoration: underline;
-  text-underline-offset: 4px;
-}
-
 :root { --broc: url("/cursors/broccoli.png") 32 32, auto; }
 
 html, body { cursor: var(--broc); }
 
 a, button, [role="button"], svg, svg * {
   cursor: var(--broc) !important;
-}
-
-.bookHotspot {
-  fill: rgba(0, 120, 255, 0.25);
-  stroke: rgba(0, 120, 255, 0.9);
-  stroke-width: 2;
-  pointer-events: all;
 }

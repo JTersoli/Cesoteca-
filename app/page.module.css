@@ -38,7 +38,7 @@
 
 .imageFrame {
   width: 100%;
-  max-width: clamp(420px, 56vw, 760px);
+  max-width: clamp(500px, 60vw, 860px);
   aspect-ratio: 13 / 16;
   position: relative;
 }

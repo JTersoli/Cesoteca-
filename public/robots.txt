@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://lacesoteca.com/sitemap.xml

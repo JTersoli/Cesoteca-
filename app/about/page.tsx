@@ -5,9 +5,31 @@ import { getAboutContent } from "@/lib/content-public";
 import { CV_CONTENT_DOWNLOAD_HREF, CV_PUBLIC_PATH } from "@/lib/cv-path";
 import styles from "./page.module.css";
 
-const ABOUT_FIXED_IMAGE_FALLBACK = "/cecilia-about-fixed.png";
+const ABOUT_FIXED_IMAGE_FALLBACK = "/about-diablo-cropped.jpeg";
+const CONTACT_FALLBACKS = {
+  email: "bonet.ceci@gmail.com",
+  phone: "+61 0493332140",
+  instagram: "/cesoteca",
+};
+const SERVICES = [
+  "Clases de español",
+  "Acompañamiento de escritura",
+  "Corrección de textos académicos y no académicos",
+];
 
 export const revalidate = 60;
+
+function cleanContactValue(line: string) {
+  const cleaned = line
+    .replace(/^(email|e-mail|correo|tel[eé]fono|telefono|instagram|ig)\s*[:\-]?\s*/i, "")
+    .trim();
+
+  if (cleaned.startsWith("@")) {
+    return `/${cleaned.slice(1)}`;
+  }
+
+  return cleaned || line.trim();
+}
 
 export default async function AboutPage() {
   const content = await getAboutContent();
@@ -28,6 +50,24 @@ export default async function AboutPage() {
     .map((line) => line.trim())
     .filter(Boolean);
   const anchoredPortraitUrl = content.bookImageUrl || ABOUT_FIXED_IMAGE_FALLBACK;
+  const email = cleanContactValue(
+    contactLines.find((line) => line.includes("@")) || CONTACT_FALLBACKS.email
+  );
+  const phone = cleanContactValue(
+    contactLines.find((line) => line.replace(/[^\d]/g, "").length >= 7) ||
+      CONTACT_FALLBACKS.phone
+  );
+  const instagram = cleanContactValue(
+    contactLines.find((line) => {
+      const normalized = line.toLowerCase();
+      return (
+        normalized.includes("instagram") ||
+        normalized.includes("ig") ||
+        line.startsWith("@") ||
+        line.startsWith("/")
+      );
+    }) || CONTACT_FALLBACKS.instagram
+  );
 
   return (
     <main className={styles.page}>
@@ -40,10 +80,10 @@ export default async function AboutPage() {
 
       <div className={styles.content}>
         <Link href="/" className={styles.backLink}>
-          Volver
+          &larr; Volver
         </Link>
 
-        <h1 className={styles.title}>{content.title || "Sobre mi"}</h1>
+        <h1 className={styles.title}>{content.title || "Sobre mí"}</h1>
 
         {paragraphs.map((paragraph, index) => (
           <p key={index} className={styles.body}>
@@ -51,62 +91,51 @@ export default async function AboutPage() {
           </p>
         ))}
 
-          {contactLines.length > 0 ? (() => {
-              const emailLine = contactLines.find((l) => l.includes("@") && !l.toLowerCase().includes("instagram"));
-              const phoneDigits = contactLines.map((l) => l.replace(/[^\d]/g, "")).find((d) => d.length >= 7);
-              const igLine = contactLines.find((l) => {
-                const lo = l.toLowerCase();
-                return lo.includes("instagram") || lo.includes("ig") || l.trim().startsWith("@");
-              });
-              return (
-                <section className={styles.contactSection} aria-labelledby="contact-title">
-                  <h2 id="contact-title" className={styles.contactTitle}>
-                    Contacto
-                  </h2>
-                  <div className={styles.contactCard}>
-                    {contactLines.map((line, index) => (
-                      <p key={`${line}-${index}`} className={styles.contactLine}>
-                        {line}
-                      </p>
-                    ))}
-                  </div>
-                  <div className={styles.contactActions}>
-                    {emailLine ? (
-                      <a href={`mailto:${emailLine.trim()}`} className={styles.contactButton}>
-                        Email
-                      </a>
-                    ) : null}
-                    {phoneDigits ? (
-                      <a href={`tel:${phoneDigits}`} className={styles.contactButton}>
-                        Teléfono
-                      </a>
-                    ) : null}
-                    {igLine ? (() => {
-                      const handle = igLine.includes("instagram.com")
-                        ? igLine.trim()
-                        : `https://instagram.com/${igLine.trim().replace("@", "")}`;
-                      return (
-                        <a href={handle} className={styles.contactButton} target="_blank" rel="noreferrer">
-                          Instagram
-                        </a>
-                      );
-                    })() : null}
-                  </div>
-                </section>
-              );
-            })() : null}
+        <p className={styles.credits}>
+          Dibujos: Luciana Minen
+        </p>
 
-        <section className={styles.cvSection} aria-labelledby="cv-title">
-          <h2 id="cv-title" className={styles.cvTitle}>
-            Curriculum
-          </h2>
+        <hr className={styles.divider} />
 
-          {cvUrl ? (
-            <a href={curriculumHref} className={styles.cvButton}>
-              Curriculum
-            </a>
-          ) : null}
+        <p className={styles.sectionLabel}>Contacto</p>
+
+        <section className={styles.card} aria-label="Contacto">
+          <div className={styles.services}>
+            {SERVICES.map((service) => (
+              <span key={service} className={styles.serviceItem}>
+                {service}
+              </span>
+            ))}
+          </div>
+          <div className={styles.contactRow}>
+            <span className={styles.contactLabel}>Email</span>
+            <span className={styles.contactValue}>{email}</span>
+          </div>
+          <div className={styles.contactRow}>
+            <span className={styles.contactLabel}>Teléfono</span>
+            <span className={styles.contactValue}>{phone}</span>
+          </div>
+          <div className={styles.contactRow}>
+            <span className={styles.contactLabel}>Instagram</span>
+            <span className={styles.contactValue}>{instagram}</span>
+          </div>
         </section>
+
+        <hr className={styles.divider} />
+
+        <p className={styles.sectionLabel}>Curriculum</p>
+
+        {cvUrl ? (
+          <a href={curriculumHref} className={styles.cvCard}>
+            <span className={styles.cvLabel}>Curriculum</span>
+            <span className={styles.cvArrow}>&darr;</span>
+          </a>
+        ) : (
+          <div className={`${styles.cvCard} ${styles.cvCardDisabled}`} aria-disabled="true">
+            <span className={styles.cvLabel}>Curriculum</span>
+            <span className={styles.cvArrow}>&darr;</span>
+          </div>
+        )}
       </div>
     </main>
   );

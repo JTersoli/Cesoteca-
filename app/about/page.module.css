@@ -1,142 +1,158 @@
 .page {
   position: relative;
-  max-width: 1100px;
+  max-width: 680px;
   margin: 0 auto;
-  padding: 24px 24px 72px;
+  padding: 3rem 2rem 5rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  color: #1a1a1a;
 }
 
 .content {
   position: relative;
   z-index: 1;
-  max-width: 760px;
-  padding-right: min(25vw, 220px);
-}
-
-.backLink,
-.cvButton {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 32px;
-  padding: 6px 14px;
-  border-radius: 8px;
-  border: 1px solid rgba(146, 124, 220, 0.26);
-  background: transparent;
-  color: #44385f;
-  text-decoration: none;
-  font-size: 0.85rem;
-  transition:
-    color 140ms ease,
-    background-color 140ms ease,
-    border-color 140ms ease;
 }
 
 .backLink {
-  margin-bottom: 18px;
+  display: inline-block;
+  margin-bottom: 2.5rem;
+  padding: 5px 14px;
+  border: 0.5px solid #d0d0d0;
+  border-radius: 8px;
+  color: #666;
+  font-size: 13px;
+  line-height: 1.4;
+  text-decoration: none;
+  transition: background 0.15s ease;
 }
 
-.backLink:hover,
-.cvButton:hover {
-  background: rgba(214, 202, 244, 0.88);
-  border-color: rgba(146, 124, 220, 0.34);
+.backLink:hover {
+  background: #f5f5f5;
 }
 
 .backLink:focus-visible,
-.cvButton:focus-visible {
-  outline: 3px solid rgba(146, 124, 220, 0.52);
+.cvCard:focus-visible {
+  outline: 2px solid #999;
   outline-offset: 4px;
 }
 
 .title {
-  margin: 0 0 18px;
-  font-size: clamp(2rem, 5vw, 3rem);
-  line-height: 1.02;
+  margin: 0 0 1.5rem;
+  color: #1a1a1a;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 38px;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.14;
 }
 
 .body {
-  margin: 0 0 14px;
-  font-size: 1.05rem;
-  line-height: 1.8;
-}
-
-.contactSection,
-.cvSection {
-  margin-top: 34px;
-  display: grid;
-  gap: 18px;
-}
-
-.contactTitle,
-.cvTitle {
   margin: 0;
-  font-size: 1.6rem;
-  line-height: 1.1;
+  color: #1a1a1a;
+  font-size: 15px;
+  line-height: 1.85;
 }
 
-.contactCard {
-  display: grid;
-  gap: 10px;
-  padding: 20px 22px;
-  border-radius: 22px;
-  border: 1px solid rgba(146, 124, 220, 0.16);
-  background: rgba(255, 255, 255, 0.84);
-  box-shadow: 0 16px 34px rgba(146, 124, 220, 0.08);
+.body + .body {
+  margin-top: 1rem;
 }
 
-.contactLine {
-  margin: 0;
-  font-size: 1rem;
-  line-height: 1.7;
-  color: rgba(17, 17, 17, 0.78);
+.credits {
+  margin-top: 1rem;
+  color: #999;
+  font-size: 12px;
+  letter-spacing: 0.2px;
 }
 
-.contactActions {
+.divider {
+  margin: 2.5rem 0 2rem;
+  border: 0;
+  border-top: 0.5px solid #e5e5e5;
+}
+
+.sectionLabel {
+  margin: 0 0 1rem;
+  color: #aaa;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+.card {
+  margin-bottom: 1.25rem;
+  padding: 1.25rem 1.5rem;
+  border: 0.5px solid #e5e5e5;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.services {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 14px;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 0.5px solid #e5e5e5;
 }
 
-.contactButton {
-  display: inline-flex;
+.serviceItem {
+  color: #1a1a1a;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+.contactRow {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 7px 0;
+}
+
+.contactRow + .contactRow {
+  border-top: 0.5px solid #e5e5e5;
+}
+
+.contactLabel {
+  min-width: 72px;
+  color: #aaa;
+  font-size: 12px;
+}
+
+.contactValue {
+  color: #1a1a1a;
+  font-size: 14px;
+}
+
+.cvCard {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  min-height: 32px;
-  padding: 6px 14px;
-  border-radius: 8px;
-  border: 1px solid rgba(146, 124, 220, 0.26);
-  background: transparent;
-  color: #44385f;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border: 0.5px solid #e5e5e5;
+  border-radius: 12px;
+  background: #f9f9f9;
+  color: inherit;
   text-decoration: none;
-  font-size: 0.85rem;
-  transition:
-    color 140ms ease,
-    background-color 140ms ease,
-    border-color 140ms ease;
+  transition: background 0.15s ease;
 }
 
-.contactButton:hover {
-  background: rgba(214, 202, 244, 0.88);
-  border-color: rgba(146, 124, 220, 0.34);
+.cvCard:hover {
+  background: #fff;
 }
 
-.cvEmpty {
-  display: grid;
-  place-items: center;
-  min-height: 180px;
-  padding: 24px;
-  border: 1px dashed rgba(146, 124, 220, 0.28);
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.82);
-  text-align: center;
+.cvCardDisabled {
+  cursor: default;
 }
 
-.cvEmptyText {
-  margin: 0;
-  max-width: 34ch;
-  font-size: 1rem;
-  line-height: 1.7;
-  color: rgba(17, 17, 17, 0.72);
+.cvLabel {
+  color: #1a1a1a;
+  font-size: 14px;
+}
+
+.cvArrow {
+  color: #aaa;
+  font-size: 14px;
 }
 
 .fixedPortrait {
@@ -150,30 +166,17 @@
 }
 
 @media (max-width: 900px) {
-  .content {
-    padding-right: 0;
-  }
-
   .fixedPortrait {
-    background-size: clamp(74px, 12vw, 108px) auto;
-    background-color: rgba(79, 64, 108, 0.1);
     opacity: 0.13;
   }
 }
 
 @media (max-width: 767px) {
   .page {
-    padding: 18px 16px 36px;
+    padding: 3rem 2rem 5rem;
   }
 
   .fixedPortrait {
-    background-size: clamp(62px, 16vw, 88px) auto;
-    background-color: rgba(79, 64, 108, 0.08);
     opacity: 0.11;
-  }
-
-  .contactCard,
-  .cvEmpty {
-    border-radius: 18px;
   }
 }

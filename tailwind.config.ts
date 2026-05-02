@@ -1,19 +1,14 @@
 import type { Config } from "tailwindcss";
 
-export default {
+const config: Config = {
   content: [
-    "./app/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}"
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
-    extend: {
-      letterSpacing: {
-        soft: "0.01em"
-      },
-      lineHeight: {
-        airy: "1.75"
-      }
-    }
+    extend: {},
   },
-  plugins: []
-} satisfies Config;
+  plugins: [],
+};
+
+export default config;

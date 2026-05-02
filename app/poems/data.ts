@@ -29,8 +29,5 @@ export const POEMS: Poem[] = Array.from({ length: 26 }, (_, i) => {
     text: buildPoemText(i + 1),
     downloadUrl: "/downloads/mi-poema.docx",
   };
+  });
 });
-
-export const POEMS_BY_SLUG: Record<string, Poem> = Object.fromEntries(
-  POEMS.map((poem) => [poem.slug, poem])
-);

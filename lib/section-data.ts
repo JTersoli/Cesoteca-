@@ -26,9 +26,9 @@ export const ABOUT_ITEM: SectionItem = {
   slug: "about",
   title: "Sobre mí",
   text:
-    "Cesoteca es un archivo personal de lectura y escritura. Reúne poemas, ensayos, comentarios de texto y publicaciones en un formato de biblioteca visual.\n\nEl proyecto prioriza una experiencia de lectura simple: tipografía clara, navegación directa y foco en el contenido.",
+    "La cesoteca es este espacio virtual donde comparto escritos, comentarios de libros, poemas, ensayos y artículos personales. Pero la cesoteca no siempre fue así. Empezó hace unos años como un perfil de instagram donde compartía comentarios de textos de los libros que leía y más me llamaban la atención. Como todo, con el tiempo se fue modificando y empecé a publicar algunos escritos personales, algunos poemas, y otras cosas que quería compartir. Hacía tiempo que quería reunir todo mi trabajo y darle una forma por fuera de la plataforma de instagram, y así surgió la idea de armar este sitio web.",
   downloadUrl: CV_PUBLIC_PATH,
-  contactInfo: "Contacto\n\nemail@example.com",
+  contactInfo: "bonet.ceci@gmail.com\n+61 0493332140\n/cesoteca",
 };
 
 function buildItems(
