@@ -1,7 +1,6 @@
 import { access } from "fs/promises";
 import Link from "next/link";
 import path from "path";
-import type { CSSProperties } from "react";
 import { getAboutContent } from "@/lib/content-public";
 import { CV_CONTENT_DOWNLOAD_HREF, CV_PUBLIC_PATH } from "@/lib/cv-path";
 import styles from "./page.module.css";
@@ -32,14 +31,11 @@ export default async function AboutPage() {
 
   return (
     <main className={styles.page}>
-      <div
+      <img
         className={styles.fixedPortrait}
         aria-hidden="true"
-        style={
-          {
-            "--about-watermark-image": `url("${anchoredPortraitUrl}")`,
-          } as CSSProperties
-        }
+        src={anchoredPortraitUrl}
+        alt=""
       />
 
       <div className={styles.content}>
@@ -55,20 +51,50 @@ export default async function AboutPage() {
           </p>
         ))}
 
-        {contactLines.length > 0 ? (
-          <section className={styles.contactSection} aria-labelledby="contact-title">
-            <h2 id="contact-title" className={styles.contactTitle}>
-              Contacto
-            </h2>
-            <div className={styles.contactCard}>
-              {contactLines.map((line, index) => (
-                <p key={`${line}-${index}`} className={styles.contactLine}>
-                  {line}
-                </p>
-              ))}
-            </div>
-          </section>
-        ) : null}
+          {contactLines.length > 0 ? (() => {
+              const emailLine = contactLines.find((l) => l.includes("@") && !l.toLowerCase().includes("instagram"));
+              const phoneDigits = contactLines.map((l) => l.replace(/[^\d]/g, "")).find((d) => d.length >= 7);
+              const igLine = contactLines.find((l) => {
+                const lo = l.toLowerCase();
+                return lo.includes("instagram") || lo.includes("ig") || l.trim().startsWith("@");
+              });
+              return (
+                <section className={styles.contactSection} aria-labelledby="contact-title">
+                  <h2 id="contact-title" className={styles.contactTitle}>
+                    Contacto
+                  </h2>
+                  <div className={styles.contactCard}>
+                    {contactLines.map((line, index) => (
+                      <p key={`${line}-${index}`} className={styles.contactLine}>
+                        {line}
+                      </p>
+                    ))}
+                  </div>
+                  <div className={styles.contactActions}>
+                    {emailLine ? (
+                      <a href={`mailto:${emailLine.trim()}`} className={styles.contactButton}>
+                        Email
+                      </a>
+                    ) : null}
+                    {phoneDigits ? (
+                      <a href={`tel:${phoneDigits}`} className={styles.contactButton}>
+                        Teléfono
+                      </a>
+                    ) : null}
+                    {igLine ? (() => {
+                      const handle = igLine.includes("instagram.com")
+                        ? igLine.trim()
+                        : `https://instagram.com/${igLine.trim().replace("@", "")}`;
+                      return (
+                        <a href={handle} className={styles.contactButton} target="_blank" rel="noreferrer">
+                          Instagram
+                        </a>
+                      );
+                    })() : null}
+                  </div>
+                </section>
+              );
+            })() : null}
 
         <section className={styles.cvSection} aria-labelledby="cv-title">
           <h2 id="cv-title" className={styles.cvTitle}>

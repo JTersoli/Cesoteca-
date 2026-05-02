@@ -37,29 +37,23 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 46px;
-  padding: 10px 18px;
-  border-radius: 999px;
+  min-height: 32px;
+  padding: 6px 14px;
+  border-radius: 8px;
   border: 1px solid var(--public-btn-border);
-  background: var(--public-btn-bg);
+  background: transparent;
   color: var(--public-btn-text);
   text-decoration: none;
-  font-size: 1rem;
-  box-shadow: var(--public-btn-shadow);
+  font-size: 0.85rem;
   transition:
     color 140ms ease,
-    transform 140ms ease,
     background-color 140ms ease,
-    border-color 140ms ease,
-    box-shadow 140ms ease;
+    border-color 140ms ease;
 }
 
 .libraryBackLink:hover {
-  transform: translateY(-1px);
-  color: #3d3257;
-  background: var(--public-btn-bg-hover);
+  background: var(--public-btn-bg);
   border-color: rgba(146, 124, 220, 0.34);
-  box-shadow: 0 16px 30px rgba(146, 124, 220, 0.18);
 }
 
 .libraryBackLink:focus-visible {
