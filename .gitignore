@@ -40,3 +40,4 @@ data/admin-credentials.json
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+ANALISIS_PARA_CLAUDE.md
