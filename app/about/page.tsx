@@ -71,51 +71,64 @@ export default async function AboutPage() {
 
   return (
     <main className={styles.page}>
-      <img
-        className={styles.fixedPortrait}
-        aria-hidden="true"
-        src={anchoredPortraitUrl}
-        alt=""
-      />
+      <div className={styles.devilDecoration} aria-hidden="true" />
 
       <div className={styles.content}>
         <Link href="/" className={styles.backLink}>
           &larr; Volver
         </Link>
 
-        <h1 className={styles.title}>{content.title || "Sobre mí"}</h1>
-
-        {paragraphs.map((paragraph, index) => (
-          <p key={index} className={styles.body}>
-            {paragraph}
-          </p>
-        ))}
-
-        <p className={styles.credits}>
-          Dibujos: Luciana Minen
-        </p>
+        <section className={styles.hero} aria-labelledby="about-title">
+          <div className={styles.heroCopy}>
+            <h1 id="about-title" className={styles.title}>
+              {content.title || "Sobre mí"}
+            </h1>
+            {paragraphs[0] ? (
+              <p className={styles.heroDescription}>{paragraphs[0]}</p>
+            ) : null}
+          </div>
+          <div
+            className={styles.heroImage}
+            aria-hidden="true"
+            style={{ backgroundImage: `url(${JSON.stringify(anchoredPortraitUrl)})` }}
+          />
+        </section>
 
         <hr className={styles.divider} />
 
-        <p className={styles.sectionLabel}>Contacto</p>
-
-        <section className={styles.card} aria-label="Contacto">
-          <div className={styles.services}>
-            {SERVICES.map((service) => (
-              <span key={service} className={styles.serviceItem}>
-                {service}
-              </span>
-            ))}
+        <section className={styles.aboutGrid} aria-label="Biografía y servicios">
+          <div className={styles.bioColumn}>
+            <p className={styles.sectionLabel}>Biografía</p>
+            <div className={styles.bioText}>
+              {paragraphs.map((paragraph, index) => (
+                <p key={index}>{paragraph}</p>
+              ))}
+            </div>
+            <p className={styles.credits}>Dibujos: Luciana Minen</p>
           </div>
-          <div className={styles.contactRow}>
+
+          <aside className={styles.servicesColumn} aria-label="Servicios">
+            <p className={styles.sectionLabel}>Servicios</p>
+            {SERVICES.map((service) => (
+              <div key={service} className={styles.serviceCard}>
+                {service}
+              </div>
+            ))}
+          </aside>
+        </section>
+
+        <hr className={styles.divider} />
+
+        <section className={styles.contactGrid} aria-label="Contacto">
+          <div className={styles.contactItem}>
             <span className={styles.contactLabel}>Email</span>
             <span className={styles.contactValue}>{email}</span>
           </div>
-          <div className={styles.contactRow}>
+          <div className={styles.contactItem}>
             <span className={styles.contactLabel}>Teléfono</span>
             <span className={styles.contactValue}>{phone}</span>
           </div>
-          <div className={styles.contactRow}>
+          <div className={styles.contactItem}>
             <span className={styles.contactLabel}>Instagram</span>
             <span className={styles.contactValue}>{instagram}</span>
           </div>
@@ -123,19 +136,21 @@ export default async function AboutPage() {
 
         <hr className={styles.divider} />
 
-        <p className={styles.sectionLabel}>Curriculum</p>
-
-        {cvUrl ? (
-          <a href={curriculumHref} className={styles.cvCard}>
-            <span className={styles.cvLabel}>Curriculum</span>
-            <span className={styles.cvArrow}>&darr;</span>
-          </a>
-        ) : (
-          <div className={`${styles.cvCard} ${styles.cvCardDisabled}`} aria-disabled="true">
-            <span className={styles.cvLabel}>Curriculum</span>
-            <span className={styles.cvArrow}>&darr;</span>
+        <section className={styles.cvBar} aria-label="Curriculum">
+          <div>
+            <p className={styles.sectionLabel}>Curriculum</p>
+            <p className={styles.cvDescription}>Curriculum vitae disponible en PDF.</p>
           </div>
-        )}
+          {cvUrl ? (
+            <a href={curriculumHref} className={styles.downloadButton}>
+              Descargar
+            </a>
+          ) : (
+            <span className={`${styles.downloadButton} ${styles.downloadButtonDisabled}`} aria-disabled="true">
+              No disponible
+            </span>
+          )}
+        </section>
       </div>
     </main>
   );
