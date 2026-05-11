@@ -1,1 +1,180 @@
-{"version":3,"caseSensitive":false,"basePath":"","rewrites":{"beforeFiles":[],"afterFiles":[],"fallback":[]},"redirects":[{"source":"/:path+/","destination":"/:path+","permanent":true,"internal":true,"regex":"^(?:\\/((?:[^\\/]+?)(?:\\/(?:[^\\/]+?))*))\\/$"}],"headers":[]}
+{
+  "version": 3,
+  "pages404": true,
+  "caseSensitive": false,
+  "basePath": "",
+  "redirects": [
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "internal": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+    }
+  ],
+  "headers": [],
+  "rewrites": {
+    "beforeFiles": [],
+    "afterFiles": [],
+    "fallback": []
+  },
+  "dynamicRoutes": [
+    {
+      "page": "/essays/[slug]",
+      "regex": "^/essays/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/essays/(?<nxtPslug>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/poems/[slug]",
+      "regex": "^/poems/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/poems/(?<nxtPslug>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/publications/academic/[slug]",
+      "regex": "^/publications/academic/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/publications/academic/(?<nxtPslug>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/publications/non-academic/[slug]",
+      "regex": "^/publications/non\\-academic/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/publications/non\\-academic/(?<nxtPslug>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/text-comments/[slug]",
+      "regex": "^/text\\-comments/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/text\\-comments/(?<nxtPslug>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/writings/[slug]",
+      "regex": "^/writings/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/writings/(?<nxtPslug>[^/]+?)(?:/)?$"
+    }
+  ],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/_not-found",
+      "regex": "^/_not\\-found(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/about",
+      "regex": "^/about(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/about(?:/)?$"
+    },
+    {
+      "page": "/admin",
+      "regex": "^/admin(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin(?:/)?$"
+    },
+    {
+      "page": "/admin/login",
+      "regex": "^/admin/login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/login(?:/)?$"
+    },
+    {
+      "page": "/admin/poems/editor",
+      "regex": "^/admin/poems/editor(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/poems/editor(?:/)?$"
+    },
+    {
+      "page": "/essays",
+      "regex": "^/essays(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/essays(?:/)?$"
+    },
+    {
+      "page": "/poems",
+      "regex": "^/poems(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/poems(?:/)?$"
+    },
+    {
+      "page": "/publications",
+      "regex": "^/publications(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/publications(?:/)?$"
+    },
+    {
+      "page": "/publications/academic",
+      "regex": "^/publications/academic(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/publications/academic(?:/)?$"
+    },
+    {
+      "page": "/publications/non-academic",
+      "regex": "^/publications/non\\-academic(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/publications/non\\-academic(?:/)?$"
+    },
+    {
+      "page": "/sitemap.xml",
+      "regex": "^/sitemap\\.xml(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/sitemap\\.xml(?:/)?$"
+    },
+    {
+      "page": "/stitch",
+      "regex": "^/stitch(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/stitch(?:/)?$"
+    },
+    {
+      "page": "/text-comments",
+      "regex": "^/text\\-comments(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/text\\-comments(?:/)?$"
+    },
+    {
+      "page": "/writings",
+      "regex": "^/writings(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/writings(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "rsc",
+    "varyHeader": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "prefetchHeader": "next-router-prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSuffix": ".prefetch.rsc",
+    "prefetchSegmentHeader": "next-router-segment-prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments"
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  }
+}
