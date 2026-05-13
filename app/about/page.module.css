@@ -13,8 +13,8 @@
   z-index: 1;
 }
 
-.backLink,
-.downloadButton {
+.backButton,
+.button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -29,31 +29,28 @@
   font-weight: 500;
   line-height: 1.2;
   text-decoration: none;
-  transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
-.backLink {
+.backButton {
   margin-bottom: 2.75rem;
 }
 
-.backLink:hover,
-.downloadButton:hover {
+.backButton:hover,
+.button:hover {
   border-color: #5f5a7a;
   background: #f8f7f4;
 }
 
-.backLink:focus-visible,
-.downloadButton:focus-visible {
+.backButton:focus-visible,
+.button:focus-visible {
   outline: 2px solid #5f5a7a;
   outline-offset: 4px;
 }
 
 .hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 180px;
+  grid-template-columns: 1fr 180px;
   gap: 2.5rem;
   align-items: center;
 }
@@ -62,17 +59,16 @@
   min-width: 0;
 }
 
-.title {
+.name {
   margin: 0;
   color: #1a1a1a;
   font-family: var(--font-reading), "EB Garamond", Georgia, serif;
   font-size: 36px;
   font-weight: 500;
-  letter-spacing: 0;
   line-height: 1.12;
 }
 
-.heroDescription {
+.tagline {
   max-width: 540px;
   margin: 1rem 0 0;
   color: #5f5a7a;
@@ -81,10 +77,9 @@
   line-height: 1.7;
 }
 
-.heroImage {
+.portrait {
   width: 180px;
   height: 180px;
-  overflow: hidden;
   border-radius: 8px;
   background: #f8f7f4;
   background-position: center;
@@ -97,9 +92,9 @@
   border-top: 1px solid #e6e2dc;
 }
 
-.aboutGrid {
+.bioServices {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px;
+  grid-template-columns: 1fr 280px;
   gap: 3rem;
   align-items: start;
 }
@@ -108,7 +103,7 @@
   min-width: 0;
 }
 
-.sectionLabel {
+.label {
   margin: 0 0 0.85rem;
   color: #999;
   font-family: var(--font-ui), Inter, sans-serif;
@@ -146,7 +141,7 @@
   min-width: 0;
 }
 
-.serviceCard {
+.card {
   padding: 1rem 1.1rem;
   border-radius: 8px;
   background: #f8f7f4;
@@ -156,18 +151,14 @@
   line-height: 1.45;
 }
 
-.serviceCard + .serviceCard {
+.card + .card {
   margin-top: 0.75rem;
 }
 
-.contactGrid {
+.contacts {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 1.25rem;
-}
-
-.contactItem {
-  min-width: 0;
 }
 
 .contactLabel {
@@ -209,11 +200,11 @@
   line-height: 1.5;
 }
 
-.downloadButton {
+.button {
   flex: 0 0 auto;
 }
 
-.downloadButtonDisabled {
+.buttonDisabled {
   opacity: 0.55;
   pointer-events: none;
 }
@@ -239,13 +230,13 @@
     padding: 2.5rem 1.5rem 5rem;
   }
 
-  .backLink {
+  .backButton {
     margin-bottom: 2.25rem;
   }
 
   .hero,
-  .aboutGrid,
-  .contactGrid {
+  .bioServices,
+  .contacts {
     grid-template-columns: 1fr;
   }
 
@@ -253,7 +244,7 @@
     gap: 1.5rem;
   }
 
-  .heroImage {
+  .portrait {
     width: 160px;
     height: 160px;
   }
@@ -263,7 +254,7 @@
   }
 
   .cvBar {
-    align-items: flex-start;
     flex-direction: column;
+    align-items: flex-start;
   }
 }

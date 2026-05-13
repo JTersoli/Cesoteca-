@@ -74,21 +74,21 @@ export default async function AboutPage() {
       <div className={styles.devilDecoration} aria-hidden="true" />
 
       <div className={styles.content}>
-        <Link href="/" className={styles.backLink}>
+        <Link href="/" className={styles.backButton}>
           &larr; Volver
         </Link>
 
         <section className={styles.hero} aria-labelledby="about-title">
           <div className={styles.heroCopy}>
-            <h1 id="about-title" className={styles.title}>
+            <h1 id="about-title" className={styles.name}>
               {content.title || "Sobre mí"}
             </h1>
             {paragraphs[0] ? (
-              <p className={styles.heroDescription}>{paragraphs[0]}</p>
+              <p className={styles.tagline}>{paragraphs[0]}</p>
             ) : null}
           </div>
           <div
-            className={styles.heroImage}
+            className={styles.portrait}
             aria-hidden="true"
             style={{ backgroundImage: `url(${JSON.stringify(anchoredPortraitUrl)})` }}
           />
@@ -96,9 +96,9 @@ export default async function AboutPage() {
 
         <hr className={styles.divider} />
 
-        <section className={styles.aboutGrid} aria-label="Biografía y servicios">
+        <section className={styles.bioServices} aria-label="Biografía y servicios">
           <div className={styles.bioColumn}>
-            <p className={styles.sectionLabel}>Biografía</p>
+            <p className={styles.label}>Biografía</p>
             <div className={styles.bioText}>
               {paragraphs.map((paragraph, index) => (
                 <p key={index}>{paragraph}</p>
@@ -108,9 +108,9 @@ export default async function AboutPage() {
           </div>
 
           <aside className={styles.servicesColumn} aria-label="Servicios">
-            <p className={styles.sectionLabel}>Servicios</p>
+            <p className={styles.label}>Servicios</p>
             {SERVICES.map((service) => (
-              <div key={service} className={styles.serviceCard}>
+              <div key={service} className={styles.card}>
                 {service}
               </div>
             ))}
@@ -119,16 +119,16 @@ export default async function AboutPage() {
 
         <hr className={styles.divider} />
 
-        <section className={styles.contactGrid} aria-label="Contacto">
-          <div className={styles.contactItem}>
+        <section className={styles.contacts} aria-label="Contacto">
+          <div>
             <span className={styles.contactLabel}>Email</span>
             <span className={styles.contactValue}>{email}</span>
           </div>
-          <div className={styles.contactItem}>
+          <div>
             <span className={styles.contactLabel}>Teléfono</span>
             <span className={styles.contactValue}>{phone}</span>
           </div>
-          <div className={styles.contactItem}>
+          <div>
             <span className={styles.contactLabel}>Instagram</span>
             <span className={styles.contactValue}>{instagram}</span>
           </div>
@@ -138,15 +138,15 @@ export default async function AboutPage() {
 
         <section className={styles.cvBar} aria-label="Curriculum">
           <div>
-            <p className={styles.sectionLabel}>Curriculum</p>
+            <p className={styles.label}>Curriculum</p>
             <p className={styles.cvDescription}>Curriculum vitae disponible en PDF.</p>
           </div>
           {cvUrl ? (
-            <a href={curriculumHref} className={styles.downloadButton}>
+            <a href={curriculumHref} className={styles.button}>
               Descargar
             </a>
           ) : (
-            <span className={`${styles.downloadButton} ${styles.downloadButtonDisabled}`} aria-disabled="true">
+            <span className={`${styles.button} ${styles.buttonDisabled}`} aria-disabled="true">
               No disponible
             </span>
           )}
