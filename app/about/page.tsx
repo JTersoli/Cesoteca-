@@ -1,113 +1,85 @@
-import { access } from "fs/promises";
 import Link from "next/link";
-import path from "path";
-import { getAboutContent } from "@/lib/content-public";
-import { CV_CONTENT_DOWNLOAD_HREF, CV_PUBLIC_PATH } from "@/lib/cv-path";
 import styles from "./page.module.css";
 
-const ABOUT_FIXED_IMAGE_FALLBACK = "/cecilia-about-fixed.png";
-
-export const revalidate = 60;
-
-export default async function AboutPage() {
-  const content = await getAboutContent();
-  const hasLegacyCv = await access(path.join(process.cwd(), "public", "cv.pdf")).then(() => true).catch(() => false);
-  const cvUrl =
-    content.downloadUrl && content.downloadUrl !== CV_PUBLIC_PATH
-      ? content.downloadUrl
-      : hasLegacyCv
-        ? CV_PUBLIC_PATH
-        : undefined;
-  const curriculumHref = CV_CONTENT_DOWNLOAD_HREF;
-  const paragraphs = content.text
-    .split(/\n{2,}/)
-    .map((paragraph) => paragraph.trim())
-    .filter(Boolean);
-  const contactLines = (content.contactInfo || "")
-    .split(/\n+/)
-    .map((line) => line.trim())
-    .filter(Boolean);
-  const anchoredPortraitUrl = content.bookImageUrl || ABOUT_FIXED_IMAGE_FALLBACK;
-
+export default function AboutPage() {
   return (
     <main className={styles.page}>
-      <img
-        className={styles.fixedPortrait}
-        aria-hidden="true"
-        src={anchoredPortraitUrl}
-        alt=""
-      />
+      <Link href="/" className={styles.backBtn}>
+        ← Volver
+      </Link>
 
-      <div className={styles.content}>
-        <Link href="/" className={styles.backLink}>
-          Volver
-        </Link>
-
-        <h1 className={styles.title}>{content.title || "Sobre mi"}</h1>
-
-        {paragraphs.map((paragraph, index) => (
-          <p key={index} className={styles.body}>
-            {paragraph}
+      <div className={styles.hero}>
+        <div className={styles.heroText}>
+          <h1 className={styles.heroTitle}>Cecilia Bonet</h1>
+          <p className={styles.heroSub}>
+            Escritora, docente y editora. Este es el espacio donde reúno todo mi trabajo literario y académico.
           </p>
-        ))}
-
-          {contactLines.length > 0 ? (() => {
-              const emailLine = contactLines.find((l) => l.includes("@") && !l.toLowerCase().includes("instagram"));
-              const phoneDigits = contactLines.map((l) => l.replace(/[^\d]/g, "")).find((d) => d.length >= 7);
-              const igLine = contactLines.find((l) => {
-                const lo = l.toLowerCase();
-                return lo.includes("instagram") || lo.includes("ig") || l.trim().startsWith("@");
-              });
-              return (
-                <section className={styles.contactSection} aria-labelledby="contact-title">
-                  <h2 id="contact-title" className={styles.contactTitle}>
-                    Contacto
-                  </h2>
-                  <div className={styles.contactCard}>
-                    {contactLines.map((line, index) => (
-                      <p key={`${line}-${index}`} className={styles.contactLine}>
-                        {line}
-                      </p>
-                    ))}
-                  </div>
-                  <div className={styles.contactActions}>
-                    {emailLine ? (
-                      <a href={`mailto:${emailLine.trim()}`} className={styles.contactButton}>
-                        Email
-                      </a>
-                    ) : null}
-                    {phoneDigits ? (
-                      <a href={`tel:${phoneDigits}`} className={styles.contactButton}>
-                        Teléfono
-                      </a>
-                    ) : null}
-                    {igLine ? (() => {
-                      const handle = igLine.includes("instagram.com")
-                        ? igLine.trim()
-                        : `https://instagram.com/${igLine.trim().replace("@", "")}`;
-                      return (
-                        <a href={handle} className={styles.contactButton} target="_blank" rel="noreferrer">
-                          Instagram
-                        </a>
-                      );
-                    })() : null}
-                  </div>
-                </section>
-              );
-            })() : null}
-
-        <section className={styles.cvSection} aria-labelledby="cv-title">
-          <h2 id="cv-title" className={styles.cvTitle}>
-            Curriculum
-          </h2>
-
-          {cvUrl ? (
-            <a href={curriculumHref} className={styles.cvButton}>
-              Curriculum
-            </a>
-          ) : null}
-        </section>
+        </div>
+        <div className={styles.heroImg}>foto / ilustración</div>
       </div>
+
+      <hr className={styles.divider} />
+
+      <div className={styles.grid}>
+        <div className={styles.bio}>
+          <p className={styles.sectionLabel}>Sobre mí</p>
+          <div>
+            <p>La cesoteca es este espacio virtual donde comparto escritos, comentarios de libros, poemas, ensayos y artículos personales.</p>
+            <p>Empezó hace unos años como un perfil de Instagram donde compartía comentarios de los libros que leía y más me llamaban la atención. Con el tiempo se fue modificando y empecé a publicar escritos personales, poemas, y otras cosas que quería compartir.</p>
+            <p>Hacía tiempo que quería reunir todo mi trabajo y darle una forma por fuera de la plataforma de Instagram, y así surgió la idea de armar este sitio web.</p>
+          </div>
+        </div>
+
+        <div>
+          <p className={styles.sectionLabel}>Servicios</p>
+          <div className={styles.services}>
+            <div className={styles.serviceCard}>
+              <strong>Clases de español</strong>
+              <span>Enseñanza y tutoría personalizada</span>
+            </div>
+            <div className={styles.serviceCard}>
+              <strong>Acompañamiento de escritura</strong>
+              <span>Edición y desarrollo de proyectos creativos</span>
+            </div>
+            <div className={styles.serviceCard}>
+              <strong>Corrección de textos</strong>
+              <span>Académicos y no académicos</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <hr className={styles.divider} />
+
+      <div className={styles.contactSection}>
+        <p className={styles.sectionLabel}>Contacto</p>
+        <div className={styles.contactGrid}>
+          <div className={styles.contactItem}>
+            <p>Email</p>
+            <a href="mailto:bonet.ceci@gmail.com">bonet.ceci@gmail.com</a>
+          </div>
+          <div className={styles.contactItem}>
+            <p>Teléfono</p>
+            <a href="tel:+61493332140">+61 0493332140</a>
+          </div>
+          <div className={styles.contactItem}>
+            <p>Instagram</p>
+            <a href="https://instagram.com/cesoteca" target="_blank" rel="noreferrer">@cesoteca</a>
+          </div>
+        </div>
+      </div>
+
+      <hr className={styles.divider} />
+
+      <div className={styles.cvBar}>
+        <div>
+          <p>Currículum</p>
+          <span>Descargá mi CV en PDF</span>
+        </div>
+        <a href="/cv.pdf" className={styles.cvBtn}>Descargar CV</a>
+      </div>
+
+      <img className={styles.devil} src="/cursors/devil.png" alt="" aria-hidden="true" />
     </main>
   );
 }
