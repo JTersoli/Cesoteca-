@@ -185,8 +185,8 @@
 
 .devil {
   position: fixed;
-  bottom: -20px;
-  left: -20px;
+  bottom: 0;
+  left: 0;
   width: 420px;
   pointer-events: none;
 }
