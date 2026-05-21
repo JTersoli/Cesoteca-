@@ -8,15 +8,7 @@ export default function AboutPage() {
         ← Volver
       </Link>
 
-      <div className={styles.hero}>
-        <div className={styles.heroText}>
-          <h1 className={styles.heroTitle}>Cecilia Bonet</h1>
-          <p className={styles.heroSub}>
-            Escritora, docente y editora. Este es el espacio donde reúno todo mi trabajo literario y académico.
-          </p>
-        </div>
-        <div className={styles.heroImg}>foto / ilustración</div>
-      </div>
+      <h1 className={styles.heroTitle}>Cecilia Bonet</h1>
 
       <hr className={styles.divider} />
 
