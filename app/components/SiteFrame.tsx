@@ -20,8 +20,13 @@ export default function SiteFrame({
 }: Readonly<{ children: React.ReactNode }>) {
   const pathname = usePathname();
   const isHomePage = pathname === "/";
+  const isAboutPage = pathname === "/about";
   const isPoemsLibrary = SECTION_OPTIONS.some((s) => s.basePath === pathname && s.key !== "about");
   const isReaderPage = isReaderPath(pathname);
+
+  if (isAboutPage) {
+    return <>{children}</>;
+  }
 
   if (isHomePage) {
     return (
