@@ -152,11 +152,19 @@
 }
 
 .devil {
-  position: fixed;
-  bottom: 0;
-  right: 40px;
   width: 280px;
   pointer-events: none;
+  display: block;
+  margin: 1rem 0;
+}
+
+@media (min-width: 601px) {
+  .devil {
+    position: fixed;
+    bottom: 0;
+    right: 40px;
+    margin: 0;
+  }
 }
 
 .divider {

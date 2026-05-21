@@ -10,6 +10,8 @@ export default function AboutPage() {
 
       <h1 className={styles.heroTitle}>Cecilia Bonet</h1>
 
+      <img className={styles.devil} src="https://yplwzzmsxkaruyncezyz.supabase.co/storage/v1/object/public/cesoteca-assets/content/about/images/about-1775880178986-diablo.jpeg" alt="" aria-hidden="true" />
+
       <hr className={styles.divider} />
 
       <div className={styles.grid}>
@@ -71,7 +73,6 @@ export default function AboutPage() {
         <a href="/cv.pdf" className={styles.cvBtn}>Descargar CV</a>
       </div>
 
-      <img className={styles.devil} src="https://yplwzzmsxkaruyncezyz.supabase.co/storage/v1/object/public/cesoteca-assets/content/about/images/about-1775880178986-diablo.jpeg" alt="" aria-hidden="true" />
     </main>
   );
 }
