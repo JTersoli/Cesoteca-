@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import LibrarySlotPicker from "./LibrarySlotPicker";
 import {
   DEFAULT_DISPLAY_MODE,
@@ -67,6 +67,7 @@ export default function AdminPoemsManager() {
   const [contactInfo, setContactInfo] = useState("");
   const [downloadUrl, setDownloadUrl] = useState("");
   const [bookImageUrl, setBookImageUrl] = useState("");
+  const [removeBookImage, setRemoveBookImage] = useState(false);
   const [entriesQuery, setEntriesQuery] = useState("");
   const [libraryPage, setLibraryPage] = useState<number | undefined>(1);
   const [librarySlot, setLibrarySlot] = useState<number | undefined>(1);
@@ -79,6 +80,7 @@ export default function AdminPoemsManager() {
   const [fileInputKey, setFileInputKey] = useState(0);
   const [editingIdentity, setEditingIdentity] = useState<EditingIdentity | null>(null);
   const [loadedUpdatedAt, setLoadedUpdatedAt] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const serializedTextLayout = useMemo(
     () => JSON.stringify(normalizeBookTextLayout(textLayout)),
@@ -88,15 +90,15 @@ export default function AdminPoemsManager() {
   const supportsLayoutControls = !isAboutSection;
   const supportsLibraryPlacement = !isAboutSection;
   const supportsPurchaseUrl = !isAboutSection;
-  const supportsImageUpload = isAboutSection || displayMode === "book";
+  const supportsImageUpload = true;
   const documentInputLabel = isAboutSection ? "CV (PDF)" : "Archivo";
   const documentInputHelp = isAboutSection
     ? "Subí el CV en PDF para mostrarlo y descargarlo luego desde Sobre mí."
     : "Subí el archivo principal de la entrada para ofrecer descarga pública.";
-  const imageInputLabel = isAboutSection ? "Imagen de perfil / portada" : "Imagen del libro";
+  const imageInputLabel = isAboutSection ? "Imagen de perfil / portada" : "Imagen";
   const imageInputHelp = isAboutSection
     ? "Imagen opcional para acompañar la página Sobre mí."
-    : "Imagen opcional para el modo libro abierto.";
+    : "Imagen opcional. Se muestra junto al texto en el modo libro abierto y como encabezado en el modo página simple. Se puede cargar en cualquiera de los dos modos.";
   const layoutHint =
     displayMode === "book"
       ? "Vista con doble pagina e imagen del libro. Se habilitan posicion e imagen."
@@ -185,6 +187,7 @@ export default function AdminPoemsManager() {
     setContactInfo("");
     setDownloadUrl("");
     setBookImageUrl("");
+    setRemoveBookImage(false);
     setLibraryPage(1);
     setLibrarySlot(1);
     setDisplayMode(DEFAULT_DISPLAY_MODE);
@@ -196,6 +199,30 @@ export default function AdminPoemsManager() {
     setEditingIdentity(null);
     setLoadedUpdatedAt("");
     setFileInputKey((value) => value + 1);
+  }
+
+  // Envuelve el fragmento seleccionado del textarea con marcadores de formato
+  // (**negrita**, *cursiva*, __subrayado__). Si no hay selección, inserta los
+  // marcadores y deja el cursor en el medio para escribir.
+  function wrapSelection(marker: string) {
+    const el = textareaRef.current;
+    if (!el) return;
+
+    const start = el.selectionStart ?? text.length;
+    const end = el.selectionEnd ?? text.length;
+    const selected = text.slice(start, end);
+    const before = text.slice(0, start);
+    const after = text.slice(end);
+    const next = `${before}${marker}${selected}${marker}${after}`;
+
+    setText(next);
+
+    const innerStart = start + marker.length;
+    const innerEnd = innerStart + selected.length;
+    requestAnimationFrame(() => {
+      el.focus();
+      el.setSelectionRange(innerStart, innerEnd);
+    });
   }
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -255,6 +282,7 @@ export default function AdminPoemsManager() {
     setContactInfo(poem.contactInfo || "");
     setDownloadUrl(poem.downloadUrl || "");
     setBookImageUrl(poem.bookImageUrl || "");
+    setRemoveBookImage(false);
     setLibraryPage(poem.libraryPage);
     setLibrarySlot(poem.librarySlot);
     setDisplayMode(poem.displayMode || DEFAULT_DISPLAY_MODE);
@@ -441,7 +469,45 @@ export default function AdminPoemsManager() {
                 </div>
               ) : null}
 
+              <div>
+                <div className={styles.toggleGroup}>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => wrapSelection("**")}
+                    className={`${styles.pill} ${styles.pillInactive} ${styles.boldText}`}
+                    title="Seleccioná texto y aplicá negrita"
+                  >
+                    Negrita
+                  </button>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => wrapSelection("*")}
+                    className={`${styles.pill} ${styles.pillInactive} ${styles.italicText}`}
+                    title="Seleccioná texto y aplicá cursiva"
+                  >
+                    Cursiva
+                  </button>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => wrapSelection("__")}
+                    className={`${styles.pill} ${styles.pillInactive} ${styles.underlineText}`}
+                    title="Seleccioná texto y aplicá subrayado"
+                  >
+                    Subrayado
+                  </button>
+                </div>
+                <div className={styles.toggleHint}>
+                  Seleccioná un fragmento del texto y tocá un botón para aplicar formato solo
+                  a esa parte. Verás los marcadores **negrita**, *cursiva* y __subrayado__ en el
+                  texto; en el sitio publicado se muestran con el formato aplicado.
+                </div>
+              </div>
+
               <textarea
+                ref={textareaRef}
                 name="text"
                 value={text}
                 onChange={(e) => setText(e.target.value)}
@@ -501,17 +567,21 @@ export default function AdminPoemsManager() {
                   </div>
 
                   <div className={styles.divider}>
-                    <div className={styles.toggleLabel}>Text format</div>
+                    <div className={styles.toggleLabel}>Alineación del texto</div>
                     <div className={styles.toggleGroup}>
-                      <button type="button" onClick={() => setTextAlign("left")} aria-pressed={textAlign === "left"} className={pillStyle(textAlign === "left")}>As written</button>
-                      <button type="button" onClick={() => setTextAlign("justify")} aria-pressed={textAlign === "justify"} className={pillStyle(textAlign === "justify")}>Justified</button>
-                      <button type="button" onClick={() => setTextAlign("center")} aria-pressed={textAlign === "center"} className={pillStyle(textAlign === "center")}>Centered</button>
-                      <button type="button" onClick={() => setBold((v) => !v)} aria-pressed={bold} className={`${pillStyle(bold)} ${styles.boldText}`}>Bold</button>
-                      <button type="button" onClick={() => setItalic((v) => !v)} aria-pressed={italic} className={`${pillStyle(italic)} ${styles.italicText}`}>Italic</button>
-                      <button type="button" onClick={() => setUnderline((v) => !v)} aria-pressed={underline} className={`${pillStyle(underline)} ${styles.underlineText}`}>Underline</button>
+                      <button type="button" onClick={() => setTextAlign("left")} aria-pressed={textAlign === "left"} className={pillStyle(textAlign === "left")}>Como se escribió</button>
+                      <button type="button" onClick={() => setTextAlign("justify")} aria-pressed={textAlign === "justify"} className={pillStyle(textAlign === "justify")}>Justificado</button>
+                      <button type="button" onClick={() => setTextAlign("center")} aria-pressed={textAlign === "center"} className={pillStyle(textAlign === "center")}>Centrado</button>
+                    </div>
+                    <div className={styles.toggleLabel} style={{ marginTop: 14 }}>Formato de TODO el texto</div>
+                    <div className={styles.toggleGroup}>
+                      <button type="button" onClick={() => setBold((v) => !v)} aria-pressed={bold} className={`${pillStyle(bold)} ${styles.boldText}`}>Negrita</button>
+                      <button type="button" onClick={() => setItalic((v) => !v)} aria-pressed={italic} className={`${pillStyle(italic)} ${styles.italicText}`}>Cursiva</button>
+                      <button type="button" onClick={() => setUnderline((v) => !v)} aria-pressed={underline} className={`${pillStyle(underline)} ${styles.underlineText}`}>Subrayado</button>
                     </div>
                     <div className={styles.toggleHint}>
-                      Estos estilos se aplican tanto al modo libro como al modo pagina.
+                      Estos botones aplican el estilo a TODO el texto. Para formatear solo una
+                      parte, seleccioná el fragmento y usá los botones de arriba del cuadro de texto.
                     </div>
                   </div>
 
@@ -575,9 +645,20 @@ export default function AdminPoemsManager() {
                   />
                   <span className={styles.fieldHint}>{documentInputHelp}</span>
                   {downloadUrl ? (
-                    <span className={styles.fieldCurrent}>Archivo actual: {downloadUrl}</span>
+                    <span className={styles.fieldCurrent}>
+                      Archivo actual:{" "}
+                      <a href={downloadUrl} target="_blank" rel="noreferrer">
+                        {isAboutSection ? "ver CV cargado" : downloadUrl}
+                      </a>
+                    </span>
                   ) : null}
                 </label>
+
+                <input
+                  type="hidden"
+                  name="removeBookImage"
+                  value={removeBookImage ? "true" : "false"}
+                />
 
                 {supportsImageUpload ? (
                   <div className={styles.imageGrid}>
@@ -589,10 +670,16 @@ export default function AdminPoemsManager() {
                         type="file"
                         accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif"
                         className={styles.field}
+                        onChange={() => setRemoveBookImage(false)}
                       />
                       <span className={styles.fieldHint}>{imageInputHelp}</span>
                       {bookImageUrl ? (
                         <span className={styles.fieldCurrent}>Imagen actual: {bookImageUrl}</span>
+                      ) : null}
+                      {removeBookImage ? (
+                        <span className={styles.fieldCurrent}>
+                          La imagen se quitará al guardar. Para conservarla, recargá la entrada o subí una nueva.
+                        </span>
                       ) : null}
                     </label>
 
@@ -606,6 +693,17 @@ export default function AdminPoemsManager() {
                           height={400}
                           className={styles.imagePreviewImg}
                         />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setRemoveBookImage(true);
+                            setBookImageUrl("");
+                            setFileInputKey((value) => value + 1);
+                          }}
+                          className={styles.btnGhost}
+                        >
+                          Quitar imagen
+                        </button>
                       </div>
                     ) : null}
                   </div>

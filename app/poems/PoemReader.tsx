@@ -24,6 +24,7 @@ import {
 } from "@/lib/book-reader";
 import { useBookImageRatio } from "@/lib/use-book-image-ratio";
 import { useElementWidth } from "@/lib/use-element-width";
+import { renderRichText } from "@/lib/rich-text";
 
 import styles from "./reader.module.css";
 
@@ -275,7 +276,7 @@ export default function PoemReader({
 
                       <div className={styles.bookSplitTextContent}>
                         <div className={textClassName} style={textStyle}>
-                          {text}
+                          {renderRichText(text)}
                         </div>
                       </div>
 
@@ -338,7 +339,7 @@ export default function PoemReader({
                         onClick={() => safeNavigate(goPrev)}
                       >
                         <div className={textClassName} style={textStyle}>
-                          {left}
+                          {renderRichText(left)}
                         </div>
                       </div>
 
@@ -348,7 +349,7 @@ export default function PoemReader({
                         onClick={() => safeNavigate(goNext)}
                       >
                         <div className={textClassName} style={textStyle}>
-                          {right}
+                          {renderRichText(right)}
                         </div>
                       </div>
                     </div>
@@ -418,7 +419,7 @@ export default function PoemReader({
                 </h2>
               )}
               <div className={styles.mobilePaper}>
-                <div className={`${textClassName} ${styles.mobileText}`}>{text}</div>
+                <div className={`${textClassName} ${styles.mobileText}`}>{renderRichText(text)}</div>
               </div>
             </article>
           </>
@@ -442,7 +443,7 @@ export default function PoemReader({
                   </div>
                 ) : null}
                 <div className={styles.documentText}>
-                  <div className={textClassName}>{text}</div>
+                  <div className={textClassName}>{renderRichText(text)}</div>
                 </div>
               </article>
             </div>

@@ -1,7 +1,15 @@
 import Link from "next/link";
+
+import { getAboutContent } from "@/lib/content-public";
+import { CV_CONTENT_DOWNLOAD_HREF, CV_PUBLIC_PATH } from "@/lib/cv-path";
 import styles from "./page.module.css";
 
-export default function AboutPage() {
+export const revalidate = 60;
+
+export default async function AboutPage() {
+  const about = await getAboutContent();
+  const hasCv = Boolean(about.downloadUrl && about.downloadUrl !== CV_PUBLIC_PATH);
+
   return (
     <main className={styles.page}>
       <Link href="/" className={styles.backBtn}>
@@ -18,9 +26,17 @@ export default function AboutPage() {
         <div className={styles.bio}>
           <p className={styles.sectionLabel}>Sobre mí</p>
           <div>
-            <p>La cesoteca es este espacio virtual donde comparto escritos, comentarios de libros, poemas, ensayos y artículos personales.</p>
-            <p>Empezó hace unos años como un perfil de Instagram donde compartía comentarios de los libros que leía y más me llamaban la atención. Con el tiempo se fue modificando y empecé a publicar escritos personales, poemas, y otras cosas que quería compartir.</p>
-            <p>Hacía tiempo que quería reunir todo mi trabajo y darle una forma por fuera de la plataforma de Instagram, y así surgió la idea de armar este sitio web.</p>
+            <p>
+              Porque escribir se escribe para constatar<br />
+              que no hay ningún inconsciente que aguante<br />
+              las ganas de futuro la alegría de saber que aunque todo se repita<br />
+              algo siempre va a cambiar<br />
+              de la casa al bar y del bar<br />
+              hasta la casa<br />
+              alguna novedad alguna<br />
+              letra chica
+            </p>
+            <p>(Tamara Kamenszain)</p>
           </div>
         </div>
 
@@ -68,9 +84,13 @@ export default function AboutPage() {
       <div className={styles.cvBar}>
         <div>
           <p>Currículum</p>
-          <span>Descargá mi CV en PDF</span>
+          <span>{hasCv ? "Descargá mi CV en PDF" : "Próximamente"}</span>
         </div>
-        <a href="/cv.pdf" className={styles.cvBtn}>Descargar CV</a>
+        {hasCv ? (
+          <a href={CV_CONTENT_DOWNLOAD_HREF} className={styles.cvBtn}>
+            Descargar CV
+          </a>
+        ) : null}
       </div>
 
     </main>

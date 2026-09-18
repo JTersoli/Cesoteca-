@@ -178,6 +178,8 @@ export async function POST(request: NextRequest) {
     const hasPurchaseUrl = formData.has("purchaseUrl");
     const hasReadArticleUrl = formData.has("readArticleUrl");
     const hasContactInfo = formData.has("contactInfo");
+    const removeBookImage =
+      String(formData.get("removeBookImage") || "").trim().toLowerCase() === "true";
     const file = formData.get("file");
     const bookImageFile = formData.get("bookImageFile");
 
@@ -360,6 +362,14 @@ export async function POST(request: NextRequest) {
     const previousDownloadUrl = existing?.downloadUrl;
     const previousBookImageUrl = existing?.bookImageUrl;
 
+    // Una imagen recién subida tiene prioridad; si no, y se pidió quitarla, queda
+    // sin imagen; en caso contrario se conserva la actual.
+    const nextBookImageUrl = bookImageUrl
+      ? bookImageUrl
+      : removeBookImage
+        ? undefined
+        : currentBookImageUrl || existing?.bookImageUrl || undefined;
+
     const saved = await upsertStoredPoem(
       {
         section: sectionValue,
@@ -373,7 +383,7 @@ export async function POST(request: NextRequest) {
         readArticleUrl:
           hasReadArticleUrl ? normalizedReadArticleUrl || undefined : existing?.readArticleUrl,
         contactInfo: hasContactInfo ? contactInfoInput || undefined : existing?.contactInfo,
-        bookImageUrl: bookImageUrl || currentBookImageUrl || existing?.bookImageUrl || undefined,
+        bookImageUrl: nextBookImageUrl,
         libraryPage,
         librarySlot,
         displayMode,
@@ -422,6 +432,11 @@ export async function POST(request: NextRequest) {
 
     await replaceAsset(previousDownloadUrl, downloadUrl);
     await replaceAsset(previousBookImageUrl, bookImageUrl);
+
+    // Si se quitó la imagen (sin subir una nueva), borramos el asset anterior.
+    if (removeBookImage && !bookImageUrl && previousBookImageUrl) {
+      await deleteAssetByPublicUrl(previousBookImageUrl);
+    }
 
     revalidateContentPaths(
       [
