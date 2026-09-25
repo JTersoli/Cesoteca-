@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { Caveat, EB_Garamond, Inter } from "next/font/google";
+import { SITE_URL } from "@/lib/site-url";
 import CursorBubble from "./components/CursorBubble";
 import SiteFrame from "./components/SiteFrame";
 
@@ -22,7 +23,7 @@ const fontUI = Inter({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://cesoteca.vercel.app"),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Cesoteca",
     template: "%s | Cesoteca",
