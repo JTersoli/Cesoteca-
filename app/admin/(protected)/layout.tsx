@@ -1,10 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import {
-  ADMIN_COOKIE_NAME,
-  getSessionSecret,
-  verifyAdminToken,
-} from "@/lib/admin-auth";
+import { ADMIN_COOKIE_NAME, isAdminSessionValid } from "@/lib/admin-auth";
 
 export default async function ProtectedAdminLayout({
   children,
@@ -12,9 +8,7 @@ export default async function ProtectedAdminLayout({
   children: React.ReactNode;
 }) {
   const cookieStore = await cookies();
-  const token = cookieStore.get(ADMIN_COOKIE_NAME)?.value;
-  const secret = await getSessionSecret();
-  const isAuthed = verifyAdminToken(token, secret);
+  const isAuthed = isAdminSessionValid(cookieStore.get(ADMIN_COOKIE_NAME)?.value);
 
   if (!isAuthed) {
     redirect("/admin/login");

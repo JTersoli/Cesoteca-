@@ -1,10 +1,6 @@
 import path from "path";
 import { NextRequest, NextResponse } from "next/server";
-import {
-  ADMIN_COOKIE_NAME,
-  getSessionSecret,
-  verifyAdminToken,
-} from "@/lib/admin-auth";
+import { ADMIN_COOKIE_NAME, isAdminSessionValid } from "@/lib/admin-auth";
 import { isSameOriginRequest } from "@/lib/request-security";
 import {
   DEFAULT_BOOK_IMAGE_URL,
@@ -39,9 +35,7 @@ const ALLOWED_IMAGE_MIME_TYPES = new Set([
 const ALLOWED_IMAGE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp", ".gif"]);
 
 async function isAuthorized(request: NextRequest) {
-  const token = request.cookies.get(ADMIN_COOKIE_NAME)?.value;
-  const secret = await getSessionSecret();
-  return verifyAdminToken(token, secret);
+  return isAdminSessionValid(request.cookies.get(ADMIN_COOKIE_NAME)?.value);
 }
 
 function sanitizeFilename(name: string) {

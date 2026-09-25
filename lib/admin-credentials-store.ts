@@ -9,7 +9,8 @@ type StoredAdminCredentials = {
 
 export type StoredAdminPasswordHashRecord = {
   passwordHash: string;
-  source: "supabase" | "file" | "none";
+  // "error": Supabase is configured but the read failed (callers must not fall back).
+  source: "supabase" | "file" | "none" | "error";
 };
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -17,6 +18,12 @@ const CREDENTIALS_PATH = path.join(DATA_DIR, "admin-credentials.json");
 const CREDENTIALS_TEMP_PATH = path.join(DATA_DIR, "admin-credentials.tmp.json");
 
 let writeQueue: Promise<void> = Promise.resolve();
+
+// data/admin-credentials.json is a local-development store only. In production it is never
+// read or written: the password hash comes from Supabase (admin_credentials) or ADMIN_PASSWORD_HASH.
+function isFileStoreEnabled() {
+  return process.env.NODE_ENV !== "production";
+}
 
 export async function readStoredAdminPasswordHash() {
   const record = await readStoredAdminPasswordHashRecord();
@@ -27,18 +34,25 @@ export async function readStoredAdminPasswordHashRecord(): Promise<StoredAdminPa
   if (isSupabaseConfigured()) {
     const client = getSupabaseAdminClient();
     if (!client) {
-      return { passwordHash: "", source: "none" };
+      return { passwordHash: "", source: "error" };
     }
 
-    const { data, error } = await client
-      .from("admin_credentials")
-      .select("password_hash")
-      .eq("id", "primary")
-      .maybeSingle();
+    let result;
+    try {
+      result = await client
+        .from("admin_credentials")
+        .select("password_hash")
+        .eq("id", "primary")
+        .maybeSingle();
+    } catch (error) {
+      console.error("[admin-credentials] Failed to read Supabase credentials:", error);
+      return { passwordHash: "", source: "error" };
+    }
 
+    const { data, error } = result;
     if (error) {
       console.error("[admin-credentials] Failed to read Supabase credentials:", error);
-      return { passwordHash: "", source: "none" };
+      return { passwordHash: "", source: "error" };
     }
 
     const row = data as { password_hash?: string } | null;
@@ -47,6 +61,10 @@ export async function readStoredAdminPasswordHashRecord(): Promise<StoredAdminPa
       passwordHash,
       source: passwordHash ? "supabase" : "none",
     };
+  }
+
+  if (!isFileStoreEnabled()) {
+    return { passwordHash: "", source: "none" };
   }
 
   try {
@@ -76,7 +94,9 @@ export async function readStoredAdminPasswordHashRecord(): Promise<StoredAdminPa
 export async function writeStoredAdminPasswordHash(passwordHash: string) {
   if (isSupabaseConfigured()) {
     const client = getSupabaseAdminClient();
-    if (!client) return;
+    if (!client) {
+      throw new Error("[admin-credentials] Supabase client is not available.");
+    }
 
     const { error } = await client.from("admin_credentials").upsert(
       {
@@ -92,6 +112,12 @@ export async function writeStoredAdminPasswordHash(passwordHash: string) {
     }
 
     return;
+  }
+
+  if (!isFileStoreEnabled()) {
+    throw new Error(
+      "[admin-credentials] Refusing to write data/admin-credentials.json in production. Configure SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY."
+    );
   }
 
   await withWriteLock(async () => {

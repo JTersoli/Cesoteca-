@@ -30,9 +30,14 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files and local data (credentials, uploads, caches) — never commit
 .env*
-data/admin-credentials.json
+data/
+# data/poems.json is already tracked (content seed/fallback) and stays tracked; new files in data/ are ignored.
+
+# dependencies and build output at any depth
+node_modules
+.next
 
 # vercel
 .vercel

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   ADMIN_COOKIE_NAME,
+  checkAdminPassword,
   createAdminToken,
   getSessionMaxAgeSeconds,
-  getAdminAuthDiagnostics,
-  resolveAdminAuthConfig,
-  verifyAdminPassword,
+  getSessionSecret,
+  resolveAdminAuth,
 } from "@/lib/admin-auth";
 import { isSameOriginRequest } from "@/lib/request-security";
 
@@ -29,11 +29,11 @@ if (!globalStore.__adminLoginRateMap) {
 
 const loginRateMap = globalStore.__adminLoginRateMap;
 
+// Keyed by IP only: including the user-agent let a client get a fresh budget per UA string.
+// On Vercel x-forwarded-for is overwritten by the platform, so it cannot be spoofed.
 function getClientKey(request: NextRequest) {
   const forwarded = request.headers.get("x-forwarded-for") || "";
-  const ip = forwarded.split(",")[0]?.trim() || request.headers.get("x-real-ip") || "unknown";
-  const ua = request.headers.get("user-agent") || "unknown";
-  return `${ip}|${ua.slice(0, 120)}`;
+  return forwarded.split(",")[0]?.trim() || request.headers.get("x-real-ip") || "unknown";
 }
 
 function getRetryAfterSeconds(blockedUntil: number) {
@@ -50,7 +50,9 @@ function clearExpiredRateEntries(now: number) {
   }
 }
 
-function registerFailedAttempt(key: string, now: number) {
+// Every attempt is counted when it arrives (a successful login clears the key), so that
+// concurrent requests cannot all pass the limit while their password checks are in flight.
+function registerAttempt(key: string, now: number) {
   const current = loginRateMap.get(key);
 
   if (!current || now - current.windowStart > LOGIN_WINDOW_MS) {
@@ -93,42 +95,54 @@ export async function POST(request: NextRequest) {
       { status: 429, headers: { "Retry-After": String(retryAfter) } }
     );
   }
+  // Must stay before the first await (see registerAttempt).
+  registerAttempt(clientKey, now);
+
+  // Fail closed before touching the password: without a valid session secret nobody can log in.
+  const sessionSecret = getSessionSecret();
+  if (!sessionSecret) {
+    console.error(
+      "[admin-login] Login rejected: ADMIN_SESSION_SECRET is missing or too short. Set it in the environment and redeploy."
+    );
+    return NextResponse.json(
+      { error: "Admin auth is not configured." },
+      { status: 401 }
+    );
+  }
 
   const body = (await request.json().catch(() => null)) as
     | { password?: string }
     | null;
   const provided = body?.password || "";
-  const diagnostics = await getAdminAuthDiagnostics();
-  const authConfig = await resolveAdminAuthConfig();
+  const { config: authConfig, diagnostics } = await resolveAdminAuth();
 
   console.info("[admin-login] Credential resolution", diagnostics);
 
+  if (authConfig.passwordSource === "unavailable") {
+    console.error(
+      "[admin-login] Login rejected: the Supabase credential store could not be read. Env credentials are not used as a fallback."
+    );
+    return NextResponse.json(
+      { error: "Admin auth is temporarily unavailable." },
+      { status: 503 }
+    );
+  }
+
   if (!authConfig.passwordHash && authConfig.passwordSource !== "env-plain") {
-    console.error("[admin-login] Admin password is not configured.", {
-      passwordSource: authConfig.passwordSource,
-      sessionSecretSource: authConfig.sessionSecretSource,
-    });
+    console.error(
+      "[admin-login] No admin password configured: add the Supabase row public.admin_credentials (id = 'primary') or set ADMIN_PASSWORD_HASH and redeploy. Plain ADMIN_PASSWORD is ignored in production.",
+      diagnostics
+    );
     return NextResponse.json(
       { error: "Admin auth is not configured." },
       { status: 500 }
     );
   }
 
-  if (!authConfig.sessionSecret) {
-    console.error("[admin-login] Session secret is not configured.", {
-      passwordSource: authConfig.passwordSource,
-      sessionSecretSource: authConfig.sessionSecretSource,
-    });
-    return NextResponse.json(
-      { error: "Admin auth is not configured." },
-      { status: 500 }
-    );
-  }
-
-  if (!(await verifyAdminPassword(provided))) {
-    const updatedRate = registerFailedAttempt(clientKey, now);
-    if (updatedRate.blockedUntil > now) {
-      const retryAfter = getRetryAfterSeconds(updatedRate.blockedUntil);
+  if (!checkAdminPassword(provided, authConfig)) {
+    const latestRate = loginRateMap.get(clientKey);
+    if (latestRate && latestRate.blockedUntil > Date.now()) {
+      const retryAfter = getRetryAfterSeconds(latestRate.blockedUntil);
       return NextResponse.json(
         { error: "Too many login attempts. Try again later." },
         { status: 429, headers: { "Retry-After": String(retryAfter) } }
@@ -140,7 +154,7 @@ export async function POST(request: NextRequest) {
 
   loginRateMap.delete(clientKey);
 
-  const token = createAdminToken(authConfig.sessionSecret);
+  const token = createAdminToken(sessionSecret);
   const response = NextResponse.json({ ok: true });
   response.cookies.set({
     name: ADMIN_COOKIE_NAME,

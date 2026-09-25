@@ -1,27 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   ADMIN_COOKIE_NAME,
-  getSessionSecret,
+  isAdminSessionValid,
   updateStoredAdminPassword,
   verifyAdminPassword,
-  verifyAdminToken,
 } from "@/lib/admin-auth";
 import { isSameOriginRequest } from "@/lib/request-security";
 
 const MIN_PASSWORD_LENGTH = 12;
 const MAX_PASSWORD_LENGTH = 128;
 
-async function isAuthorized(request: NextRequest) {
-  const token = request.cookies.get(ADMIN_COOKIE_NAME)?.value;
-  const secret = await getSessionSecret();
-  return verifyAdminToken(token, secret);
+function isAuthorized(request: NextRequest) {
+  return isAdminSessionValid(request.cookies.get(ADMIN_COOKIE_NAME)?.value);
 }
 
 export async function POST(request: NextRequest) {
   if (!isSameOriginRequest(request)) {
     return NextResponse.json({ error: "Forbidden origin." }, { status: 403 });
   }
-  if (!(await isAuthorized(request))) {
+  if (!isAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -61,6 +58,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Current password is invalid." }, { status: 401 });
   }
 
-  await updateStoredAdminPassword(newPassword);
+  try {
+    await updateStoredAdminPassword(newPassword);
+  } catch (error) {
+    console.error("[admin-password] Failed to store the new password hash:", error);
+    return NextResponse.json(
+      { error: "The new password could not be saved. It was not changed." },
+      { status: 500 }
+    );
+  }
   return NextResponse.json({ ok: true });
 }

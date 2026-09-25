@@ -4,7 +4,7 @@ Sitio editorial construido con Next.js (App Router), TypeScript y Tailwind.
 
 ## Requisitos
 
-- Node.js 20+
+- Node.js 22.18+ (lo exige `npm test`; Vercel usa 24.x)
 - npm 10+
 
 ## Scripts
@@ -18,11 +18,8 @@ Sitio editorial construido con Next.js (App Router), TypeScript y Tailwind.
 
 Crear `.env.local` con:
 
-- `ADMIN_PASSWORD_HASH=<hash scrypt>`
-
-Opcional pero recomendado:
-
-- `ADMIN_SESSION_SECRET=<hex-largo-seguro>`
+- `ADMIN_SESSION_SECRET=<hex aleatorio de 64 caracteres>` **obligatorio**. Firma las sesiones de admin y no tiene respaldo: si falta o tiene menos de 32 caracteres, el login responde 401 y ninguna sesión es válida. Generarlo con `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`. Cambiarlo cierra todas las sesiones abiertas.
+- `ADMIN_PASSWORD_HASH=<hash scrypt>` (si no se usa la tabla `admin_credentials` de Supabase)
 
 Opcional para persistencia en Supabase:
 
@@ -31,14 +28,16 @@ Opcional para persistencia en Supabase:
 - `SUPABASE_STORAGE_BUCKET=cesoteca-assets`
 - `LOCAL_ASSET_FALLBACK=true|false` solo para desarrollo local; por defecto queda deshabilitado en producción
 
-Compatibilidad temporal (no recomendado):
+Solo desarrollo local (se ignora en producción):
 
 - `ADMIN_PASSWORD=<texto_plano>`
 
 ### Generar `ADMIN_PASSWORD_HASH`
 
+El salt se usa como texto hex, igual que en `lib/admin-auth.ts`. La contraseña se pide por consola para que no quede en el historial de la terminal:
+
 ```bash
-node -e "const c=require('crypto');const p=process.argv[1];const s=c.randomBytes(16).toString('hex');const d=c.scryptSync(p,Buffer.from(s,'hex'),64).toString('hex');console.log('scrypt$'+s+'$'+d)" "TU_PASSWORD"
+node -e "const c=require('crypto');const rl=require('readline').createInterface({input:process.stdin,output:process.stdout});rl.question('Password: ',p=>{rl.close();const s=c.randomBytes(16).toString('hex');console.log('scrypt$'+s+'$'+c.scryptSync(p,s,64).toString('hex'))})"
 ```
 
 ## Flujo de contenido
@@ -46,12 +45,12 @@ node -e "const c=require('crypto');const p=process.argv[1];const s=c.randomBytes
 - Login admin: `/admin/login`
 - Panel admin: `/admin`
 - Alta/edición de textos y archivos desde panel
-- Cambio de contraseña desde panel (guarda hash en `data/admin-credentials.json`)
+- Cambio de contraseña en `/admin/password` (botón "Cambiar contraseña" del panel). Guarda el hash en Supabase `admin_credentials`; en desarrollo sin Supabase, en `data/admin-credentials.json`. No cierra las sesiones abiertas en otros dispositivos: para eso hay que rotar `ADMIN_SESSION_SECRET` y redeployar.
 
 ## Persistencia
 
 - Contenido: `data/poems.json`
-- Credenciales admin persistidas: `data/admin-credentials.json`
+- Credenciales admin persistidas: `data/admin-credentials.json` **solo en desarrollo local**. En producción ese archivo no se lee ni se escribe: la contraseña sale de Supabase o de `ADMIN_PASSWORD_HASH`. `data/` está en `.gitignore`.
 
 Si `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` están configurados:
 
@@ -65,11 +64,13 @@ Si `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` están configurados:
 ## Seguridad implementada
 
 - Cookie de sesión admin `httpOnly` + `sameSite=lax`
-- Verificación de token firmado
-- Rate-limit en login
+- Token de sesión firmado con HMAC-SHA256 usando solo `ADMIN_SESSION_SECRET` (sin respaldo; vence a los 7 días)
+- Rate-limit en login por IP (en memoria, por instancia)
+- Tests de regresión de seguridad: `npm test`
 - Protección CSRF por `Origin` en POST sensibles
 - Validación de uploads (tipo/extensión/tamaño)
-- Ruta interna `/poems/editor` oculta en producción si no hay sesión admin
+- Ruta interna `/admin/poems/editor` protegida por la sesión admin
+- Si Supabase está configurado pero no responde, el login falla (503) en lugar de usar `ADMIN_PASSWORD_HASH` como respaldo
 
 ## Descargas
 

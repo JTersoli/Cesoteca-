@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import LibrarySlotPicker from "./LibrarySlotPicker";
 import {
@@ -358,14 +359,19 @@ export default function AdminPoemsManager() {
               Panel editorial para administrar biblioteca, archivos e imagenes.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={onLogout}
-            disabled={busy}
-            className={styles.btnPrimary}
-          >
-            Logout
-          </button>
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <Link href="/admin/password" className={styles.btnGhost}>
+              Cambiar contraseña
+            </Link>
+            <button
+              type="button"
+              onClick={onLogout}
+              disabled={busy}
+              className={styles.btnPrimary}
+            >
+              Logout
+            </button>
+          </div>
         </header>
 
         <div className={styles.columns}>
