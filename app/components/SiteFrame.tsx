@@ -45,7 +45,7 @@ export default function SiteFrame({
   if (isPoemsLibrary) {
     return (
       <div className="px-4 py-3 sm:px-6 sm:py-6">
-        <header className="mb-4 sm:mb-6">
+        <header className="mb-4 sm:mb-6 px-[clamp(8px,2vw,18px)]">
           <h1 className="text-left font-hand font-bold text-[34px] sm:text-[42px] md:text-[48px] leading-none">
             Cesoteca
           </h1>
@@ -59,7 +59,7 @@ export default function SiteFrame({
   if (isReaderPage) {
     return (
       <div className="px-4 py-6 sm:px-6">
-        <header className="mb-4 sm:mb-5">
+        <header className="mb-4 sm:mb-5 px-[clamp(8px,2vw,18px)]">
           <h1 className="text-left font-hand font-bold text-[34px] sm:text-[42px] md:text-[48px] leading-none">
             Cesoteca
           </h1>
@@ -72,7 +72,7 @@ export default function SiteFrame({
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-6">
-      <header className="mb-4 sm:mb-5">
+      <header className="mb-4 sm:mb-5 px-[clamp(8px,2vw,18px)]">
         <h1 className="text-left font-hand font-bold text-[34px] sm:text-[42px] md:text-[48px] leading-none">
           Cesoteca
         </h1>
