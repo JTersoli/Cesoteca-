@@ -21,6 +21,7 @@
   justify-content: center;
   align-items: center;
   width: min(100%, 1680px);
+  box-sizing: border-box;
   margin: 0 auto;
   padding: 0 clamp(8px, 2vw, 18px);
 }
